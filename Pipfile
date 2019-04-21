@@ -1,0 +1,22 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+django = "*"
+"django[bcrypt]" = "*"
+djangorestframework = "*"
+psycopg2 = '==2.7.7'
+python-dotenv = "*"
+djangorestframework-simplejwt = "*"
+django-background-tasks = "*"
+"django-sendgrid-v5" = "*"
+requests = "*"
+gunicorn = "*"
+bcrypt = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.7"

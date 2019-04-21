@@ -1,0 +1,25 @@
+version: '3.6'
+services:
+
+  backend:
+    image: backend:latest
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: backend02
+    env_file:
+    - ../.env
+    volumes:
+    - ../src:/src
+    ports:
+    - 8000:8000
+
+  ngrok-pyback:
+    image: wernight/ngrok:latest
+    env_file:
+      - .ngrok.env
+    environment:
+      - NGROK_PORT=backend:8000
+      - NGROK_SUBDOMAIN=pyback
+    ports:
+      - 4040:4040

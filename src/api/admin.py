@@ -1,0 +1,49 @@
+from django.contrib import admin
+
+from api.models import (
+    CodeSchool,
+    Location,
+    Resource,
+    Scholarship,
+    ScholarshipApplication,
+    TeamMember,
+    ActiveAdminComment,
+    AdminUser,
+    ArInternalMetadata,
+    Event,
+    GitHubStatistic,
+    GitHubUser,
+    Request,
+    Role,
+    SchemaMigration,
+    Service,
+    SlackUser,
+    Tagging,
+    Tag,
+    User,
+    Vote,
+    UserInfo,
+)
+
+admin.site.register(ActiveAdminComment)
+admin.site.register(AdminUser)
+admin.site.register(ArInternalMetadata)
+admin.site.register(CodeSchool)
+admin.site.register(Event)
+admin.site.register(GitHubStatistic)
+admin.site.register(GitHubUser)
+admin.site.register(Location)
+admin.site.register(Request)
+admin.site.register(Resource)
+admin.site.register(Role)
+admin.site.register(SchemaMigration)
+admin.site.register(ScholarshipApplication)
+admin.site.register(Scholarship)
+admin.site.register(Service)
+admin.site.register(SlackUser)
+admin.site.register(Tagging)
+admin.site.register(Tag)
+admin.site.register(TeamMember)
+admin.site.register(User)
+admin.site.register(Vote)
+admin.site.register(UserInfo)

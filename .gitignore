@@ -1,0 +1,6 @@
+.idea/
+.env
+.ngrok.env
+__pycache__/
+src/static/
+src/templates/

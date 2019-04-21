@@ -1,0 +1,467 @@
+from django.contrib.auth.models import User as AuthUser
+from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+
+class ActiveAdminComment(models.Model):
+    namespace = models.CharField(max_length=256, blank=True, null=True)
+    body = models.TextField(blank=True, null=True)
+    resource_type = models.CharField(max_length=256, blank=True, null=True)
+    resource_id = models.IntegerField(blank=True, null=True)
+    author_type = models.CharField(max_length=256, blank=True, null=True)
+    author_id = models.IntegerField(blank=True, null=True)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = "active_admin_comments"
+
+
+class AdminUser(models.Model):
+    email = models.CharField(unique=True, max_length=256)
+    encrypted_password = models.CharField(max_length=256)
+    reset_password_token = models.CharField(
+        unique=True, max_length=256, blank=True, null=True
+    )
+    reset_password_sent_at = models.DateTimeField(blank=True, null=True)
+    remember_created_at = models.DateTimeField(blank=True, null=True)
+    sign_in_count = models.IntegerField()
+    current_sign_in_at = models.DateTimeField(blank=True, null=True)
+    last_sign_in_at = models.DateTimeField(blank=True, null=True)
+    current_sign_in_ip = models.GenericIPAddressField(blank=True, null=True)
+    last_sign_in_ip = models.GenericIPAddressField(blank=True, null=True)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+    role_id = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "admin_users"
+
+
+class ArInternalMetadata(models.Model):
+    key = models.CharField(primary_key=True, max_length=256)
+    value = models.CharField(max_length=256, blank=True, null=True)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = "ar_internal_metadata"
+
+
+class CodeSchool(models.Model):
+    name = models.CharField(max_length=256, blank=True, null=True)
+    url = models.CharField(max_length=256, blank=True, null=True)
+    logo = models.CharField(max_length=256, blank=True, null=True)
+    full_time = models.BooleanField(blank=True, null=True)
+    hardware_included = models.BooleanField(blank=True, null=True)
+    has_online = models.BooleanField(blank=True, null=True)
+    online_only = models.BooleanField(blank=True, null=True)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+    notes = models.TextField(blank=True, null=True)
+    mooc = models.BooleanField()
+    is_partner = models.BooleanField()
+    rep_name = models.CharField(max_length=256, blank=True, null=True)
+    rep_email = models.CharField(max_length=256, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.url}"
+
+    class Meta:
+        managed = False
+        db_table = "code_schools"
+
+
+class Event(models.Model):
+    name = models.CharField(max_length=256, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    url = models.CharField(max_length=256, blank=True, null=True)
+    start_date = models.DateTimeField(blank=True, null=True)
+    end_date = models.DateTimeField(blank=True, null=True)
+    address1 = models.CharField(max_length=256, blank=True, null=True)
+    address2 = models.CharField(max_length=256, blank=True, null=True)
+    city = models.CharField(max_length=256, blank=True, null=True)
+    state = models.CharField(max_length=256, blank=True, null=True)
+    zip = models.CharField(max_length=256, blank=True, null=True)
+    scholarship_available = models.BooleanField(blank=True, null=True)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+    source_id = models.CharField(max_length=256, blank=True, null=True)
+    source_type = models.CharField(max_length=256, blank=True, null=True)
+    source_updated = models.DateTimeField(blank=True, null=True)
+    group = models.CharField(max_length=256, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "events"
+
+
+class GitHubStatistic(models.Model):
+    git_hub_user = models.ForeignKey(
+        "GitHubUser", models.DO_NOTHING, blank=True, null=True
+    )
+    source_id = models.CharField(max_length=256, blank=True, null=True)
+    source_type = models.CharField(max_length=256, blank=True, null=True)
+    state = models.CharField(max_length=256, blank=True, null=True)
+    additions = models.IntegerField(blank=True, null=True)
+    deletions = models.IntegerField(blank=True, null=True)
+    repository = models.CharField(max_length=256, blank=True, null=True)
+    url = models.CharField(max_length=256, blank=True, null=True)
+    title = models.CharField(max_length=256, blank=True, null=True)
+    number = models.CharField(max_length=256, blank=True, null=True)
+    completed_on = models.DateField(blank=True, null=True)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = "git_hub_statistics"
+
+
+class GitHubUser(models.Model):
+    user_id = models.IntegerField(blank=True, null=True)
+    git_hub_login = models.CharField(max_length=256, blank=True, null=True)
+    avatar_url = models.CharField(max_length=256, blank=True, null=True)
+    api_url = models.CharField(max_length=256, blank=True, null=True)
+    html_url = models.CharField(max_length=256, blank=True, null=True)
+    git_hub_id = models.IntegerField(blank=True, null=True)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = "git_hub_users"
+
+
+class Location(models.Model):
+    va_accepted = models.BooleanField(blank=True, null=True)
+    address1 = models.CharField(max_length=256, blank=True, null=True)
+    address2 = models.CharField(max_length=256, blank=True, null=True)
+    city = models.CharField(max_length=256, blank=True, null=True)
+    state = models.CharField(max_length=256, blank=True, null=True)
+    zip = models.IntegerField(blank=True, null=True)
+    code_school = models.ForeignKey(
+        CodeSchool, models.DO_NOTHING, blank=True, null=True
+    )
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+
+    def __str__(self):
+        return (
+            f"{self.code_school} - {self.address1} {self.city} {self.state} {self.zip}"
+        )
+
+    class Meta:
+        managed = False
+        db_table = "locations"
+
+
+class Request(models.Model):
+    service_id = models.IntegerField(blank=True, null=True)
+    language = models.CharField(max_length=256, blank=True, null=True)
+    details = models.TextField(blank=True, null=True)
+    user = models.ForeignKey("User", models.DO_NOTHING, blank=True, null=True)
+    assigned_mentor_id = models.IntegerField(blank=True, null=True)
+    requested_mentor_id = models.IntegerField(blank=True, null=True)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+    status = models.CharField(max_length=256, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "requests"
+
+
+class Resource(models.Model):
+    name = models.CharField(max_length=256, blank=True, null=True)
+    url = models.CharField(max_length=256, blank=True, null=True)
+    category = models.CharField(max_length=256, blank=True, null=True)
+    language = models.CharField(max_length=256, blank=True, null=True)
+    paid = models.BooleanField(blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    votes_count = models.IntegerField()
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = "resources"
+
+
+class Role(models.Model):
+    title = models.CharField(max_length=256, blank=True, null=True)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+
+    def __str__(self):
+        return f"{self.title}"
+
+    class Meta:
+        managed = False
+        db_table = "roles"
+
+
+class SchemaMigration(models.Model):
+    version = models.CharField(primary_key=True, max_length=256)
+
+    class Meta:
+        managed = False
+        db_table = "schema_migrations"
+
+
+class ScholarshipApplication(models.Model):
+    reason = models.TextField(blank=True, null=True)
+    terms_accepted = models.BooleanField(blank=True, null=True)
+    user = models.ForeignKey("User", models.DO_NOTHING, blank=True, null=True)
+    scholarship = models.ForeignKey(
+        "Scholarship", models.DO_NOTHING, blank=True, null=True
+    )
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = "scholarship_applications"
+
+
+class Scholarship(models.Model):
+    name = models.CharField(max_length=256, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    location = models.CharField(max_length=256, blank=True, null=True)
+    terms = models.TextField(blank=True, null=True)
+    open_time = models.DateTimeField(blank=True, null=True)
+    close_time = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = "scholarships"
+
+
+class Service(models.Model):
+    name = models.CharField(max_length=256, blank=True, null=True)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = "services"
+
+
+class SlackUser(models.Model):
+    slack_id = models.CharField(max_length=256, blank=True, null=True)
+    slack_name = models.CharField(max_length=256, blank=True, null=True)
+    slack_real_name = models.CharField(max_length=256, blank=True, null=True)
+    slack_display_name = models.CharField(max_length=256, blank=True, null=True)
+    slack_email = models.CharField(max_length=256, blank=True, null=True)
+    user_id = models.IntegerField(blank=True, null=True)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = "slack_users"
+
+
+class Tagging(models.Model):
+    tag_id = models.IntegerField(blank=True, null=True)
+    taggable_type = models.CharField(max_length=256, blank=True, null=True)
+    taggable_id = models.IntegerField(blank=True, null=True)
+    tagger_type = models.CharField(max_length=256, blank=True, null=True)
+    tagger_id = models.IntegerField(blank=True, null=True)
+    context = models.CharField(max_length=128, blank=True, null=True)
+    created_at = models.DateTimeField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.tag_id}"
+
+    class Meta:
+        managed = False
+        db_table = "taggings"
+        unique_together = (
+            (
+                "tag_id",
+                "taggable_id",
+                "taggable_type",
+                "context",
+                "tagger_id",
+                "tagger_type",
+            ),
+        )
+
+
+class Tag(models.Model):
+    name = models.CharField(unique=True, max_length=256, blank=True, null=True)
+    taggings_count = models.IntegerField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.taggings_count}"
+
+    class Meta:
+        managed = False
+        db_table = "tags"
+
+
+class TeamMember(models.Model):
+    name = models.CharField(max_length=256, blank=True, null=True)
+    role = models.CharField(max_length=256, blank=True, null=True)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+    description = models.TextField(blank=True, null=True)
+    group = models.CharField(max_length=256, blank=True, null=True)
+    image_src = models.CharField(max_length=256, blank=True, null=True)
+    email = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.role}"
+
+    class Meta:
+        managed = False
+        db_table = "team_members"
+
+
+class UserInfo(models.Model):
+    """
+    Model used to extend Django's base User model
+    """
+
+    user = models.OneToOneField(AuthUser, on_delete=models.CASCADE)
+
+    zip = models.CharField(max_length=256, blank=True, null=True)
+    latitude = models.FloatField(blank=True, null=True)
+    longitude = models.FloatField(blank=True, null=True)
+    remember_created_at = models.DateTimeField(blank=True, null=True)
+    sign_in_count = models.IntegerField(blank=True, null=True)
+    mentor = models.BooleanField(blank=True, null=True, default=False)
+    timezone = models.CharField(max_length=256, blank=True, null=True)
+    bio = models.TextField(blank=True, null=True)
+    verified = models.BooleanField(default=False)
+    state = models.CharField(max_length=256, blank=True, null=True)
+    address_1 = models.CharField(max_length=256, blank=True, null=True)
+    address_2 = models.CharField(max_length=256, blank=True, null=True)
+    city = models.CharField(max_length=256, blank=True, null=True)
+    volunteer = models.BooleanField(blank=True, null=True, default=False)
+    branch_of_service = models.CharField(max_length=256, blank=True, null=True)
+    years_of_service = models.FloatField(blank=True, null=True)
+    pay_grade = models.CharField(max_length=256, blank=True, null=True)
+    military_occupational_specialty = models.CharField(
+        max_length=256, blank=True, null=True
+    )
+    github = models.CharField(max_length=256, blank=True, null=True)
+    twitter = models.CharField(max_length=256, blank=True, null=True)
+    linkedin = models.CharField(max_length=256, blank=True, null=True)
+    employment_status = models.CharField(max_length=256, blank=True, null=True)
+    education = models.CharField(max_length=256, blank=True, null=True)
+    company_role = models.CharField(max_length=256, blank=True, null=True)
+    company_name = models.CharField(max_length=256, blank=True, null=True)
+    education_level = models.CharField(max_length=256, blank=True, null=True)
+    interests = models.CharField(max_length=256, blank=True, null=True)
+    scholarship_info = models.BooleanField(blank=True, null=True)
+    role_id = models.IntegerField(blank=True, null=True)
+    military_status = models.CharField(max_length=256, blank=True, null=True)
+
+    slack_id = models.CharField(max_length=16)
+
+    def __str__(self):
+        return f"Username: {self.user} Slack ID: {self.slack_id}"
+
+
+class User(models.Model):
+    email = models.CharField(unique=True, max_length=256, blank=True, null=True)
+    zip = models.CharField(max_length=256, blank=True, null=True)
+    latitude = models.FloatField(blank=True, null=True)
+    longitude = models.FloatField(blank=True, null=True)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+    encrypted_password = models.CharField(max_length=256)
+    reset_password_token = models.CharField(
+        unique=True, max_length=256, blank=True, null=True
+    )
+    reset_password_sent_at = models.DateTimeField(blank=True, null=True)
+    remember_created_at = models.DateTimeField(blank=True, null=True)
+    sign_in_count = models.IntegerField()
+    current_sign_in_at = models.DateTimeField(blank=True, null=True)
+    last_sign_in_at = models.DateTimeField(blank=True, null=True)
+    current_sign_in_ip = models.GenericIPAddressField(blank=True, null=True)
+    last_sign_in_ip = models.GenericIPAddressField(blank=True, null=True)
+    mentor = models.BooleanField(blank=True, null=True)
+    first_name = models.CharField(max_length=256, blank=True, null=True)
+    last_name = models.CharField(max_length=256, blank=True, null=True)
+    timezone = models.CharField(max_length=256, blank=True, null=True)
+    bio = models.TextField(blank=True, null=True)
+    verified = models.BooleanField()
+    state = models.CharField(max_length=256, blank=True, null=True)
+    address_1 = models.CharField(max_length=256, blank=True, null=True)
+    address_2 = models.CharField(max_length=256, blank=True, null=True)
+    city = models.CharField(max_length=256, blank=True, null=True)
+    username = models.CharField(max_length=256, blank=True, null=True)
+    volunteer = models.BooleanField(blank=True, null=True)
+    branch_of_service = models.CharField(max_length=256, blank=True, null=True)
+    years_of_service = models.FloatField(blank=True, null=True)
+    pay_grade = models.CharField(max_length=256, blank=True, null=True)
+    military_occupational_specialty = models.CharField(
+        max_length=256, blank=True, null=True
+    )
+    github = models.CharField(max_length=256, blank=True, null=True)
+    twitter = models.CharField(max_length=256, blank=True, null=True)
+    linkedin = models.CharField(max_length=256, blank=True, null=True)
+    employment_status = models.CharField(max_length=256, blank=True, null=True)
+    education = models.CharField(max_length=256, blank=True, null=True)
+    company_role = models.CharField(max_length=256, blank=True, null=True)
+    company_name = models.CharField(max_length=256, blank=True, null=True)
+    education_level = models.CharField(max_length=256, blank=True, null=True)
+    interests = models.CharField(max_length=256, blank=True, null=True)
+    scholarship_info = models.BooleanField(blank=True, null=True)
+    role_id = models.IntegerField(blank=True, null=True)
+    military_status = models.CharField(max_length=256, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.email} - {self.first_name} {self.last_name}"
+
+    class Meta:
+        managed = False
+        db_table = "users"
+
+    @property
+    def is_active(self):
+        return True
+
+    @property
+    def is_staff(self):
+        return True
+
+    @property
+    def last_login(self):
+        return self.last_sign_in_at
+
+    @last_login.setter
+    def last_login(self, signin):
+        self.last_sign_in_at = signin
+
+
+class Vote(models.Model):
+    user = models.ForeignKey(User, models.DO_NOTHING, blank=True, null=True)
+    resource = models.ForeignKey(Resource, models.DO_NOTHING, blank=True, null=True)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = "votes"
+
+
+@receiver(post_save, sender=AuthUser)
+def create_user_info(sender, instance, created, **kwargs):
+    """
+    Function creates an empty UserInfo attached to the created AuthUser upon creation
+    """
+    if created:
+        try:
+            instance.userinfo
+        except UserInfo.DoesNotExist:
+            UserInfo.objects.create(user=instance)
