@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -27,9 +28,16 @@ SECRET_KEY = os.environ.get(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DEBUG", False)
+# DEBUG = os.environ.get("DEBUG", False)
+DEBUG = True
 
 ALLOWED_HOSTS = ["pyback.ngrok.io", "localhost", os.environ.get("ALLOWED_HOST")]
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+# CORS_ORIGIN_WHITELIST = (
+#     'http//:localhost:3000',
+# )
 
 # Application definition
 
@@ -43,12 +51,15 @@ INSTALLED_APPS = [
     "backend.apps.BackendConfig",
     "background_task",
     "rest_framework",
+    "corsheaders",
+    "authentication",
     "api",
 ]
 
 # AUTHENTICATION_BACKENDS = ["backend.security.CustomBackend"]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -149,3 +160,7 @@ SENDGRID_SANDBOX_MODE_IN_DEBUG = False
 
 PYBOT_AUTH_TOKEN = os.environ.get("PYBOT_AUTH_TOKEN", "")
 PYBOT_URL = os.environ.get("PYBOT_URL", "http://localhost:5000")
+
+MAILCHIMP_API_KEY = os.environ.get("MAILCHIMP_API_KEY", "")
+MAILCHIMP_USERNAME = os.environ.get("MAILCHIMP_USERNAME", "")
+MAILCHIMP_LIST_ID = os.environ.get("MAILCHIMP_LIST_ID", "")

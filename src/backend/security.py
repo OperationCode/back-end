@@ -1,7 +1,7 @@
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth.models import User as AuthUser
 
-from api.models import User
+from authentication.models import User
 
 
 class CustomBackend:

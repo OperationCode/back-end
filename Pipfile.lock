@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "48f75c840a6f1cf8874b05c95c7e50b7866503e52d9ea2ea6ed1457ca99d4cb1"
+            "sha256": "862371e704d54ecab23bd2c45a748405bf517767904dc889514ee1e9f2285a30"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -112,13 +112,13 @@
             ],
             "version": "==1.0.15"
         },
-        "django-sendgrid-v5": {
+        "django-cors-headers": {
             "hashes": [
-                "sha256:e514084c340d17ce2c0f3822b00239d357766b90703cbbb88722f577949eeb7b",
-                "sha256:f74ccb676cdaee79962ab426bf3d689e243e97ffb7d152459f4d1e26e5d91147"
+                "sha256:1ccedec2973087be9d73f96d58c4f6660c823efc0385581e13efb77f060d0e02",
+                "sha256:fb44f6b9f10de847919305c3f0d38fcfbadfe0dd5cf1c866f37df66ad0dda1bb"
             ],
             "index": "pypi",
-            "version": "==0.8.0"
+            "version": "==2.5.2"
         },
         "djangorestframework": {
             "hashes": [
@@ -136,12 +136,6 @@
             "index": "pypi",
             "version": "==4.3.0"
         },
-        "future": {
-            "hashes": [
-                "sha256:67045236dcfd6816dc439556d009594abf643e5eb48992e36beac09c2ca659b8"
-            ],
-            "version": "==0.17.1"
-        },
         "gunicorn": {
             "hashes": [
                 "sha256:aa8e0b40b4157b36a5df5e599f45c9c76d6af43845ba3b3b0efe2c70473c2471",
@@ -156,6 +150,14 @@
                 "sha256:ea8b7f6188e6fa117537c3df7da9fc686d485087abf6ac197f9c46432f7e4a3c"
             ],
             "version": "==2.8"
+        },
+        "mailchimp3": {
+            "hashes": [
+                "sha256:8ba4fd1c913a71ee895a4087cd3a8e25721547fa0b7e637f87dee82c3b3e9848",
+                "sha256:d1fc0de0e4e1f0b5a00b567a8b99385e38280d16f942c29d4e8fe3b920da7a20"
+            ],
+            "index": "pypi",
+            "version": "==3.0.7"
         },
         "psycopg2": {
             "hashes": [
@@ -214,12 +216,6 @@
             "index": "pypi",
             "version": "==0.10.1"
         },
-        "python-http-client": {
-            "hashes": [
-                "sha256:7e430f4b9dd2b621b0051f6a362f103447ea8e267594c602a5c502a0c694ee38"
-            ],
-            "version": "==3.1.0"
-        },
         "pytz": {
             "hashes": [
                 "sha256:303879e36b721603cc54604edcac9d20401bdbe31e1e4fdee5b9f98d5d31dfda",
@@ -234,13 +230,6 @@
             ],
             "index": "pypi",
             "version": "==2.21.0"
-        },
-        "sendgrid": {
-            "hashes": [
-                "sha256:351a7fc501d2b9d5afdcbc70a02490917057d6ce5cc22c558cadfc16229f157b",
-                "sha256:e1f93c72b3db3bd00d86f79ee926a093ee7e65533936a140855916569b08e0b0"
-            ],
-            "version": "==6.0.4"
         },
         "six": {
             "hashes": [
