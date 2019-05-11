@@ -1,6 +1,6 @@
 from django.db import models
 
-from authentication.models import User
+from backend.models import OldUserObj
 
 
 class ActiveAdminComment(models.Model):
@@ -163,7 +163,7 @@ class Request(models.Model):
     service_id = models.IntegerField(blank=True, null=True)
     language = models.CharField(max_length=256, blank=True, null=True)
     details = models.TextField(blank=True, null=True)
-    user = models.ForeignKey(User, models.DO_NOTHING, blank=True, null=True)
+    user = models.ForeignKey(OldUserObj, models.DO_NOTHING, blank=True, null=True)
     assigned_mentor_id = models.IntegerField(blank=True, null=True)
     requested_mentor_id = models.IntegerField(blank=True, null=True)
     created_at = models.DateTimeField()
@@ -215,7 +215,7 @@ class SchemaMigration(models.Model):
 class ScholarshipApplication(models.Model):
     reason = models.TextField(blank=True, null=True)
     terms_accepted = models.BooleanField(blank=True, null=True)
-    user = models.ForeignKey(User, models.DO_NOTHING, blank=True, null=True)
+    user = models.ForeignKey(OldUserObj, models.DO_NOTHING, blank=True, null=True)
     scholarship = models.ForeignKey(
         "Scholarship", models.DO_NOTHING, blank=True, null=True
     )
@@ -325,7 +325,7 @@ class TeamMember(models.Model):
 
 
 class Vote(models.Model):
-    user = models.ForeignKey(User, models.DO_NOTHING, blank=True, null=True)
+    user = models.ForeignKey(OldUserObj, models.DO_NOTHING, blank=True, null=True)
     resource = models.ForeignKey(Resource, models.DO_NOTHING, blank=True, null=True)
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()

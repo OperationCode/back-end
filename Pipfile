@@ -4,20 +4,27 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-django = "*"
-"django[bcrypt]" = "*"
-djangorestframework = "*"
-psycopg2 = '==2.7.7'
-python-dotenv = "*"
-djangorestframework-simplejwt = "*"
-django-background-tasks = "*"
-requests = "*"
-gunicorn = "*"
 bcrypt = "*"
+django = "*"
+djangorestframework = "*"
+djangorestframework-jwt = "*"
+django-allauth = ">=0.24.1"
+django-background-tasks = "*"
 django-cors-headers = "*"
-"mailchimp3" = "*"
+django-rest-auth = "==0.9.5"
+django-rest-swagger = "*"
+gunicorn = "*"
+psycopg2 = '==2.7.7'
+mailchimp3 = "*"
+python-dotenv = "*"
+requests = "*"
 
 [dev-packages]
+coverage = "*"
+django-debug-toolbar = "*"
+factory_boy = "*"
+pytest = "*"
+pytest-django = "*"
 
 [requires]
 python_version = "3.7"

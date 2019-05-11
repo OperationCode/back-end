@@ -1,6 +1,3 @@
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
 from api.models import (
@@ -22,6 +19,7 @@ from api.serializers import (
 
 
 class CodeSchoolViewSet(ModelViewSet):
+    permission_classes = ()
     serializer_class = CodeSchoolSerializer
     queryset = CodeSchool.objects.all()
 

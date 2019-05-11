@@ -8,11 +8,14 @@ services:
       dockerfile: docker/Dockerfile
     container_name: backend02
     env_file:
-    - ../.env
+      - .env
     volumes:
-    - ../src:/src
+      - ../src:/src
     ports:
-    - 8000:8000
+      - 8000:8000
+    depends_on:
+      - db
+
 
   ngrok-pyback:
     image: wernight/ngrok:latest
@@ -23,3 +26,14 @@ services:
       - NGROK_SUBDOMAIN=pyback
     ports:
       - 4040:4040
+
+  db:
+    image: postgres:10.1-alpine
+    container_name: pg01
+    ports:
+      - 5434:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+volumes:
+  postgres_data:

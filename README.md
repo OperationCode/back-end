@@ -13,3 +13,5 @@
 # Welcome!
 
 This is a work in progress rewrite of the current [OperationCode](https://operationcode.org) backend.
+
+This documentation is bad, and yes I feel bad.

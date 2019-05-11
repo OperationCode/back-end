@@ -50,6 +50,9 @@ class UserInfo(models.Model):
     def __str__(self):
         return f"Username: {self.user} Slack ID: {self.slack_id}"
 
+    class Meta:
+        db_table = "userinfo"
+
 
 @receiver(post_save, sender=AuthUser)
 def create_user_info(sender, instance, created, **kwargs):
@@ -63,7 +66,7 @@ def create_user_info(sender, instance, created, **kwargs):
             UserInfo.objects.create(user=instance)
 
 
-class User(models.Model):
+class OldUserObj(models.Model):
     email = models.CharField(unique=True, max_length=256, blank=True, null=True)
     zip = models.CharField(max_length=256, blank=True, null=True)
     latitude = models.FloatField(blank=True, null=True)
@@ -118,19 +121,3 @@ class User(models.Model):
     class Meta:
         managed = False
         db_table = "users"
-
-    @property
-    def is_active(self):
-        return True
-
-    @property
-    def is_staff(self):
-        return True
-
-    @property
-    def last_login(self):
-        return self.last_sign_in_at
-
-    @last_login.setter
-    def last_login(self, signin):
-        self.last_sign_in_at = signin
