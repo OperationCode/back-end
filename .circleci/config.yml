@@ -73,6 +73,12 @@ jobs:
           name: Run Pytest, coverage
           command: |
             poetry run coverage run --omit="/home/circleci/.cache/pypoetry/virtualenvs/*" -m pytest
+
+      - run:
+          name: Run linting and coverage
+          command: |
+            poetry run flake8 .
+            poetry run black --check --diff src
             poetry run coverage report
             poetry run coverage xml
             poetry run coverage html
