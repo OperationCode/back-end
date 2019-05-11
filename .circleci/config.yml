@@ -73,10 +73,11 @@ jobs:
           name: Run Pytest, coverage
           command: |
             poetry run coverage run --omit="/home/circleci/.cache/pypoetry/virtualenvs" -m pytest
-            poetry run coverage xml
+            poetry run coverage report
+            poetry run coverage html
 
       - store_test_results:
           path: test-results
       - store_artifacts:
-          path: test-results
+          path: htmlcov
           destination: tr1
