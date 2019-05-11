@@ -1,43 +1,5 @@
 version: 2.1
 
-#orbs:
-#  aws-ecr: circleci/aws-ecr@4.0.1
-#  aws-ecs: circleci/aws-ecs@0.0.8
-
-
-#workflows:
-#  build_test_deploy:
-#    jobs:
-#      - build_test
-#
-#      # push new Docker image to ECS
-#      - aws-ecr/build_and_push_image:
-#          repo: pybot
-#          tag: staging
-#          dockerfile: docker/Dockerfile
-#          requires:
-#            - build_test
-#          filters:
-#            branches:
-#              only:
-#                - master
-#                - staging
-#
-#      # Update ECS task and service, then replace the current one
-#      - aws-ecs/deploy-service-update:
-#          family: 'pybot-${CIRCLE_BRANCH}'
-#          service-name: 'pybot-svc-${CIRCLE_BRANCH}'
-#          cluster-name: 'python-oc-services'
-#          container-image-name-updates: 'container=pybot,tag=${CIRCLE_BRANCH}'
-#          verify-revision-is-deployed: true
-#          requires:
-#            - aws-ecr/build_and_push_image
-#          filters:
-#            branches:
-#              only:
-#                - master
-#                - staging
-
 jobs:
   build:
     docker:
@@ -70,9 +32,9 @@ jobs:
 
       # Run tests
       - run:
-          name: Run Pytest, coverage
+          name: Run Pytest
           command: |
-            poetry run coverage run --omit="/home/circleci/.cache/pypoetry/virtualenvs/*" -m pytest
+            poetry run coverage run --omit="/home/circleci/.cache/pypoetry/virtualenvs/*" -m pytest --junitxml=test-results/pytest/results.xml
 
       - run:
           name: Run linting and coverage
@@ -80,11 +42,6 @@ jobs:
             poetry run flake8 .
             poetry run black --check --diff src
             poetry run coverage report
-            poetry run coverage xml
-            poetry run coverage html
 
       - store_test_results:
           path: test-results
-      - store_artifacts:
-          path: htmlcov
-          destination: tr1
