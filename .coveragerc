@@ -1,2 +1,2 @@
 [xml]
-output = test-results/coverage.xml
+output = test-results/pytest/results.xml
