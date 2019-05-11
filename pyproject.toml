@@ -1,0 +1,37 @@
+[tool.poetry]
+name = "back-end"
+version = "0.1.0"
+description = ""
+authors = ["Allen Anthes <allen@operationcode.org>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+bcrypt = "^3.1"
+django = "^2.2"
+djangorestframework = "^3.9"
+djangorestframework-jwt = "^1.11"
+django-allauth = "^0.39.1"
+django-background-tasks = "^1.2"
+django-cors-headers = "^3.0"
+django-rest-auth = "^0.9.5"
+django-rest-swagger = "^2.2"
+gunicorn = "^19.9"
+psycopg2 = "^2.8"
+mailchimp3 = "^3.0"
+python-dotenv = "^0.10.1"
+requests = "^2.21"
+
+[tool.poetry.dev-dependencies]
+black = {version = "^18.3-alpha.0",allows-prereleases = true}
+coverage = "^4.5"
+django-debug-toolbar = "^1.11"
+factory_boy = "^2.12"
+pytest = "^4.4"
+pytest-django = "^3.4"
+flake8 = "^3.7"
+flake8-bugbear = "^19.3"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
