@@ -74,6 +74,7 @@ jobs:
           command: |
             poetry run coverage run --omit="/home/circleci/.cache/pypoetry/virtualenvs/*" -m pytest
             poetry run coverage report
+            poetry run coverage xml
             poetry run coverage html
 
       - store_test_results:
