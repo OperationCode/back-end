@@ -1,0 +1,82 @@
+version: 2.1
+
+#orbs:
+#  aws-ecr: circleci/aws-ecr@4.0.1
+#  aws-ecs: circleci/aws-ecs@0.0.8
+
+
+#workflows:
+#  build_test_deploy:
+#    jobs:
+#      - build_test
+#
+#      # push new Docker image to ECS
+#      - aws-ecr/build_and_push_image:
+#          repo: pybot
+#          tag: staging
+#          dockerfile: docker/Dockerfile
+#          requires:
+#            - build_test
+#          filters:
+#            branches:
+#              only:
+#                - master
+#                - staging
+#
+#      # Update ECS task and service, then replace the current one
+#      - aws-ecs/deploy-service-update:
+#          family: 'pybot-${CIRCLE_BRANCH}'
+#          service-name: 'pybot-svc-${CIRCLE_BRANCH}'
+#          cluster-name: 'python-oc-services'
+#          container-image-name-updates: 'container=pybot,tag=${CIRCLE_BRANCH}'
+#          verify-revision-is-deployed: true
+#          requires:
+#            - aws-ecr/build_and_push_image
+#          filters:
+#            branches:
+#              only:
+#                - master
+#                - staging
+
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.7.1
+        environment: # environment variables for primary container
+          PIPENV_VENV_IN_PROJECT: true
+
+    steps:
+      - checkout
+      - run: sudo chown -R circleci:circleci /usr/local/bin
+
+      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
+
+      - restore_cache:  # ensure this step occurs *before* installing dependencies
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+
+      - run:
+          name: Installing dependencies
+          command: |
+            sudo pip install poetry
+            poetry install
+
+      - save_cache:
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "poetry.lock" }}
+          paths:
+            - "/home/circleci/.cache/pypoetry/virtualenvs"
+            - ".venv"
+            - "/usr/local/bin"
+            - "/usr/local/lib/python3.7/site-packages"
+
+      # Run tests
+      - run:
+          name: Run Pytest, coverage
+          command: |
+            poetry run coverage run --omit="/home/circleci/.cache/pypoetry/virtualenvs" -m pytest
+            poetry run coverage xml
+
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test-results
+          destination: tr1
