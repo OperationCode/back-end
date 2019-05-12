@@ -57,6 +57,7 @@ COPY . ./
 # a convetion for stages which result in useful images. Think of it like
 # hint that this is a public interface
 FROM dev-base AS Test
+ENV ENVIRONMENT TEST
 RUN cd src && pytest
 
 # `Shell` will build an image that, when run, drops you into a
@@ -75,9 +76,8 @@ ENV DJANGO_SETTINGS_MODULE settings.development
 EXPOSE 8000
 WORKDIR /src
 
-CMD python manage.py collectstatic --no-input;python manage.py makemigrations;\
-    python manage.py migrate;\
-    gunicorn operationcode_backend.wsgi -b 0.0.0.0:8000 -w 3 --access-logfile=- --error-logfile=- --capture-output
+CMD python manage.py collectstatic --no-input;\
+    gunicorn operationcode_backend.wsgi -b 0.0.0.0:8000 -w 3 --access-logfile=- --error-logfile=- --capture-output --logger-class "operationcode_backend.custom_logging.CustomGunicornLogger"
 
 
 # The `Prod` stage is the default stage if the Dockerfile is run without
@@ -85,6 +85,5 @@ CMD python manage.py collectstatic --no-input;python manage.py makemigrations;\
 # production webserver and configuration
 FROM app As Prod
 EXPOSE 8000
-CMD python manage.py collectstatic --no-input;python manage.py makemigrations;\
-    python manage.py migrate;\
-    gunicorn operationcode_backend.wsgi -b 0.0.0.0:8000 -w 3 --access-logfile=- --error-logfile=- --capture-output
+CMD python manage.py collectstatic --no-input;\
+    gunicorn operationcode_backend.wsgi -b 0.0.0.0:8000 -w 3 --access-logfile=- --error-logfile=- --capture-output --logger-class "operationcode_backend.custom_logging.CustomGunicornLogger"

@@ -9,8 +9,25 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 # APPEND_SLASH = False
 
-# TODO: CHANGE THIS BEFORE PROD PLEASE!
-ALLOWED_HOSTS = ["*"]
+hosts = os.environ.get("EXTRA_HOSTS", "")
+EXTRA_HOSTS = [s.strip() for s in hosts.split(",") if hosts]
+
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    "pyback.ngrok.io",
+    "pyback",
+    "pybot.operationcode.org",
+] + EXTRA_HOSTS
+
+# Necessary to allow AWS health check to succeed
+try:
+    import socket
+
+    local_ip = str(socket.gethostbyname(socket.gethostname()))
+    ALLOWED_HOSTS.append(local_ip)
+except Exception as ex:
+    print(ex)
 
 ADMINS = (("Admin", "example@example.com"),)
 
@@ -18,7 +35,7 @@ SECRET_KEY = os.environ.get(
     "SECRET_KEY", "&e4+qaiwz$+ie#kx9=f%w1)pzmr#b$&^)6jl&c)ad_i*670trt"
 )
 
-DEBUG = False
+DEBUG = os.environ.get("DEBUG") in ("True", "true", "TRUE")
 
 CORS_ORIGIN_ALLOW_ALL = True
 
@@ -41,6 +58,7 @@ INSTALLED_APPS = [
     "allauth",
     "allauth.account",
     "rest_auth.registration",
+    "storages",
     "corsheaders",
     "rest_framework_swagger",
 ]
@@ -72,12 +90,12 @@ PASSWORD_HASHERS = [
 ]
 
 REST_FRAMEWORK = {
-    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    # "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_jwt.authentication.JSONWebTokenAuthentication",
         # 'rest_framework.authentication.TokenAuthentication',
         # 'rest_framework.authentication.SessionAuthentication',
-    ),
+    )
 }
 
 ROOT_URLCONF = "operationcode_backend.urls"
@@ -141,10 +159,29 @@ ATOMIC_REQUESTS = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
-STATIC_URL = "/static/"
-MEDIA_URL = "/media/"
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+if "aws" in os.environ.get("ENVIRONMENT", "aws"):
+    AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
+    AWS_STORAGE_BUCKET_NAME = os.environ["AWS_STORAGE_BUCKET_NAME"]
+    AWS_S3_REGION_NAME = os.environ["BUCKET_REGION_NAME"]  # e.g. us-east-2
+    AWS_ACCESS_KEY_ID = os.environ["AWS_ACCESS_KEY_ID"]
+    AWS_SECRET_ACCESS_KEY = os.environ["AWS_SECRET_ACCESS_KEY"]
+    AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
+    AWS_DEFAULT_ACL = None
+    AWS_LOCATION = "static"
+    STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/"
+    MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
+
+    STATICFILES_LOCATION = "static"
+    MEDIAFILES_LOCATION = "media"
+    STATICFILES_STORAGE = "custom_storages.StaticStorage"
+    DEFAULT_FILE_STORAGE = "custom_storages.MediaStorage"
+
+else:
+    STATIC_URL = "/static/"
+    MEDIA_URL = "/media/"
+    STATIC_ROOT = os.path.join(BASE_DIR, "static")
+    MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 PYBOT_AUTH_TOKEN = os.environ.get("PYBOT_AUTH_TOKEN", "")
 PYBOT_URL = os.environ.get("PYBOT_URL", "http://localhost:5000")
@@ -168,7 +205,6 @@ ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 REST_USE_JWT = True
-# ACCOUNT_EMAIL_CONFIRMATION_HMAC = False
 
 ACCOUNT_ADAPTER = "backend.adapters.AccountAdapter"
 ACCOUNT_USERNAME_REQUIRED = False

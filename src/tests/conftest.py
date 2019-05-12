@@ -1,5 +1,6 @@
 import os
 
+os.environ["ENVIRONMENT"] = "TEST"
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings.testing")
 
 import django  # noqa: F402
