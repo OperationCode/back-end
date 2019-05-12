@@ -52,7 +52,7 @@ jobs:
             poetry run black --check --diff src
             poetry run coverage report
             poetry run coverage xml
-            /usr/local/bin/cc-test-reporter after-build
+            /usr/local/bin/cc-test-reporter after-build -t coverage.py
 
       - store_test_results:
           path: test-results
