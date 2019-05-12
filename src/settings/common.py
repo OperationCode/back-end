@@ -2,8 +2,14 @@ import datetime
 import os
 
 from dotenv import load_dotenv  # noqa
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 load_dotenv()
+
+SENTRY_DSN = os.environ.get("SENTRY_DSN")
+if SENTRY_DSN:
+    sentry_sdk.init(dsn=SENTRY_DSN, integrations=[DjangoIntegration()])
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
