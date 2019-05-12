@@ -1,12 +1,16 @@
+import logging
 from calendar import timegm
 from datetime import datetime
 
-from allauth.account.signals import user_signed_up
 from django.conf import settings
-from django.contrib.auth.models import User as AuthUser
 from django.dispatch import receiver
+from allauth.account.models import EmailConfirmation
+from django.contrib.auth.models import User as AuthUser
+from allauth.account.signals import user_signed_up, email_confirmed
 
-from backend.tasks import send_slack_invite_job
+from backend.tasks import send_slack_invite_job, add_user_to_mailing_list
+
+logger = logging.getLogger(__name__)
 
 
 # noinspection PyUnresolvedReferences
@@ -40,6 +44,20 @@ def get_username_from_jwt(payload: dict) -> str:
 
 
 @receiver(user_signed_up)
-def registration_callback(request, user, **kwargs):
-    print("*****************")
+def registration_callback(user: AuthUser, **kwargs) -> None:
+    """
+    Listens for the `user_signed_up` signal and adds a background task to
+    send the slack invite
+    """
+    logger.info(f"Received user_signed_up signal for {user}")
     send_slack_invite_job(user.email)
+
+
+@receiver(email_confirmed)
+def email_confirmed_callback(email_address: EmailConfirmation, **kwargs) -> None:
+    """
+    Listens for the `email_confirmed` signal and adds a background task to
+    add the user to the mailing list
+    """
+    logger.info(f"Received email_confirmed signal for {email_address.email}")
+    add_user_to_mailing_list(email_address.email)

@@ -16,7 +16,7 @@ def test_confirmation_email_sent(client, register_form, mailoutbox):
 
 
 @pytest.mark.django_db
-def test_background_task_created(client, register_form, mailoutbox):
+def test_slack_invite_task_created(client, register_form, mailoutbox):
     res = client.post(reverse("rest_register"), register_form)
 
     assert res.status_code == 201
@@ -25,8 +25,6 @@ def test_background_task_created(client, register_form, mailoutbox):
 
     assert len(tasks) == 1
     assert tasks[0].task_name.split(".")[-1] == "send_slack_invite_job"
-
-    print(tasks)
 
 
 @pytest.mark.django_db
@@ -70,3 +68,22 @@ def test_email_verification_with_invalid_token(client, register_form, mailoutbox
 
     assert res.status_code == 404
     assert res.data["detail"] == "Not found."
+
+
+@pytest.mark.django_db
+@override_settings(ACCOUNT_EMAIL_CONFIRMATION_HMAC=False)
+def test_mailing_list_task_created(client, register_form, mailoutbox):
+    client.post(reverse("rest_register"), register_form)
+    email_conf = EmailConfirmation.objects.get(
+        email_address__email=register_form["email"]
+    )
+
+    res = client.post(reverse("rest_verify_email"), {"key": email_conf.key})
+
+    assert res.status_code == 200
+    tasks = BackgroundTask.objects.all()
+
+    assert len(tasks) == 2
+    assert any(
+        task.task_name.split(".")[-1] == "add_user_to_mailing_list" for task in tasks
+    )

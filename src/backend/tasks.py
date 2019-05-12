@@ -1,10 +1,11 @@
 import logging
 
 import requests
-from background_task import background
 from django.conf import settings
-from django.core.mail import send_mail
 from mailchimp3 import MailChimp
+from django.core.mail import send_mail
+from background_task import background
+from django.contrib.auth.models import User as AuthUser
 
 logger = logging.getLogger(__name__)
 
@@ -39,18 +40,20 @@ def send_slack_invite_job(email: str) -> None:
 
 
 @background(schedule=1)
-def add_user_to_mailing_list(email: str, first_name: str, last_name: str) -> None:
+def add_user_to_mailing_list(email: str) -> None:
     """
     Adds the new user's email to our mailchimp list (which should trigger a
     welcome email)
     """
+    user = AuthUser.objects.get(email=email)
+
     client = MailChimp(settings.MAILCHIMP_API_KEY, mc_user=settings.MAILCHIMP_USERNAME)
     res = client.lists.members.create(
         settings.MAILCHIMP_LIST_ID,
         {
             "email_address": email,
             "status": "subscribed",
-            "merge_fields": {"FNAME": first_name, "LNAME": last_name},
+            "merge_fields": {"FNAME": user.first_name, "LNAME": user.last_name},
         },
     )
 
