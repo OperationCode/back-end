@@ -21,6 +21,15 @@ jobs:
           command: |
             sudo pip install poetry
             poetry install
+            curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > /usr/local/bin/cc-test-reporter
+            chmod +x /usr/local/bin/cc-test-reporter
+
+      - run:
+          name: Initializing CodeClimate
+          command: |
+            curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > /usr/local/bin/cc-test-reporter
+            chmod +x /usr/local/bin/cc-test-reporter
+            /usr/local/bin/cc-test-reporter before-build
 
       - save_cache:
           key: v1-dependencies-{{ .Branch }}-{{ checksum "poetry.lock" }}
@@ -42,6 +51,8 @@ jobs:
             poetry run flake8 .
             poetry run black --check --diff src
             poetry run coverage report
+            poetry run coverage xml
+            /usr/local/bin/cc-test-reporter after-build
 
       - store_test_results:
           path: test-results
