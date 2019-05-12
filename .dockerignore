@@ -1,1 +1,14 @@
 *.env
+git/
+
+build
+dist
+*.egg-info
+*.egg/
+*.swp
+
+.tox
+.coverage
+html/*
+**/__pycache__
+**/*.pyc

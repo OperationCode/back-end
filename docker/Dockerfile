@@ -22,22 +22,68 @@ RUN pip install poetry && \
     poetry config settings.virtualenvs.create false && \
     poetry install --no-dev --no-interaction --no-ansi
 
-# Create actual image to be deployed
-FROM base as prod
 
+# The `built-image` stage is the base for all remaining images
+# Pulls all of the built dependencies from the builder stage
+FROM base as built-image
 # copy installed deps from builder image
 COPY --from=builder /opt/venv /opt/venv
-
 # Add libpq which psycopg2 needs at runtime
 RUN apk add --no-cache libpq
-
 # Make sure we use the virtualenv
 ENV PATH="/opt/venv/bin:$PATH"
 
-WORKDIR /src
+# The `app` stage is used as the base for images that don't
+# need the development dependencies
+FROM built-image as app
 RUN mkdir /static
 COPY src /src
+WORKDIR /src
 
+
+# The `dev-base` stage is used as the base for images that require
+# the development dependencies. The duplication of the COPY instruction
+# avoids breaking the cache for that later when the Pipfile changes
+FROM built-image AS dev-base
+COPY poetry.lock pyproject.toml ./
+RUN pip install poetry \
+    && poetry config settings.virtualenvs.create false \
+    && poetry install --no-interaction --no-ansi
+COPY . ./
+
+
+# The `Test` stage runs the application unit tests, the build will fail
+# if the tests fail. Note this stage name is capitalised, this is purely
+# a convetion for stages which result in useful images. Think of it like
+# hint that this is a public interface
+FROM dev-base AS Test
+RUN cd src && pytest
+
+# `Shell` will build an image that, when run, drops you into a
+# python shell with the application context loaded
+FROM app AS Shell
+LABEL shell=true
+CMD python manage.py shell
+
+
+# `Dev` runs the application using the development web server, and enables
+# developer tools like the debugger and interactive expcetions
+FROM dev-base AS Dev
+LABEL dev=true
+ENV DEBUG True
+ENV DJANGO_SETTINGS_MODULE settings.development
+EXPOSE 8000
+WORKDIR /src
+
+CMD python manage.py collectstatic --no-input;python manage.py makemigrations;\
+    python manage.py migrate;\
+    gunicorn operationcode_backend.wsgi -b 0.0.0.0:8000 -w 3 --access-logfile=- --error-logfile=- --capture-output
+
+
+# The `Prod` stage is the default stage if the Dockerfile is run without
+# a target stage set. The resulting image will run the application using a
+# production webserver and configuration
+FROM app As Prod
 EXPOSE 8000
 CMD python manage.py collectstatic --no-input;python manage.py makemigrations;\
     python manage.py migrate;\

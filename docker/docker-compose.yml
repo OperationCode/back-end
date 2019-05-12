@@ -6,6 +6,7 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
+      target: Dev
     container_name: backend02
     env_file:
       - .env
