@@ -7,6 +7,13 @@ from api.models import (
     Scholarship,
     ScholarshipApplication,
     TeamMember,
+    Request,
+    GitHubUser,
+    GitHubStatistic,
+    Event,
+    Service,
+    Vote,
+    Tag,
 )
 
 
@@ -43,4 +50,46 @@ class ScholarshipApplicationSerializer(serializers.HyperlinkedModelSerializer):
 class TeamMemberSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = TeamMember
+        fields = "__all__"
+
+
+class EventSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Event
+        fields = "__all__"
+
+
+class GitHubStatisticSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = GitHubStatistic
+        fields = "__all__"
+
+
+class GitHubUserSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = GitHubUser
+        fields = "__all__"
+
+
+class RequestSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Request
+        fields = "__all__"
+
+
+class ServiceSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Service
+        fields = "__all__"
+
+
+class TagSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Tag
+        fields = "__all__"
+
+
+class VoteSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Vote
         fields = "__all__"
