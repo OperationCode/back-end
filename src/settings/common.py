@@ -8,12 +8,18 @@ from sentry_sdk.integrations.django import DjangoIntegration
 load_dotenv()
 
 SENTRY_DSN = os.environ.get("SENTRY_DSN")
+ENVIRONMENT = os.environ.get("ENVIRONMENT", "local")
+RELEASE = os.environ.get("RELEASE", "0.0.0")
+
 if SENTRY_DSN:
-    sentry_sdk.init(dsn=SENTRY_DSN, integrations=[DjangoIntegration()])
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        environment=ENVIRONMENT,
+        release=RELEASE,
+    )
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-
-# APPEND_SLASH = False
 
 hosts = os.environ.get("EXTRA_HOSTS", "")
 EXTRA_HOSTS = [s.strip() for s in hosts.split(",") if hosts]
@@ -166,7 +172,7 @@ ATOMIC_REQUESTS = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 
-if "aws" in os.environ.get("ENVIRONMENT", "aws"):
+if "aws" in ENVIRONMENT:
     AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
     AWS_STORAGE_BUCKET_NAME = os.environ["AWS_STORAGE_BUCKET_NAME"]
     AWS_S3_REGION_NAME = os.environ["BUCKET_REGION_NAME"]  # e.g. us-east-2
