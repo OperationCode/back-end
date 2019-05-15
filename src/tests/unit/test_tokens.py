@@ -1,6 +1,6 @@
 import pytest
 
-from backend.handlers import custom_jwt_payload_handler
+from core.handlers import custom_jwt_payload_handler
 from tests.utils import DEFAULT_USER
 from .. import factories as f
 

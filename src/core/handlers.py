@@ -8,7 +8,7 @@ from allauth.account.models import EmailConfirmation
 from django.contrib.auth.models import User as AuthUser
 from allauth.account.signals import user_signed_up, email_confirmed
 
-from backend.tasks import send_slack_invite_job, add_user_to_mailing_list
+from core.tasks import send_slack_invite_job, add_user_to_mailing_list
 
 logger = logging.getLogger(__name__)
 

@@ -9,7 +9,7 @@ from rest_auth.registration.serializers import (
 )
 from django.contrib.auth import get_user_model
 
-from backend.models import Profile
+from core.models import Profile
 
 
 class CustomValidationError(PermissionDenied):

@@ -2,7 +2,7 @@ import pytest
 import requests
 from django.conf import settings
 
-from backend.tasks import (
+from core.tasks import (
     send_welcome_email,
     send_slack_invite_job,
     add_user_to_mailing_list,
@@ -49,7 +49,7 @@ def test_send_slack_invite_job(mocker):
 
 @pytest.mark.django_db
 def test_add_user_to_mailing_list(user, mocker):
-    mock = mocker.patch("backend.tasks.MailChimp")
+    mock = mocker.patch("core.tasks.MailChimp")
     add_user_to_mailing_list(user.email)
 
     run_next_task()

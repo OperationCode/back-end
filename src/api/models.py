@@ -1,6 +1,6 @@
 from django.db import models
 
-from backend.models import OldUserObj
+from core.models import OldUserObj
 
 
 class ActiveAdminComment(models.Model):

@@ -62,7 +62,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
-    "backend.apps.BackendConfig",
+    "core.apps.CoreConfig",
     "api.apps.ApiConfig",
     "background_task",
     "rest_framework",
@@ -219,12 +219,12 @@ ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 REST_USE_JWT = True
 
-ACCOUNT_ADAPTER = "backend.adapters.AccountAdapter"
+ACCOUNT_ADAPTER = "core.adapters.AccountAdapter"
 ACCOUNT_USERNAME_REQUIRED = False
 
 JWT_AUTH = {
-    "JWT_PAYLOAD_HANDLER": "backend.handlers.custom_jwt_payload_handler",
-    "JWT_PAYLOAD_GET_USERNAME_HANDLER": "backend.handlers.get_username_from_jwt",
+    "JWT_PAYLOAD_HANDLER": "core.handlers.custom_jwt_payload_handler",
+    "JWT_PAYLOAD_GET_USERNAME_HANDLER": "core.handlers.get_username_from_jwt",
     "JWT_AUTH_HEADER_PREFIX": "Bearer",
     "JWT_EXPIRATION_DELTA": datetime.timedelta(minutes=5),
     "JWT_ALLOW_REFRESH": True,
@@ -232,10 +232,10 @@ JWT_AUTH = {
 }
 
 REST_AUTH_SERIALIZERS = {
-    "LOGIN_SERIALIZER": "backend.serializers.LoginSerializer",
-    "USER_DETAILS_SERIALIZER": "backend.serializers.UserDetailsSerializer",
+    "LOGIN_SERIALIZER": "core.serializers.LoginSerializer",
+    "USER_DETAILS_SERIALIZER": "core.serializers.UserDetailsSerializer",
 }
 
 REST_AUTH_REGISTER_SERIALIZERS = {
-    "REGISTER_SERIALIZER": "backend.serializers.RegisterSerializer"
+    "REGISTER_SERIALIZER": "core.serializers.RegisterSerializer"
 }

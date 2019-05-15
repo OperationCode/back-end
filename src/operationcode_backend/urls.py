@@ -5,7 +5,7 @@ from django.urls import path, include
 from rest_framework_swagger.views import get_swagger_view
 
 urlpatterns = [
-    path("", include("backend.urls")),
+    path("", include("core.urls")),
     path("api/v1/", include("api.urls")),
     path("admin/", admin.site.urls),
     path("docs/", get_swagger_view(title="OperationCode API"), name="api_docs"),

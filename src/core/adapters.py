@@ -5,7 +5,7 @@ from django.contrib.auth.models import User as AuthUser
 from django.contrib.sites.models import Site
 from rest_framework.request import Request
 
-from backend.serializers import RegisterSerializer
+from core.serializers import RegisterSerializer
 
 
 class AccountAdapter(DefaultAccountAdapter):

@@ -4,7 +4,7 @@ import factory
 from django.conf import settings
 from django.db.models.signals import post_save
 
-from backend.models import Profile
+from core.models import Profile
 from tests.utils import DEFAULT_USER
 
 
