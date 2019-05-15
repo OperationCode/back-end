@@ -19,14 +19,14 @@ def custom_jwt_payload_handler(user: AuthUser) -> dict:
     Overrides the default jwt_payload_handler to embed
     extra data into the JWT
     """
-    user_info = user.userinfo
+    profile = user.profile
 
     payload = {
         "email": user.username,
         "firstName": user.first_name,
         "lastName": user.last_name,
-        "zipcode": user_info.zip,
-        "isMentor": user_info.mentor,
+        "zipcode": profile.zip,
+        "isMentor": profile.mentor,
         "exp": datetime.utcnow() + settings.JWT_AUTH["JWT_EXPIRATION_DELTA"],
         "orig_iat": timegm(datetime.utcnow().utctimetuple()),
     }

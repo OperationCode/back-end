@@ -4,7 +4,6 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework_swagger.views import get_swagger_view
 
-
 urlpatterns = [
     path("", include("backend.urls")),
     path("api/v1/", include("api.urls")),
@@ -15,7 +14,7 @@ urlpatterns = [
 ##############################################
 #   Static and media files in debug mode     #
 ##############################################
-if settings.DEBUG:
+if settings.DEBUG or settings.TESTING:
     import debug_toolbar
 
     urlpatterns += [

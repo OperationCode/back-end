@@ -13,8 +13,11 @@ def test_valid_rest_login(client, user):
     assert res.data["token"] is not None
 
     returned_user = res.data["user"]
-    assert returned_user["username"] == user.username
+    assert returned_user["username"] == user.email
     assert returned_user["email"] == user.email
+    assert returned_user["first_name"] == user.first_name
+    assert returned_user["last_name"] == user.last_name
+    assert returned_user["zip"] == user.profile.zip
 
 
 @pytest.mark.django_db

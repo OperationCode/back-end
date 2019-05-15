@@ -19,4 +19,7 @@ def register_form():
         "password1": "P4ssw0rd1",
         "password2": "P4ssw0rd1",
         "email": "user@email.com",
+        "firstName": "Test",
+        "lastName": "Testerson",
+        "zip": "12345",
     }

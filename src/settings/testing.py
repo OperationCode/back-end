@@ -3,6 +3,7 @@ from .development import *  # noqa: F403
 MEDIA_ROOT = "/tmp"
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 DEBUG = True
+TESTING = True
 
 INSTALLED_APPS = INSTALLED_APPS + ["tests"]  # noqa: F405
 

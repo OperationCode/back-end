@@ -4,7 +4,7 @@ import factory
 from django.conf import settings
 from django.db.models.signals import post_save
 
-from backend.models import UserInfo
+from backend.models import Profile
 from tests.utils import DEFAULT_USER
 
 
@@ -25,12 +25,12 @@ class Factory(factory.DjangoModelFactory):
 
 
 @factory.django.mute_signals(post_save)
-class UserInfoFactory(factory.DjangoModelFactory):
+class ProfileFactory(factory.DjangoModelFactory):
     class Meta:
-        model = UserInfo
+        model = Profile
 
-    zip = DEFAULT_USER["userinfo"]["zip"]
-    user = factory.SubFactory("tests.factories.UserFactory", userinfo=None)
+    zip = DEFAULT_USER["profile"]["zip"]
+    user = factory.SubFactory("tests.factories.UserFactory", profile=None)
 
 
 @factory.django.mute_signals(post_save)
@@ -41,9 +41,9 @@ class UserFactory(Factory):
 
     first_name = DEFAULT_USER["first_name"]
     last_name = DEFAULT_USER["last_name"]
-    username = factory.Sequence(lambda n: "user{}".format(n))
-    email = factory.LazyAttribute(lambda obj: "%s@email.com" % obj.username)
+    email = factory.Sequence(lambda n: f"user{n}@email.com")
+    username = factory.LazyAttribute(lambda obj: obj.email)
     password = factory.PostGeneration(
         lambda obj, *args, **kwargs: obj.set_password(obj.username)
     )
-    userinfo = factory.RelatedFactory(UserInfoFactory, "user")
+    profile = factory.RelatedFactory(ProfileFactory, "user")

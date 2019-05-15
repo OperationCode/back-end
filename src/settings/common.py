@@ -25,6 +25,7 @@ hosts = os.environ.get("EXTRA_HOSTS", "")
 EXTRA_HOSTS = [s.strip() for s in hosts.split(",") if hosts]
 
 ALLOWED_HOSTS = [
+    "*",
     "127.0.0.1",
     "localhost",
     "pyback.ngrok.io",
@@ -48,7 +49,7 @@ SECRET_KEY = os.environ.get(
 )
 
 DEBUG = os.environ.get("DEBUG") in ("True", "true", "TRUE")
-
+TESTING = False
 CORS_ORIGIN_ALLOW_ALL = True
 
 # Application definition
@@ -105,8 +106,8 @@ REST_FRAMEWORK = {
     # "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_jwt.authentication.JSONWebTokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
         # 'rest_framework.authentication.TokenAuthentication',
-        # 'rest_framework.authentication.SessionAuthentication',
     )
 }
 
@@ -225,11 +226,16 @@ JWT_AUTH = {
     "JWT_PAYLOAD_HANDLER": "backend.handlers.custom_jwt_payload_handler",
     "JWT_PAYLOAD_GET_USERNAME_HANDLER": "backend.handlers.get_username_from_jwt",
     "JWT_AUTH_HEADER_PREFIX": "Bearer",
-    "JWT_EXPIRATION_DELTA": datetime.timedelta(seconds=300),
+    "JWT_EXPIRATION_DELTA": datetime.timedelta(minutes=5),
     "JWT_ALLOW_REFRESH": True,
     "JWT_AUTH_COOKIE": "JWT",
 }
 
 REST_AUTH_SERIALIZERS = {
-    "LOGIN_SERIALIZER": "backend.serializers.CustomLoginSerializer"
+    "LOGIN_SERIALIZER": "backend.serializers.LoginSerializer",
+    "USER_DETAILS_SERIALIZER": "backend.serializers.UserDetailsSerializer",
+}
+
+REST_AUTH_REGISTER_SERIALIZERS = {
+    "REGISTER_SERIALIZER": "backend.serializers.RegisterSerializer"
 }

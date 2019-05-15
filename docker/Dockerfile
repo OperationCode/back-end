@@ -43,7 +43,7 @@ WORKDIR /src
 
 # The `dev-base` stage is used as the base for images that require
 # the development dependencies. The duplication of the COPY instruction
-# avoids breaking the cache for that later when the Pipfile changes
+# avoids breaking the cache for that later when the poetry.lock changes
 FROM built-image AS dev-base
 COPY poetry.lock pyproject.toml ./
 RUN pip install poetry \

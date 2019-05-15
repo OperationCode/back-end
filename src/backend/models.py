@@ -5,7 +5,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 
-class UserInfo(models.Model):
+class Profile(models.Model):
     """
     Model used to extend Django's base User model
     """
@@ -51,19 +51,19 @@ class UserInfo(models.Model):
         return f"Username: {self.user} Slack ID: {self.slack_id}"
 
     class Meta:
-        db_table = "userinfo"
+        db_table = "profile"
 
 
 @receiver(post_save, sender=AuthUser)
-def create_user_info(sender, instance, created, **kwargs):
+def create_profile(sender, instance, created, **kwargs):
     """
-    Function creates an empty UserInfo attached to the created AuthUser upon creation
+    Function creates an empty Profile attached to the created AuthUser upon creation
     """
     if created:
         try:
-            instance.userinfo
-        except UserInfo.DoesNotExist:
-            UserInfo.objects.create(user=instance)
+            instance.profile
+        except Profile.DoesNotExist:
+            Profile.objects.create(user=instance)
 
 
 class OldUserObj(models.Model):

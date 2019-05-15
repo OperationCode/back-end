@@ -12,4 +12,4 @@ def test_valid_token():
 
     assert token["firstName"] == DEFAULT_USER["first_name"]
     assert token["lastName"] == DEFAULT_USER["last_name"]
-    assert token["zipcode"] == DEFAULT_USER["userinfo"]["zip"]
+    assert token["zipcode"] == DEFAULT_USER["profile"]["zip"]

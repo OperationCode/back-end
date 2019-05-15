@@ -2,6 +2,7 @@ import pytest
 from allauth.account.models import EmailAddress
 from allauth.account.models import EmailConfirmation
 from background_task.models import Task as BackgroundTask
+from django.contrib.auth import get_user_model
 from django.test.utils import override_settings
 from django.urls import reverse
 
@@ -13,6 +14,38 @@ def test_confirmation_email_sent(client, register_form, mailoutbox):
     assert res.status_code == 201
     assert len(mailoutbox) == 1
     assert register_form["email"] in mailoutbox[0].to
+
+
+@pytest.mark.django_db
+def test_user_is_created(client, register_form):
+    res = client.post(reverse("rest_register"), register_form)
+
+    assert res.status_code == 201
+
+    UserModel = get_user_model()
+    users = UserModel.objects.all()
+
+    assert len(users) == 1
+    user = users[0]
+
+    assert user.email == register_form["email"]
+    assert user.first_name == register_form["firstName"]
+    assert user.last_name == register_form["lastName"]
+
+
+@pytest.mark.django_db
+def test_user_profile_created(client, register_form):
+    res = client.post(reverse("rest_register"), register_form)
+
+    assert res.status_code == 201
+
+    UserModel = get_user_model()
+    users = UserModel.objects.all()
+
+    assert len(users) == 1
+
+    profile = users[0].profile
+    assert profile.zip == register_form["zip"]
 
 
 @pytest.mark.django_db
