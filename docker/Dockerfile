@@ -71,8 +71,6 @@ CMD python manage.py shell
 # developer tools like the debugger and interactive expcetions
 FROM dev-base AS Dev
 LABEL dev=true
-ENV DEBUG True
-ENV DJANGO_SETTINGS_MODULE settings.development
 EXPOSE 8000
 WORKDIR /src
 

@@ -1,7 +1,47 @@
 version: 2.1
 
+orbs:
+  aws-ecr: circleci/aws-ecr@4.0.1
+  aws-ecs: circleci/aws-ecs@0.0.8
+
+workflows:
+  build_test_deploy:
+    jobs:
+      - build_test
+
+      # push new Docker image to ECS
+      - aws-ecr/build_and_push_image:
+          repo: back-end
+          # TODO: This will be dynamic once we have a prod environment
+          tag: staging
+          dockerfile: docker/Dockerfile
+          requires:
+            - build_test
+          filters:
+            branches:
+              only:
+                - master
+                - staging
+
+      # Update ECS task and service, then replace the current one
+      - aws-ecs/deploy-service-update:
+          # TODO: This will be dynamic once we have a prod environment
+          family: 'backend-staging'
+          service-name: 'backend-staging'
+          cluster-name: 'python-oc-services'
+          verify-revision-is-deployed: true
+          requires:
+            - aws-ecr/build_and_push_image
+          filters:
+            branches:
+              only:
+                - master
+                - staging
+
+
+
 jobs:
-  build:
+  build_test:
     docker:
       - image: circleci/python:3.7.1
         environment: # environment variables for primary container
