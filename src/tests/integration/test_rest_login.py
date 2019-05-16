@@ -22,16 +22,18 @@ def test_valid_rest_login(client: test.Client, user: User):
     assert returned_user["zip"] == user.profile.zip
 
 
-@pytest.mark.django_db
-def test_unverified_email_rest_login(client: test.Client, user: User):
-    EmailAddress.objects.filter(email=user.email).update(verified=False)
-
-    res = client.post(
-        reverse("rest_login"), {"email": user.email, "password": user.username}
-    )
-
-    assert res.status_code == 400
-    assert "Email has not been verified" in res.data["error"]
+# Commented out until email confirmation is required again
+#
+# @pytest.mark.django_db
+# def test_unverified_email_rest_login(client: test.Client, user: User):
+#     EmailAddress.objects.filter(email=user.email).update(verified=False)
+#
+#     res = client.post(
+#         reverse("rest_login"), {"email": user.email, "password": user.username}
+#     )
+#
+#     assert res.status_code == 400
+#     assert "Email has not been verified" in res.data["error"]
 
 
 @pytest.mark.django_db

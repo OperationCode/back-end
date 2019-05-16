@@ -219,8 +219,10 @@ REST_SESSION_LOGIN = True
 SITE_ID = os.environ.get("SITE_ID", 3)
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = "email"
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 REST_USE_JWT = True
+
+# Disabled until front-end is refactored to allow it
+# ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 
 ACCOUNT_ADAPTER = "core.adapters.AccountAdapter"
 ACCOUNT_USERNAME_REQUIRED = False
