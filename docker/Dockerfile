@@ -52,16 +52,11 @@ RUN pip install poetry \
 COPY . ./
 
 
-# The `Test` stage runs the application unit tests, the build will fail
-# if the tests fail. Note this stage name is capitalised, this is purely
-# a convetion for stages which result in useful images. Think of it like
-# hint that this is a public interface
-FROM dev-base AS Test
-ENV ENVIRONMENT TEST
-RUN cd src && pytest
-
 # `Shell` will build an image that, when run, drops you into a
 # python shell with the application context loaded
+# Note this stage name is capitalised, this is purely
+# a convetion for stages which result in useful images. Think of it like
+# hint that this is a public interface
 FROM app AS Shell
 LABEL shell=true
 CMD python manage.py shell
@@ -77,6 +72,11 @@ WORKDIR /src
 CMD python manage.py collectstatic --no-input;\
     gunicorn operationcode_backend.wsgi -b 0.0.0.0:8000 -w 3 --access-logfile=- --error-logfile=- --capture-output --logger-class "operationcode_backend.custom_logging.CustomGunicornLogger"
 
+# The `BackgroundRunner` stage runs the manage.py process_task function
+#
+FROM app As BackgroundRunner
+EXPOSE 8080
+CMD python manage.py process_tasks
 
 # The `Prod` stage is the default stage if the Dockerfile is run without
 # a target stage set. The resulting image will run the application using a

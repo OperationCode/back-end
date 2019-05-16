@@ -14,8 +14,34 @@ services:
       - ../src:/src
     ports:
       - 8000:8000
+  #    depends_on:
+  #      - db
+
+
+  backgroundRunner:
+    image: backend:background
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: BackgroundRunner
+    container_name: background02
+    env_file:
+      - .env
+    volumes:
+      - ../src:/src
+    ports:
+      - 8080:8080
     depends_on:
-      - db
+      - pybot
+
+  pybot:
+    image: pybot:latest
+    container_name: pybot01
+    env_file:
+      - pybot.env
+    ports:
+      - 5000:5000
+
 
 
   ngrok-pyback:
@@ -28,13 +54,13 @@ services:
     ports:
       - 4040:4040
 
-  db:
-    image: postgres:10.1-alpine
-    container_name: pg01
-    ports:
-      - 5434:5432
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
+#  db:
+#    image: postgres:10.1-alpine
+#    container_name: pg01
+#    ports:
+#      - 5434:5432
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data/
 
-volumes:
-  postgres_data:
+#volumes:
+#  postgres_data:
