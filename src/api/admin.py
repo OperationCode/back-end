@@ -1,25 +1,25 @@
 from django.contrib import admin
 
 from api.models import (
-    CodeSchool,
-    Location,
-    Resource,
-    Scholarship,
-    ScholarshipApplication,
-    TeamMember,
     ActiveAdminComment,
     AdminUser,
     ArInternalMetadata,
+    CodeSchool,
     Event,
     GitHubStatistic,
     GitHubUser,
+    Location,
     Request,
+    Resource,
     Role,
     SchemaMigration,
+    Scholarship,
+    ScholarshipApplication,
     Service,
     SlackUser,
-    Tagging,
     Tag,
+    Tagging,
+    TeamMember,
     Vote,
 )
 

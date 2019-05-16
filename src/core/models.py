@@ -1,6 +1,5 @@
-from django.contrib.auth.models import User as AuthUser
+from django.contrib.auth.models import User
 from django.db import models
-
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -10,7 +9,7 @@ class Profile(models.Model):
     Model used to extend Django's base User model
     """
 
-    user = models.OneToOneField(AuthUser, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
 
     zip = models.CharField(max_length=256, blank=True, null=True)
     latitude = models.FloatField(blank=True, null=True)
@@ -54,10 +53,10 @@ class Profile(models.Model):
         db_table = "profile"
 
 
-@receiver(post_save, sender=AuthUser)
-def create_profile(sender, instance, created, **kwargs):
+@receiver(post_save, sender=User)
+def create_profile(instance: User, created: bool, **kwargs: dict) -> None:
     """
-    Function creates an empty Profile attached to the created AuthUser upon creation
+    Function creates an empty Profile attached to the created User upon creation
     """
     if created:
         try:

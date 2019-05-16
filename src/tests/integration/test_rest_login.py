@@ -1,10 +1,12 @@
 import pytest
 from allauth.account.models import EmailAddress
+from django import test
+from django.contrib.auth.models import User
 from django.urls import reverse
 
 
 @pytest.mark.django_db
-def test_valid_rest_login(client, user):
+def test_valid_rest_login(client: test.Client, user: User):
     res = client.post(
         reverse("rest_login"), {"email": user.email, "password": user.username}
     )
@@ -21,7 +23,7 @@ def test_valid_rest_login(client, user):
 
 
 @pytest.mark.django_db
-def test_unverified_email_rest_login(client, user):
+def test_unverified_email_rest_login(client: test.Client, user: User):
     EmailAddress.objects.filter(email=user.email).update(verified=False)
 
     res = client.post(
@@ -33,7 +35,7 @@ def test_unverified_email_rest_login(client, user):
 
 
 @pytest.mark.django_db
-def test_invalid_pass_rest_login(client, user):
+def test_invalid_pass_rest_login(client: test.Client, user: User):
     res = client.post(
         reverse("rest_login"), {"email": user.email, "password": "wrongPass"}
     )
@@ -43,7 +45,7 @@ def test_invalid_pass_rest_login(client, user):
 
 
 @pytest.mark.django_db
-def test_invalid_username_rest_login(client, user):
+def test_invalid_username_rest_login(client: test.Client, user: User):
     res = client.post(
         reverse("rest_login"), {"email": "wrong@email.com", "password": user.username}
     )

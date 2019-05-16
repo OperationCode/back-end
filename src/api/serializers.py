@@ -2,18 +2,18 @@ from rest_framework import serializers
 
 from api.models import (
     CodeSchool,
+    Event,
+    GitHubStatistic,
+    GitHubUser,
     Location,
+    Request,
     Resource,
     Scholarship,
     ScholarshipApplication,
-    TeamMember,
-    Request,
-    GitHubUser,
-    GitHubStatistic,
-    Event,
     Service,
-    Vote,
     Tag,
+    TeamMember,
+    Vote,
 )
 
 

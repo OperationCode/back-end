@@ -2,19 +2,19 @@ import logging
 from calendar import timegm
 from datetime import datetime
 
-from django.conf import settings
-from django.dispatch import receiver
 from allauth.account.models import EmailConfirmation
-from django.contrib.auth.models import User as AuthUser
-from allauth.account.signals import user_signed_up, email_confirmed
+from allauth.account.signals import email_confirmed, user_signed_up
+from django.conf import settings
+from django.contrib.auth.models import User
+from django.dispatch import receiver
 
-from core.tasks import send_slack_invite_job, add_user_to_mailing_list
+from core.tasks import add_user_to_mailing_list, send_slack_invite_job
 
 logger = logging.getLogger(__name__)
 
 
 # noinspection PyUnresolvedReferences
-def custom_jwt_payload_handler(user: AuthUser) -> dict:
+def custom_jwt_payload_handler(user: User) -> dict:
     """
     Overrides the default jwt_payload_handler to embed
     extra data into the JWT
@@ -44,7 +44,7 @@ def get_username_from_jwt(payload: dict) -> str:
 
 
 @receiver(user_signed_up)
-def registration_callback(user: AuthUser, **kwargs) -> None:
+def registration_callback(user: User, **kwargs: dict) -> None:
     """
     Listens for the `user_signed_up` signal and adds a background task to
     send the slack invite
@@ -54,7 +54,7 @@ def registration_callback(user: AuthUser, **kwargs) -> None:
 
 
 @receiver(email_confirmed)
-def email_confirmed_callback(email_address: EmailConfirmation, **kwargs) -> None:
+def email_confirmed_callback(email_address: EmailConfirmation, **kwargs: dict) -> None:
     """
     Listens for the `email_confirmed` signal and adds a background task to
     add the user to the mailing list

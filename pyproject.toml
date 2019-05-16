@@ -26,10 +26,11 @@ requests = "^2.21"
 sentry-sdk = "^0.7.14"
 
 [tool.poetry.dev-dependencies]
-black = {version = "^18.3-alpha.0",allows-prereleases = true}
+black = {version = "^18.3-alpha.0", allows-prereleases = true}
 coverage = "^4.5"
 django-debug-toolbar = "^1.11"
 factory_boy = "^2.12"
+isort = "^4.3"
 pytest = "^4.4"
 pytest-django = "^3.4"
 pytest-mock = "^1.10"

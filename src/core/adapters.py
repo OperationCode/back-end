@@ -1,7 +1,7 @@
 from allauth.account.adapter import DefaultAccountAdapter
 from allauth.account.models import EmailConfirmation
 from django.conf import settings
-from django.contrib.auth.models import User as AuthUser
+from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from rest_framework.request import Request
 
@@ -21,15 +21,15 @@ class AccountAdapter(DefaultAccountAdapter):
     def save_user(
         self,
         request: Request,
-        user: AuthUser,
+        user: User,
         form: RegisterSerializer,
         commit: bool = True,
-    ):
+    ) -> User:
         """
         Adds the provided zip code to the profile attached
         to the newly created user
         """
         super().save_user(request, user, form)
-        user.profile.zip = form.cleaned_data["zip"]  # noqa
-        user.profile.save()  # noqa
+        user.profile.zip = form.cleaned_data["zip"]
+        user.profile.save()
         return user

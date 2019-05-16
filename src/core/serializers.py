@@ -1,13 +1,11 @@
-from rest_framework import serializers, status
-from rest_framework.exceptions import PermissionDenied
-from rest_auth.serializers import (
-    LoginSerializer as BaseLoginSerializer,
-    UserDetailsSerializer as BaseUserDetailsSerializer,
-)
+from django.contrib.auth import get_user_model
 from rest_auth.registration.serializers import (
     RegisterSerializer as BaseRegisterSerializer,
 )
-from django.contrib.auth import get_user_model
+from rest_auth.serializers import LoginSerializer as BaseLoginSerializer
+from rest_auth.serializers import UserDetailsSerializer as BaseUserDetailsSerializer
+from rest_framework import serializers, status
+from rest_framework.exceptions import PermissionDenied
 
 from core.models import Profile
 
@@ -29,7 +27,7 @@ class CustomValidationError(PermissionDenied):
 # noinspection PyAbstractClass
 class LoginSerializer(BaseLoginSerializer):
     """
-    Wraps the default LoginSerializer in order to return
+    Extends the default LoginSerializer in order to return
     custom error messages
     """
 

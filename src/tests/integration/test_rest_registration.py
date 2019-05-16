@@ -1,14 +1,21 @@
+from typing import Dict, List
+
 import pytest
-from allauth.account.models import EmailAddress
-from allauth.account.models import EmailConfirmation
+from allauth.account.models import EmailAddress, EmailConfirmation
 from background_task.models import Task as BackgroundTask
+from django import test
 from django.contrib.auth import get_user_model
+from django.core.mail import EmailMultiAlternatives
 from django.test.utils import override_settings
 from django.urls import reverse
 
 
 @pytest.mark.django_db
-def test_confirmation_email_sent(client, register_form, mailoutbox):
+def test_confirmation_email_sent(
+    client: test.Client,
+    register_form: Dict[str, str],
+    mailoutbox: List[EmailMultiAlternatives],
+):
     res = client.post(reverse("rest_register"), register_form)
 
     assert res.status_code == 201
@@ -17,13 +24,12 @@ def test_confirmation_email_sent(client, register_form, mailoutbox):
 
 
 @pytest.mark.django_db
-def test_user_is_created(client, register_form):
+def test_user_is_created(client: test.Client, register_form):
     res = client.post(reverse("rest_register"), register_form)
 
     assert res.status_code == 201
 
-    UserModel = get_user_model()
-    users = UserModel.objects.all()
+    users = get_user_model().objects.all()
 
     assert len(users) == 1
     user = users[0]
@@ -34,13 +40,12 @@ def test_user_is_created(client, register_form):
 
 
 @pytest.mark.django_db
-def test_user_profile_created(client, register_form):
+def test_user_profile_created(client: test.Client, register_form):
     res = client.post(reverse("rest_register"), register_form)
 
     assert res.status_code == 201
 
-    UserModel = get_user_model()
-    users = UserModel.objects.all()
+    users = get_user_model().objects.all()
 
     assert len(users) == 1
 
@@ -49,7 +54,11 @@ def test_user_profile_created(client, register_form):
 
 
 @pytest.mark.django_db
-def test_slack_invite_task_created(client, register_form, mailoutbox):
+def test_slack_invite_task_created(
+    client: test.Client,
+    register_form: Dict[str, str],
+    mailoutbox: List[EmailMultiAlternatives],
+):
     res = client.post(reverse("rest_register"), register_form)
 
     assert res.status_code == 201
@@ -61,7 +70,12 @@ def test_slack_invite_task_created(client, register_form, mailoutbox):
 
 
 @pytest.mark.django_db
-def test_already_used_email(client, mailoutbox, register_form, user):
+def test_already_used_email(
+    client: test.Client,
+    mailoutbox: List[EmailMultiAlternatives],
+    register_form: Dict[str, str],
+    user,
+):
     register_form["email"] = user.email
     res = client.post(reverse("rest_register"), register_form)
 
@@ -70,7 +84,9 @@ def test_already_used_email(client, mailoutbox, register_form, user):
 
 
 @pytest.mark.django_db
-def test_not_matching_passwords(client, mailoutbox, register_form):
+def test_not_matching_passwords(
+    client: test.Client, mailoutbox: List[EmailMultiAlternatives], register_form
+):
     register_form["password2"] = "different"
     res = client.post(reverse("rest_register"), register_form)
 
@@ -80,7 +96,11 @@ def test_not_matching_passwords(client, mailoutbox, register_form):
 
 @override_settings(ACCOUNT_EMAIL_CONFIRMATION_HMAC=False)
 @pytest.mark.django_db
-def test_email_verification_token(client, register_form, mailoutbox):
+def test_email_verification_token(
+    client: test.Client,
+    register_form: Dict[str, str],
+    mailoutbox: List[EmailMultiAlternatives],
+):
     client.post(reverse("rest_register"), register_form)
     email_conf = EmailConfirmation.objects.get(
         email_address__email=register_form["email"]
@@ -96,7 +116,11 @@ def test_email_verification_token(client, register_form, mailoutbox):
 
 
 @pytest.mark.django_db
-def test_email_verification_with_invalid_token(client, register_form, mailoutbox):
+def test_email_verification_with_invalid_token(
+    client: test.Client,
+    register_form: Dict[str, str],
+    mailoutbox: List[EmailMultiAlternatives],
+):
     res = client.post(reverse("rest_verify_email"), {"key": "abc123"})
 
     assert res.status_code == 404
@@ -105,7 +129,11 @@ def test_email_verification_with_invalid_token(client, register_form, mailoutbox
 
 @pytest.mark.django_db
 @override_settings(ACCOUNT_EMAIL_CONFIRMATION_HMAC=False)
-def test_mailing_list_task_created(client, register_form, mailoutbox):
+def test_mailing_list_task_created(
+    client: test.Client,
+    register_form: Dict[str, str],
+    mailoutbox: List[EmailMultiAlternatives],
+):
     client.post(reverse("rest_register"), register_form)
     email_conf = EmailConfirmation.objects.get(
         email_address__email=register_form["email"]

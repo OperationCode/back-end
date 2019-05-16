@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework_swagger.views import get_swagger_view
 
 urlpatterns = [
@@ -12,7 +12,7 @@ urlpatterns = [
 ]
 
 ##############################################
-#   Static and media files in debug mode     #
+#    Static and media files in debug mode     #
 ##############################################
 if settings.DEBUG or settings.TESTING:
     import debug_toolbar

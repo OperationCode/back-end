@@ -1,11 +1,11 @@
 import logging
 
 import requests
-from django.conf import settings
-from mailchimp3 import MailChimp
-from django.core.mail import send_mail
 from background_task import background
+from django.conf import settings
 from django.contrib.auth.models import User as AuthUser
+from django.core.mail import send_mail
+from mailchimp3 import MailChimp
 
 logger = logging.getLogger(__name__)
 
