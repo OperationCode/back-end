@@ -25,11 +25,10 @@ hosts = os.environ.get("EXTRA_HOSTS", "")
 EXTRA_HOSTS = [s.strip() for s in hosts.split(",") if hosts]
 
 ALLOWED_HOSTS = [
-    "*",
     "127.0.0.1",
     "localhost",
-    "pyback.ngrok.io",
-    "pyback",
+    "ocbackend.ngrok.io",
+    "operationcode.org",
     "pybot.operationcode.org",
 ] + EXTRA_HOSTS
 

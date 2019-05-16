@@ -23,6 +23,51 @@
 
 # Welcome!
 
-This is a work in progress rewrite of the current [OperationCode](https://operationcode.org) backend.
+This is a work in progress rewrite of the current [OperationCode](https://operationcode.org) backend. 
+We highly recommend [joining our organization](https://operationcode.org/join) to receive an invite to our Slack team. 
+From there, you'll want to join the `#oc-python-projects` and `#oc-projects` channels.
+You can get help from multiple professional developers, including people who have worked on the application since day 1!
+Our website is currently served by code located [here](https://github.com/OperationCode/operationcode_backend), 
+but that repository is no longer being actively developed.
 
 This documentation is bad, and yes I feel bad.
+
+## Maintainers
+For information about the maintainers of the project, check out [MAINTAINERS.md](MAINTAINERS.md).
+
+
+## Quick Start
+
+Recommended versions of tools used within the repo:
+- `python@3.7` or greater
+- `git@2.17.1` or greater
+- `poetry@0.12.11` or greater
+    - [Poetry](https://poetry.eustace.io/) is a packaging and dependency manager, similar to pip or pipenv
+    - Poetry provides a custom installer that can be ran via `curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python`
+    - Alternatively, poetry can be installed via pip with `pip install --user poetry`
+    - See https://poetry.eustace.io/docs/
+
+
+```bash
+# Install dependencies (ensure poetry is already installed)
+poetry install
+
+# Create database
+# By default this creates a local sqlite database and adds tables for each of the defined models
+# see example.env for database configurations
+poetry run python src/manage.py migrate
+
+# Create a superuser to add to the new database
+poetry run python src/manage.py createsuperuser 
+
+# Run local development
+poetry run python src/manage.py runserver
+
+# Run testing suite
+poetry run test
+
+# Run formatting and linting
+poetry run black .
+poetry run flake8
+poetry run isort -rc .
+```
