@@ -11,7 +11,7 @@ SENTRY_DSN = os.environ.get("SENTRY_DSN")
 ENVIRONMENT = os.environ.get("ENVIRONMENT", "local")
 RELEASE = os.environ.get("RELEASE", "0.0.0")
 
-if SENTRY_DSN:
+if SENTRY_DSN:  # pragma: no cover
     sentry_sdk.init(
         dsn=SENTRY_DSN,
         integrations=[DjangoIntegration()],
@@ -39,7 +39,7 @@ try:
 
     local_ip = str(socket.gethostbyname(socket.gethostname()))
     ALLOWED_HOSTS.append(local_ip)
-except Exception as ex:
+except Exception as ex:  # pragma: no cover
     print(ex)
 
 ADMINS = (("Admin", "example@example.com"),)
@@ -70,6 +70,10 @@ INSTALLED_APPS = [
     "rest_auth",
     "allauth",
     "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+    "allauth.socialaccount.providers.facebook",
+    "allauth.socialaccount.providers.github",
     "rest_auth.registration",
     "storages",
     "corsheaders",
@@ -173,7 +177,7 @@ ATOMIC_REQUESTS = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 
-if "aws" in ENVIRONMENT:
+if "aws" in ENVIRONMENT:  # pragma: no cover
     AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
     AWS_STORAGE_BUCKET_NAME = os.environ["AWS_STORAGE_BUCKET_NAME"]
     AWS_S3_REGION_NAME = os.environ["BUCKET_REGION_NAME"]  # e.g. us-east-2
@@ -213,7 +217,7 @@ EMAIL_PORT = os.environ.get("EMAIL_PORT", "")
 
 # Django-Rest-Auth
 REST_SESSION_LOGIN = True
-SITE_ID = 3
+SITE_ID = os.environ.get("SITE_ID", 3)
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
@@ -239,3 +243,11 @@ REST_AUTH_SERIALIZERS = {
 REST_AUTH_REGISTER_SERIALIZERS = {
     "REGISTER_SERIALIZER": "core.serializers.RegisterSerializer"
 }
+
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {"SCOPE": ["profile", "email"], "AUTH_PARAMS": {"access_type": "online"}}
+}
+
+GITHUB_AUTH_CALLBACK_URL = os.environ.get(
+    "GITHUB_AUTH_CALLBACK_URL", "http://localhost:8000/dev/github/login/callback/"
+)
