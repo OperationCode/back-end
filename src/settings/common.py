@@ -106,12 +106,22 @@ PASSWORD_HASHERS = [
 ]
 
 REST_FRAMEWORK = {
-    # "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    # Renderer/parsers translate between camelCase and snake_case at application
+    # entry, allowing clients to send/receive data as camelCase while we can still
+    # use snake_case within this application
+    "DEFAULT_RENDERER_CLASSES": (
+        "djangorestframework_camel_case.render.CamelCaseJSONRenderer",
+    ),
+    "DEFAULT_PARSER_CLASSES": (
+        "djangorestframework_camel_case.parser.CamelCaseFormParser",
+        "djangorestframework_camel_case.parser.CamelCaseMultiPartParser",
+        "djangorestframework_camel_case.parser.CamelCaseJSONParser",
+    ),
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_jwt.authentication.JSONWebTokenAuthentication",
         "rest_framework.authentication.SessionAuthentication",
-        # 'rest_framework.authentication.TokenAuthentication',
-    )
+    ),
+    "JSON_UNDERSCOREIZE": {"no_underscore_before_number": True},
 }
 
 ROOT_URLCONF = "operationcode_backend.urls"

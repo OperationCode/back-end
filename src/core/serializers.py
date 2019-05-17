@@ -46,8 +46,8 @@ class RegisterSerializer(BaseRegisterSerializer):
     email = serializers.EmailField(required=True)
     password1 = serializers.CharField(write_only=True)
     password2 = serializers.CharField(write_only=True)
-    firstName = serializers.CharField(write_only=True)
-    lastName = serializers.CharField(write_only=True)
+    first_name = serializers.CharField(write_only=True)
+    last_name = serializers.CharField(write_only=True)
     zip = serializers.CharField(write_only=True)
 
     def get_cleaned_data(self):
@@ -55,8 +55,8 @@ class RegisterSerializer(BaseRegisterSerializer):
             "username": self.validated_data.get("email", ""),
             "email": self.validated_data.get("email", ""),
             "password1": self.validated_data.get("password1", ""),
-            "first_name": self.validated_data.get("firstName", ""),
-            "last_name": self.validated_data.get("lastName", ""),
+            "first_name": self.validated_data.get("first_name", ""),
+            "last_name": self.validated_data.get("last_name", ""),
             "zip": self.validated_data.get("zip", ""),
         }
 
