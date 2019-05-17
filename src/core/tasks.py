@@ -38,9 +38,9 @@ def send_slack_invite_job(email: str) -> None:
         res = requests.post(url, json={"email": email}, headers=headers)
 
         logger.info("Slack invite response:", res)
-    except Exception:
+    except Exception as e:  # pragma: no cover
         logger.exception(
-            f"Exception while trying to send slack invite for email {email}"
+            f"Exception while trying to send slack invite for email {email}", e
         )
 
 
@@ -66,5 +66,5 @@ def add_user_to_mailing_list(email: str) -> None:
         )
 
         logger.info("Added user to email list.  Response: ", res)
-    except Exception:
-        logger.exception(f"Exception while adding email {email} to mailing list.")
+    except Exception as e:
+        logger.exception(f"Exception while adding email {email} to mailing list.", e)

@@ -17,6 +17,15 @@ def user(db) -> User:
 
 
 @pytest.fixture
+def authed_user(client, user: User):
+    """
+    Returns a standard user that has a valid active session
+    """
+    client.login(email=user.email, password=user.username)
+    return user
+
+
+@pytest.fixture
 def register_form() -> Dict[str, str]:
     return {
         "password1": "P4ssw0rd1",
