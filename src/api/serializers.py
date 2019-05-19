@@ -17,13 +17,15 @@ from api.models import (
 )
 
 
-class LocationSerializer(serializers.HyperlinkedModelSerializer):
+class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
         fields = "__all__"
 
 
-class CodeSchoolSerializer(serializers.HyperlinkedModelSerializer):
+class CodeSchoolSerializer(serializers.ModelSerializer):
+    locations = LocationSerializer(many=True, read_only=True)
+
     class Meta:
         model = CodeSchool
         fields = "__all__"

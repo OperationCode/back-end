@@ -2,11 +2,11 @@ version: '3.6'
 services:
 
   backend:
-    image: backend:latest
+    image: back-end:latest
     build:
       context: ..
       dockerfile: docker/Dockerfile
-      target: Dev
+#      target: Dev
     container_name: backend02
     env_file:
       - .env

@@ -144,7 +144,7 @@ class Location(models.Model):
     state = models.CharField(max_length=256, blank=True, null=True)
     zip = models.IntegerField(blank=True, null=True)
     code_school = models.ForeignKey(
-        CodeSchool, models.DO_NOTHING, blank=True, null=True
+        CodeSchool, models.DO_NOTHING, blank=True, null=True, related_name="locations"
     )
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
