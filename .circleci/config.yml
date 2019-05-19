@@ -15,6 +15,7 @@ workflows:
           # TODO: This will be dynamic once we have a prod environment
           tag: staging
           dockerfile: docker/Dockerfile
+          extra-build-args: "--target Dev" # Dev target for staging
           requires:
             - build_test
           filters:
