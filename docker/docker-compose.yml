@@ -18,22 +18,6 @@ services:
   #      - db
 
 
-  backgroundRunner:
-    image: backend:background
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile
-      target: BackgroundRunner
-    container_name: background02
-    env_file:
-      - .env
-    volumes:
-      - ../src:/src
-    ports:
-      - 8080:8080
-    depends_on:
-      - pybot
-
   pybot:
     image: pybot:latest
     container_name: pybot01

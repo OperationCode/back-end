@@ -72,16 +72,11 @@ WORKDIR /src
 CMD python manage.py collectstatic --no-input;\
     gunicorn operationcode_backend.wsgi -b 0.0.0.0:8000 -w 3 --access-logfile=- --error-logfile=- --capture-output --logger-class "operationcode_backend.custom_logging.CustomGunicornLogger"
 
-# The `BackgroundRunner` stage runs the manage.py process_task function
-#
-FROM app As BackgroundRunner
-EXPOSE 8080
-CMD python manage.py process_tasks
-
 # The `Prod` stage is the default stage if the Dockerfile is run without
 # a target stage set. The resulting image will run the application using a
 # production webserver and configuration
 FROM app As Prod
 EXPOSE 8000
 CMD python manage.py collectstatic --no-input;\
+    python manage.py process_tasks &\
     gunicorn operationcode_backend.wsgi -b 0.0.0.0:8000 -w 3 --access-logfile=- --error-logfile=- --capture-output --logger-class "operationcode_backend.custom_logging.CustomGunicornLogger"

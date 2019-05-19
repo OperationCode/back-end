@@ -21,16 +21,16 @@ if SENTRY_DSN:  # pragma: no cover
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-hosts = os.environ.get("EXTRA_HOSTS", "")
-EXTRA_HOSTS = [s.strip() for s in hosts.split(",") if hosts]
+DEBUG = os.environ.get("DEBUG") in ("True", "true", "TRUE")
+TESTING = False
 
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-    "ocbackend.ngrok.io",
-    "operationcode.org",
-    "pybot.operationcode.org",
-] + EXTRA_HOSTS
+ALLOWED_HOSTS = ["ocbackend.ngrok.io", "operationcode.org", "pybot.operationcode.org"]
+
+EXTRA_HOSTS = os.environ.get("EXTRA_HOSTS", "")
+ALLOWED_HOSTS += [s.strip() for s in EXTRA_HOSTS.split(",") if EXTRA_HOSTS]
+
+if DEBUG:
+    ALLOWED_HOSTS += ["localhost", "127.0.0.1"]
 
 # Necessary to allow AWS health check to succeed
 try:
@@ -41,18 +41,11 @@ try:
 except Exception as ex:  # pragma: no cover
     print(ex)
 
-ADMINS = (("Admin", "example@example.com"),)
+SECRET_KEY = os.environ.get("SECRET_KEY", "SUPA_SECRET")
 
-SECRET_KEY = os.environ.get(
-    "SECRET_KEY", "&e4+qaiwz$+ie#kx9=f%w1)pzmr#b$&^)6jl&c)ad_i*670trt"
-)
-
-DEBUG = os.environ.get("DEBUG") in ("True", "true", "TRUE")
-TESTING = False
 CORS_ORIGIN_ALLOW_ALL = True
 
 # Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
