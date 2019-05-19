@@ -18,7 +18,6 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY poetry.lock pyproject.toml ./
 
 RUN pip install poetry && \
-    # configures poetry to use the virtualenv we already created
     poetry config settings.virtualenvs.create false && \
     poetry install --no-dev --no-interaction --no-ansi
 
@@ -49,7 +48,7 @@ COPY poetry.lock pyproject.toml ./
 RUN pip install poetry \
     && poetry config settings.virtualenvs.create false \
     && poetry install --no-interaction --no-ansi
-COPY . ./
+COPY . /
 
 
 # `Shell` will build an image that, when run, drops you into a

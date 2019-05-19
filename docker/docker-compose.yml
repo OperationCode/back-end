@@ -10,8 +10,8 @@ services:
     container_name: backend02
     env_file:
       - .env
-    volumes:
-      - ../src:/src
+#    volumes:
+#      - ../src:/src
     ports:
       - 8000:8000
   #    depends_on:
