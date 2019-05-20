@@ -51,9 +51,9 @@ def test_professional_details_update(client: test.Client, authed_user: User, par
 
 
 @pytest.mark.parametrize(
-    argnames="method, status", argvalues=[("post", 405), ("get", 405), ("patch", 200)]
+    argnames="method, status", argvalues=[("post", 405), ("get", 200), ("patch", 200)]
 )
-def test_update_requires_patch(
+def test_update_requires_get_or_patch(
     client: test.Client, authed_user: User, method: str, status: int
 ):
     func = getattr(client, method)

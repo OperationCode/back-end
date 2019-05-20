@@ -4,10 +4,8 @@ from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from django.conf import settings
 from rest_auth.registration.views import SocialLoginView
-from rest_framework.generics import UpdateAPIView
+from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.request import Request
-from rest_framework.response import Response
 
 from core.models import Profile
 from core.serializers import ProfileSerializer
@@ -27,25 +25,21 @@ class GithubLogin(SocialLoginView):
     client_class = OAuth2Client
 
 
-class UpdateProfile(UpdateAPIView):
+class UpdateProfile(RetrieveUpdateAPIView):
+    """
+    API View for retrieving and updating user profile info like
+    military service details, current employment, etc
+    """
+
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
     permission_classes = (IsAuthenticated,)
 
-    def update(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+    def get_object(self):
         """
-        Pulls the profile off of the currently authenticated users
-        and performs a partial-update on it with the provided params
+        Overrides `get_object` to pull the user profile
+        off the current authenticated user
         """
-        partial = kwargs.pop("partial", False)
-        instance = request.user.profile
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-
-        if getattr(instance, "_prefetched_objects_cache", None):  # pragma: no cover
-            # If 'prefetch_related' has been applied to a queryset, we need to
-            # forcibly invalidate the prefetch cache on the instance.
-            instance._prefetched_objects_cache = {}
-
-        return Response(serializer.data)
+        obj = self.request.user.profile
+        self.check_object_permissions(self.request, obj)
+        return obj
