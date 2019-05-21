@@ -30,6 +30,18 @@ class ProfileFactory(factory.DjangoModelFactory):
         model = Profile
 
     zip = DEFAULT_USER["profile"]["zip"]
+    sign_in_count = DEFAULT_USER["profile"]["sign_in_count"]
+    mentor = DEFAULT_USER["profile"]["mentor"]
+    state = DEFAULT_USER["profile"]["state"]
+    address_1 = DEFAULT_USER["profile"]["address_1"]
+    address_2 = DEFAULT_USER["profile"]["address_2"]
+    city = DEFAULT_USER["profile"]["city"]
+    branch_of_service = DEFAULT_USER["profile"]["branch_of_service"]
+    years_of_service = DEFAULT_USER["profile"]["years_of_service"]
+    pay_grade = DEFAULT_USER["profile"]["pay_grade"]
+    military_occupational_specialty = DEFAULT_USER["profile"][
+        "military_occupational_specialty"
+    ]
     user = factory.SubFactory("tests.factories.UserFactory", profile=None)
 
 

@@ -14,7 +14,6 @@ from tests.integration.test_data import (
 )
 
 
-@pytest.mark.django_db
 @pytest.mark.parametrize(
     argnames="params",
     argvalues=[
@@ -36,10 +35,10 @@ from tests.integration.test_data import (
         "interests_multiple",
     ],
 )
-def test_professional_details_update(client: test.Client, authed_user: User, params):
-    res = client.patch(
-        reverse("update_profile"), params, content_type="application/json"
-    )
+def test_professional_details_update(
+    authed_client: test.Client, authed_user: User, params
+):
+    res = authed_client.patch(reverse("update_profile"), params)
 
     assert res.status_code == 200
 
@@ -54,26 +53,21 @@ def test_professional_details_update(client: test.Client, authed_user: User, par
     argnames="method, status", argvalues=[("post", 405), ("get", 200), ("patch", 200)]
 )
 def test_update_requires_get_or_patch(
-    client: test.Client, authed_user: User, method: str, status: int
+    authed_client: test.Client, method: str, status: int
 ):
-    func = getattr(client, method)
+    func = getattr(authed_client, method)
     res = func(reverse("update_profile"))
     assert res.status_code == status
 
 
 @pytest.mark.parametrize(
     argnames="content_type, status",
-    argvalues=[
-        ("application/octet-stream", 415),
-        ("text/html", 415),
-        ("multipart/form-data", 200),
-        ("application/json", 200),
-    ],
+    argvalues=[("application/octet-stream", 415), ("text/html", 415)],
 )
-def test_update_requires_application_json_or_multipart(
-    client: test.Client, authed_user: User, content_type: str, status: int
+def test_update_requires_correct_format(
+    authed_client: test.Client, content_type: str, status: int
 ):
-    res = client.patch(
+    res = authed_client.patch(
         reverse("update_profile"), professional_details, content_type=content_type
     )
 

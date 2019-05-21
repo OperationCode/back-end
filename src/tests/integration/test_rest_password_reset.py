@@ -2,17 +2,17 @@ import re
 from typing import List
 
 import pytest
-from django import test
 from django.contrib.auth.models import User
 from django.core.mail import EmailMultiAlternatives
 from django.urls import reverse
+from rest_framework.test import APIClient
 
 token_pattern = re.compile("http.*/reset/(?P<uid>.+?)/(?P<token>.+?)/")
 
 
 @pytest.mark.django_db
 def test_password_reset_sends_email(
-    client: test.Client, user: User, mailoutbox: List[EmailMultiAlternatives]
+    client: APIClient, user: User, mailoutbox: List[EmailMultiAlternatives]
 ):
     res = client.post(reverse("rest_password_reset"), {"email": user.email})
 
@@ -27,7 +27,7 @@ def test_password_reset_sends_email(
 
 @pytest.mark.django_db
 def test_password_reset_invalid_email(
-    client: test.Client, user: User, mailoutbox: List[EmailMultiAlternatives]
+    client: APIClient, user: User, mailoutbox: List[EmailMultiAlternatives]
 ):
     res = client.post(reverse("rest_password_reset"), {"email": "bad@email"})
 
