@@ -16,7 +16,7 @@ class CustomValidationError(PermissionDenied):
     in order to define our own error message responses
     """
 
-    default_status_code = status.HTTP_400_BAD_REQUEST
+    default_status_code = status.HTTP_401_UNAUTHORIZED
     default_detail = "The email or password you entered is incorrect!"
 
     def __init__(self, detail=default_detail, status_code=default_status_code):

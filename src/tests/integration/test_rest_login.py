@@ -41,7 +41,7 @@ def test_invalid_pass_rest_login(client: APIClient, user: User):
         reverse("rest_login"), {"email": user.email, "password": "wrongPass"}
     )
 
-    assert res.status_code == 400
+    assert res.status_code == 401
     assert "The email or password you entered is incorrect!" in res.data["error"]
 
 
@@ -51,5 +51,5 @@ def test_invalid_username_rest_login(client: APIClient, user: User):
         reverse("rest_login"), {"email": "wrong@email.com", "password": user.username}
     )
 
-    assert res.status_code == 400
+    assert res.status_code == 401
     assert "The email or password you entered is incorrect!" in res.data["error"]
