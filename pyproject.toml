@@ -25,9 +25,9 @@ mailchimp3 = "^3.0"
 python-dotenv = "^0.10.1"
 requests = "^2.21"
 sentry-sdk = "^0.7.14"
-bandit = "~1.5.1"
 
 [tool.poetry.dev-dependencies]
+bandit = "~1.5.1"
 black = {version = "^18.3-alpha.0", allows-prereleases = true}
 coverage = "^4.5"
 django-debug-toolbar = "^1.11"
@@ -39,7 +39,6 @@ pytest-mock = "^1.10"
 pytest-pythonpath = "^0.7.3"
 flake8 = "^3.7"
 flake8-bugbear = "^19.3"
-bandit = "~1.5.1"
 
 [tool.isort]
 line_length = 88
