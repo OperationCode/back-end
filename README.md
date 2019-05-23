@@ -81,4 +81,4 @@ From within the `back-end/` directory you can run the following Bandit commands:
 - `bandit -r -b 20190522-banditBaseline.json .` runs the all Bandit tests recursively and compares to a pre-established baseline (see below for more detail)
 - `bandit -r .` runs all bandit tests recursively without a filter (may result in false positives on the `src/test/` folder)
 
-The `20190522-banditBaseline.json` file includes output from an initial Bandit run (dated appropriately) and lists several false positives. Running against the baseline will filter out these results.
+The `20190522-banditBaseline.json` file includes output from an initial Bandit run (dated appropriately) and lists several false positives. Running against the baseline will filter out these results. 
