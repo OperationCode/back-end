@@ -46,6 +46,7 @@ jobs:
       - image: circleci/python:3.7.1
         environment: # environment variables for primary container
           PIPENV_VENV_IN_PROJECT: true
+          CC_TEST_REPORTER_ID: 91944b115a88fcc2040da46325f3606d096c281149ab4fcff022f06b09a700c0
 
     steps:
       - checkout
