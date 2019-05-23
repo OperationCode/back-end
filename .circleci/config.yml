@@ -98,7 +98,7 @@ jobs:
       - run:
           name: Run Bandit security analysis
           command: |
-            poetry run bandit -r -b 20190522-banditBaseline.json .
+            poetry run bandit -r .
 
       - store_test_results:
           path: test-results
