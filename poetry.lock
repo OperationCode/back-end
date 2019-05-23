@@ -28,7 +28,7 @@ description = "Security oriented static analyser for python code."
 name = "bandit"
 optional = false
 python-versions = "*"
-version = "1.5.1"
+version = "1.6"
 
 [package.dependencies]
 GitPython = ">=1.0.1"
