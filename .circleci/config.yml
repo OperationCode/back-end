@@ -95,7 +95,7 @@ jobs:
             /usr/local/bin/cc-test-reporter after-build -t coverage.py
 
       - run:
-        name: Run Bandit security analysis
+          name: Run Bandit security analysis
           command: |
             poetry run bandit -r -b 20190522-banditBaseline.json .
 
