@@ -1,6 +1,6 @@
 from .development import *  # noqa: F403
 
-MEDIA_ROOT = "/tmp" # nosec
+MEDIA_ROOT = "/tmp"  # nosec
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 DEBUG = True
 TESTING = True
