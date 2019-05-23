@@ -7,7 +7,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.urls import reverse
 from rest_framework.test import APIClient
 
-token_pattern = re.compile("http.*/reset/(?P<uid>.+?)/(?P<token>.+?)/")
+token_pattern = re.compile(r"http.*/confirm\?uid=(?P<uid>.+?)&token=(?P<token>.+)")
 
 
 @pytest.mark.django_db
