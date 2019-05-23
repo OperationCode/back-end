@@ -38,17 +38,18 @@ For information about the maintainers of the project, check out [MAINTAINERS.md]
 ## Quick Start
 
 Recommended versions of tools used within the repo:
-- `python@3.7` or greater
+- `python@3.7` or greater (in some environments, you may need to specify version of python i.e. `python test.py` vs `python3 test.py`))
 - `git@2.17.1` or greater
 - `poetry@0.12.11` or greater
     - [Poetry](https://poetry.eustace.io/) is a packaging and dependency manager, similar to pip or pipenv
     - Poetry provides a custom installer that can be ran via `curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python`
-    - Alternatively, poetry can be installed via pip with `pip install --user poetry`
+    - Alternatively, poetry can be installed via pip/pip3 with `pip install --user poetry` or `pip3 install --user poetry`
     - See https://poetry.eustace.io/docs/
 
 
 ```bash
 # Install dependencies (ensure poetry is already installed)
+# if you are encountering an error with psycopg2 during poetry installation, ensure postgreqsql is installed (macOS: brew install postgresql)
 poetry install
 
 # Create database
@@ -63,10 +64,11 @@ poetry run python src/manage.py createsuperuser
 poetry run python src/manage.py runserver
 
 # Run testing suite
-poetry run test
+poetry run pytest
 
 # Run formatting and linting
 poetry run black .
+# the next line shouldn't output anything to the terminal if it passes
 poetry run flake8
 poetry run isort -rc .
 ```

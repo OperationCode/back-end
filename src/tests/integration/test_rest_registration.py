@@ -1,18 +1,20 @@
+import re
 from typing import Dict, List
 
 import pytest
-from allauth.account.models import EmailAddress, EmailConfirmation
+from allauth.account.models import EmailAddress
 from background_task.models import Task as BackgroundTask
-from django import test
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 from django.core.mail import EmailMultiAlternatives
-from django.test.utils import override_settings
 from django.urls import reverse
+from rest_framework.test import APIClient
+
+key_pattern = re.compile(r"http.+/confirm_email\?key=(?P<key>.+)")
 
 
 @pytest.mark.django_db
 def test_confirmation_email_sent(
-    client: test.Client,
+    client: APIClient,
     register_form: Dict[str, str],
     mailoutbox: List[EmailMultiAlternatives],
 ):
@@ -24,12 +26,12 @@ def test_confirmation_email_sent(
 
 
 @pytest.mark.django_db
-def test_user_is_created(client: test.Client, register_form):
+def test_user_is_created(client: APIClient, register_form: Dict[str, str]):
     res = client.post(reverse("rest_register"), register_form)
 
     assert res.status_code == 201
 
-    users = get_user_model().objects.all()
+    users = User.objects.all()
 
     assert len(users) == 1
     user = users[0]
@@ -40,12 +42,12 @@ def test_user_is_created(client: test.Client, register_form):
 
 
 @pytest.mark.django_db
-def test_user_profile_created(client: test.Client, register_form):
+def test_user_profile_created(client: APIClient, register_form: Dict[str, str]):
     res = client.post(reverse("rest_register"), register_form)
 
     assert res.status_code == 201
 
-    users = get_user_model().objects.all()
+    users = User.objects.all()
 
     assert len(users) == 1
 
@@ -55,7 +57,7 @@ def test_user_profile_created(client: test.Client, register_form):
 
 @pytest.mark.django_db
 def test_slack_invite_task_created(
-    client: test.Client,
+    client: APIClient,
     register_form: Dict[str, str],
     mailoutbox: List[EmailMultiAlternatives],
 ):
@@ -71,7 +73,7 @@ def test_slack_invite_task_created(
 
 @pytest.mark.django_db
 def test_already_used_email(
-    client: test.Client,
+    client: APIClient,
     mailoutbox: List[EmailMultiAlternatives],
     register_form: Dict[str, str],
     user,
@@ -84,29 +86,17 @@ def test_already_used_email(
 
 
 @pytest.mark.django_db
-def test_not_matching_passwords(
-    client: test.Client, mailoutbox: List[EmailMultiAlternatives], register_form
-):
-    register_form["password2"] = "different"
-    res = client.post(reverse("rest_register"), register_form)
-
-    assert res.status_code == 400
-    assert "The two password fields didn't match." in res.data["non_field_errors"]
-
-
-@override_settings(ACCOUNT_EMAIL_CONFIRMATION_HMAC=False)
-@pytest.mark.django_db
 def test_email_verification_token(
-    client: test.Client,
+    client: APIClient,
     register_form: Dict[str, str],
     mailoutbox: List[EmailMultiAlternatives],
 ):
     client.post(reverse("rest_register"), register_form)
-    email_conf = EmailConfirmation.objects.get(
-        email_address__email=register_form["email"]
-    )
 
-    res = client.post(reverse("rest_verify_email"), {"key": email_conf.key})
+    body = mailoutbox[0].body
+    groups = key_pattern.search(body).groupdict()
+
+    res = client.post(reverse("rest_verify_email"), {"key": groups["key"]})
 
     assert res.status_code == 200
     assert res.data["detail"] == "ok"
@@ -117,7 +107,7 @@ def test_email_verification_token(
 
 @pytest.mark.django_db
 def test_email_verification_with_invalid_token(
-    client: test.Client,
+    client: APIClient,
     register_form: Dict[str, str],
     mailoutbox: List[EmailMultiAlternatives],
 ):
@@ -128,18 +118,17 @@ def test_email_verification_with_invalid_token(
 
 
 @pytest.mark.django_db
-@override_settings(ACCOUNT_EMAIL_CONFIRMATION_HMAC=False)
 def test_mailing_list_task_created(
-    client: test.Client,
+    client: APIClient,
     register_form: Dict[str, str],
     mailoutbox: List[EmailMultiAlternatives],
 ):
     client.post(reverse("rest_register"), register_form)
-    email_conf = EmailConfirmation.objects.get(
-        email_address__email=register_form["email"]
-    )
 
-    res = client.post(reverse("rest_verify_email"), {"key": email_conf.key})
+    body = mailoutbox[0].body
+    groups = key_pattern.search(body).groupdict()
+
+    res = client.post(reverse("rest_verify_email"), {"key": groups["key"]})
 
     assert res.status_code == 200
     tasks = BackgroundTask.objects.all()

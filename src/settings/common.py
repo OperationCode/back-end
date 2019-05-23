@@ -112,7 +112,7 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_jwt.authentication.JSONWebTokenAuthentication",
-        "rest_framework.authentication.SessionAuthentication",
+        # "rest_framework.authentication.SessionAuthentication",
     ),
     "JSON_UNDERSCOREIZE": {"no_underscore_before_number": True},
 }
@@ -234,9 +234,9 @@ JWT_AUTH = {
     "JWT_PAYLOAD_HANDLER": "core.handlers.custom_jwt_payload_handler",
     "JWT_PAYLOAD_GET_USERNAME_HANDLER": "core.handlers.get_username_from_jwt",
     "JWT_AUTH_HEADER_PREFIX": "Bearer",
-    "JWT_EXPIRATION_DELTA": datetime.timedelta(minutes=5),
-    "JWT_ALLOW_REFRESH": True,
-    "JWT_AUTH_COOKIE": "JWT",
+    "JWT_EXPIRATION_DELTA": datetime.timedelta(hours=1),
+    "JWT_ALLOW_REFRESH": False,
+    "JWT_AUTH_COOKIE": None,
 }
 
 REST_AUTH_SERIALIZERS = {

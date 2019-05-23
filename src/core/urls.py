@@ -1,13 +1,19 @@
 from django.conf import settings
+from django.contrib.auth.views import PasswordResetConfirmView
 from django.urls import include, path
 from django.views.generic import TemplateView
-from rest_auth.registration.views import SocialAccountListView
+from rest_auth.registration.views import SocialAccountListView, VerifyEmailView
 from rest_framework_jwt.views import refresh_jwt_token, verify_jwt_token
 
 from . import views
 
 urlpatterns = [
-    path("", include("django.contrib.auth.urls")),
+    path(
+        "password/reset/confirm/<uidb64>/<token>",
+        PasswordResetConfirmView.as_view(),
+        name="password_reset_confirm",
+    ),
+    path("verify-email/", VerifyEmailView.as_view(), name="rest_verify_email"),
     path("auth/social/google", views.GoogleLogin.as_view(), name="google_rest_login"),
     path("auth/social/facebook", views.GoogleLogin.as_view(), name="fb_rest_login"),
     path("auth/social/github", views.GithubLogin.as_view(), name="gh_rest_login"),
@@ -15,8 +21,9 @@ urlpatterns = [
     path("auth/", include("rest_auth.urls")),
     path("auth/token/refresh", refresh_jwt_token, name="refresh_jwt"),
     path("auth/token/verify", verify_jwt_token, name="verify_jwt"),
-    path("auth/registration/", include("rest_auth.registration.urls")),
+    path("auth/registration/", views.RegisterView.as_view(), name="rest_register"),
     path("auth/profile", views.UpdateProfile.as_view(), name="update_profile"),
+    path("auth/user", views.UserView.as_view(), name="view_user"),
     # Used by allauth to send the "verification email sent" response to client
     path(
         "auth/account-email-verification-sent",

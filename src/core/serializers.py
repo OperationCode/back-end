@@ -16,7 +16,7 @@ class CustomValidationError(PermissionDenied):
     in order to define our own error message responses
     """
 
-    default_status_code = status.HTTP_400_BAD_REQUEST
+    default_status_code = status.HTTP_401_UNAUTHORIZED
     default_detail = "The email or password you entered is incorrect!"
 
     def __init__(self, detail=default_detail, status_code=default_status_code):
@@ -44,24 +44,28 @@ class LoginSerializer(BaseLoginSerializer):
 # noinspection PyAbstractClass
 class RegisterSerializer(BaseRegisterSerializer):
     email = serializers.EmailField(required=True)
-    password1 = serializers.CharField(write_only=True)
-    password2 = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True)
     first_name = serializers.CharField(write_only=True)
     last_name = serializers.CharField(write_only=True)
     zip = serializers.CharField(write_only=True)
+
+    # Overrides the default required password fields
+    password1 = None
+    password2 = None
 
     def get_cleaned_data(self):
         return {
             "username": self.validated_data.get("email", ""),
             "email": self.validated_data.get("email", ""),
-            "password1": self.validated_data.get("password1", ""),
+            # allauth uses password1 internally for creation
+            "password1": self.validated_data.get("password", ""),
             "first_name": self.validated_data.get("first_name", ""),
             "last_name": self.validated_data.get("last_name", ""),
             "zip": self.validated_data.get("zip", ""),
         }
 
-    def save(self, request):
-        return super().save(request)
+    def validate(self, data):
+        return data
 
 
 UserModel = get_user_model()
@@ -87,4 +91,24 @@ class UserDetailsSerializer(BaseUserDetailsSerializer):
         profile = representation.pop("profile")
         representation["zip"] = profile["zip"]
         representation["mentor"] = profile["mentor"]
+        return representation
+
+
+class UserSerializer(BaseUserDetailsSerializer):
+    profile = ProfileSerializer()
+
+    class Meta:
+        model = UserModel
+        fields = ("username", "email", "first_name", "last_name", "profile")
+        read_only_fields = ("email",)
+
+    def to_representation(self, instance: UserModel) -> dict:
+        """Move fields from Profile to user representation."""
+        representation = super().to_representation(instance)
+        profile = representation.pop("profile")
+        profile.pop("user")
+
+        for key, val in profile.items():
+            representation[key] = val
+
         return representation

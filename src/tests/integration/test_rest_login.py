@@ -1,14 +1,15 @@
 import pytest
-from allauth.account.models import EmailAddress
-from django import test
 from django.contrib.auth.models import User
 from django.urls import reverse
+from rest_framework.test import APIClient
+
+from tests.test_data import DEFAULT_PASSWORD
 
 
 @pytest.mark.django_db
-def test_valid_rest_login(client: test.Client, user: User):
+def test_valid_rest_login(client: APIClient, user: User):
     res = client.post(
-        reverse("rest_login"), {"email": user.email, "password": user.username}
+        reverse("rest_login"), {"email": user.email, "password": DEFAULT_PASSWORD}
     )
 
     assert res.status_code == 200
@@ -37,20 +38,20 @@ def test_valid_rest_login(client: test.Client, user: User):
 
 
 @pytest.mark.django_db
-def test_invalid_pass_rest_login(client: test.Client, user: User):
+def test_invalid_pass_rest_login(client: APIClient, user: User):
     res = client.post(
         reverse("rest_login"), {"email": user.email, "password": "wrongPass"}
     )
 
-    assert res.status_code == 400
+    assert res.status_code == 401
     assert "The email or password you entered is incorrect!" in res.data["error"]
 
 
 @pytest.mark.django_db
-def test_invalid_username_rest_login(client: test.Client, user: User):
+def test_invalid_username_rest_login(client: APIClient, user: User):
     res = client.post(
         reverse("rest_login"), {"email": "wrong@email.com", "password": user.username}
     )
 
-    assert res.status_code == 400
+    assert res.status_code == 401
     assert "The email or password you entered is incorrect!" in res.data["error"]

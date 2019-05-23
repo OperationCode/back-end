@@ -1,16 +1,33 @@
 import threading
 
-import factory
+# import factory
+from factory import (
+    DjangoModelFactory,
+    CREATE_STRATEGY,
+    LazyAttribute,
+    LazyFunction,
+    django,
+    SubFactory,
+    PostGeneration,
+    RelatedFactory,
+)
+from allauth.account.models import EmailAddress
 from django.conf import settings
 from django.db.models.signals import post_save
 
 from core.models import Profile
-from tests.utils import DEFAULT_USER
+from tests.test_data import (
+    fake,
+    DEFAULT_PASSWORD,
+    random_branch,
+    random_pay_grade,
+    random_mos,
+)
 
 
-class Factory(factory.DjangoModelFactory):
+class Factory(DjangoModelFactory):
     class Meta:
-        strategy = factory.CREATE_STRATEGY
+        strategy = CREATE_STRATEGY
         model = None
         abstract = True
 
@@ -24,26 +41,48 @@ class Factory(factory.DjangoModelFactory):
         return cls._SEQUENCE
 
 
-@factory.django.mute_signals(post_save)
-class ProfileFactory(factory.DjangoModelFactory):
+@django.mute_signals(post_save)
+class ProfileFactory(Factory):
     class Meta:
         model = Profile
 
-    zip = DEFAULT_USER["profile"]["zip"]
-    user = factory.SubFactory("tests.factories.UserFactory", profile=None)
+    zip = LazyFunction(fake.zipcode)
+    sign_in_count = LazyFunction(fake.random_digit)
+    mentor = LazyFunction(fake.pybool)
+    state = LazyFunction(fake.state)
+    address_1 = fake.street_address()
+    address_2 = None
+    city = LazyFunction(fake.city)
+    branch_of_service = LazyFunction(random_branch)
+    years_of_service = LazyAttribute(lambda x: fake.random_int(max=40))
+    pay_grade = LazyFunction(random_pay_grade)
+    military_occupational_specialty = LazyFunction(random_mos)
+
+    user = SubFactory("tests.factories.UserFactory", profile=None)
 
 
-@factory.django.mute_signals(post_save)
+@django.mute_signals(post_save)
+class EmailAddressFactory(Factory):
+    class Meta:
+        model = EmailAddress
+
+    primary = True
+    verified = True
+    user = SubFactory("tests.factories.UserFactory", active_email=None)
+
+
+@django.mute_signals(post_save)
 class UserFactory(Factory):
     class Meta:
         model = settings.AUTH_USER_MODEL
-        strategy = factory.CREATE_STRATEGY
+        strategy = CREATE_STRATEGY
 
-    first_name = DEFAULT_USER["first_name"]
-    last_name = DEFAULT_USER["last_name"]
-    email = factory.Sequence(lambda n: f"user{n}@email.com")
-    username = factory.LazyAttribute(lambda obj: obj.email)
-    password = factory.PostGeneration(
-        lambda obj, *args, **kwargs: obj.set_password(obj.username)
+    first_name = LazyFunction(fake.first_name)
+    last_name = LazyFunction(fake.last_name)
+    email = LazyFunction(fake.email)
+    username = LazyAttribute(lambda o: o.email)
+    password = PostGeneration(
+        lambda obj, *args, **kwargs: obj.set_password(DEFAULT_PASSWORD)
     )
-    profile = factory.RelatedFactory(ProfileFactory, "user")
+    profile = RelatedFactory(ProfileFactory, "user")
+    active_email = RelatedFactory(EmailAddressFactory, "user", email=email)
