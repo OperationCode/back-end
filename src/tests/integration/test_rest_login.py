@@ -3,11 +3,13 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework.test import APIClient
 
+from tests.test_data import DEFAULT_PASSWORD
+
 
 @pytest.mark.django_db
 def test_valid_rest_login(client: APIClient, user: User):
     res = client.post(
-        reverse("rest_login"), {"email": user.email, "password": user.username}
+        reverse("rest_login"), {"email": user.email, "password": DEFAULT_PASSWORD}
     )
 
     assert res.status_code == 200

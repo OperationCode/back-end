@@ -10,8 +10,8 @@ class ActiveAdminComment(models.Model):
     resource_id = models.IntegerField(blank=True, null=True)
     author_type = models.CharField(max_length=256, blank=True, null=True)
     author_id = models.IntegerField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         managed = False
@@ -31,8 +31,8 @@ class AdminUser(models.Model):
     last_sign_in_at = models.DateTimeField(blank=True, null=True)
     current_sign_in_ip = models.GenericIPAddressField(blank=True, null=True)
     last_sign_in_ip = models.GenericIPAddressField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     role_id = models.IntegerField(blank=True, null=True)
 
     class Meta:
@@ -43,8 +43,8 @@ class AdminUser(models.Model):
 class ArInternalMetadata(models.Model):
     key = models.CharField(primary_key=True, max_length=256)
     value = models.CharField(max_length=256, blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         managed = False
@@ -55,15 +55,15 @@ class OldCodeSchool(models.Model):
     name = models.CharField(max_length=256, blank=True, null=True)
     url = models.CharField(max_length=256, blank=True, null=True)
     logo = models.CharField(max_length=256, blank=True, null=True)
-    full_time = models.BooleanField(blank=True, null=True)
-    hardware_included = models.BooleanField(blank=True, null=True)
-    has_online = models.BooleanField(blank=True, null=True)
-    online_only = models.BooleanField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    full_time = models.BooleanField(default=False, blank=True, null=True)
+    hardware_included = models.BooleanField(default=False, blank=True, null=True)
+    has_online = models.BooleanField(default=False, blank=True, null=True)
+    online_only = models.BooleanField(default=False, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     notes = models.TextField(blank=True, null=True)
-    mooc = models.BooleanField()
-    is_partner = models.BooleanField()
+    mooc = models.BooleanField(default=False)
+    is_partner = models.BooleanField(default=False)
     rep_name = models.CharField(max_length=256, blank=True, null=True)
     rep_email = models.CharField(max_length=256, blank=True, null=True)
 
@@ -83,8 +83,8 @@ class CodeSchool(models.Model):
     hardware_included = models.BooleanField(blank=True, null=True)
     has_online = models.BooleanField(blank=True, null=True)
     online_only = models.BooleanField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     notes = models.TextField(blank=True, null=True)
     mooc = models.BooleanField()
     is_partner = models.BooleanField()
@@ -110,8 +110,8 @@ class Event(models.Model):
     state = models.CharField(max_length=256, blank=True, null=True)
     zip = models.CharField(max_length=256, blank=True, null=True)
     scholarship_available = models.BooleanField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     source_id = models.CharField(max_length=256, blank=True, null=True)
     source_type = models.CharField(max_length=256, blank=True, null=True)
     source_updated = models.DateTimeField(blank=True, null=True)
@@ -136,8 +136,8 @@ class GitHubStatistic(models.Model):
     title = models.CharField(max_length=256, blank=True, null=True)
     number = models.CharField(max_length=256, blank=True, null=True)
     completed_on = models.DateField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         managed = False
@@ -151,8 +151,8 @@ class GitHubUser(models.Model):
     api_url = models.CharField(max_length=256, blank=True, null=True)
     html_url = models.CharField(max_length=256, blank=True, null=True)
     git_hub_id = models.IntegerField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         managed = False
@@ -173,8 +173,8 @@ class OldLocation(models.Model):
         null=True,
         related_name="locations",
     )
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return (
@@ -196,8 +196,8 @@ class Location(models.Model):
     code_school = models.ForeignKey(
         CodeSchool, models.DO_NOTHING, blank=True, null=True, related_name="locations"
     )
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return (
@@ -215,8 +215,8 @@ class Request(models.Model):
     user = models.ForeignKey(OldUserObj, models.DO_NOTHING, blank=True, null=True)
     assigned_mentor_id = models.IntegerField(blank=True, null=True)
     requested_mentor_id = models.IntegerField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=256, blank=True, null=True)
 
     class Meta:
@@ -232,8 +232,8 @@ class Resource(models.Model):
     paid = models.BooleanField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     votes_count = models.IntegerField()
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         managed = False
@@ -242,8 +242,8 @@ class Resource(models.Model):
 
 class Role(models.Model):
     title = models.CharField(max_length=256, blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.title}"
@@ -268,8 +268,8 @@ class ScholarshipApplication(models.Model):
     scholarship = models.ForeignKey(
         "Scholarship", models.DO_NOTHING, blank=True, null=True
     )
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         managed = False
@@ -283,8 +283,8 @@ class Scholarship(models.Model):
     terms = models.TextField(blank=True, null=True)
     open_time = models.DateTimeField(blank=True, null=True)
     close_time = models.DateTimeField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         managed = False
@@ -293,8 +293,8 @@ class Scholarship(models.Model):
 
 class Service(models.Model):
     name = models.CharField(max_length=256, blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         managed = False
@@ -308,8 +308,8 @@ class SlackUser(models.Model):
     slack_display_name = models.CharField(max_length=256, blank=True, null=True)
     slack_email = models.CharField(max_length=256, blank=True, null=True)
     user_id = models.IntegerField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         managed = False
@@ -323,7 +323,7 @@ class Tagging(models.Model):
     tagger_type = models.CharField(max_length=256, blank=True, null=True)
     tagger_id = models.IntegerField(blank=True, null=True)
     context = models.CharField(max_length=128, blank=True, null=True)
-    created_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(blank=True, null=True, auto_now_add=True)
 
     def __str__(self):
         return f"{self.tag_id}"
@@ -358,8 +358,8 @@ class Tag(models.Model):
 class OldTeamMember(models.Model):
     name = models.CharField(max_length=256, blank=True, null=True)
     role = models.CharField(max_length=256, blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     description = models.TextField(blank=True, null=True)
     group = models.CharField(max_length=256, blank=True, null=True)
     image_src = models.CharField(max_length=256, blank=True, null=True)
@@ -376,8 +376,8 @@ class OldTeamMember(models.Model):
 class TeamMember(models.Model):
     name = models.CharField(max_length=256, blank=True, null=True)
     role = models.CharField(max_length=256, blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     description = models.TextField(blank=True, null=True)
     group = models.CharField(max_length=256, blank=True, null=True)
     image_src = models.CharField(max_length=256, blank=True, null=True)
@@ -393,8 +393,8 @@ class TeamMember(models.Model):
 class Vote(models.Model):
     user = models.ForeignKey(OldUserObj, models.DO_NOTHING, blank=True, null=True)
     resource = models.ForeignKey(Resource, models.DO_NOTHING, blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         managed = False

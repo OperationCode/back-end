@@ -1,51 +1,39 @@
+import humps
 import pytest
 from django import test
 from django.contrib.auth.models import User
 from django.urls import reverse
 
-from tests.integration.test_data import (
-    empty_update,
-    interests_empty,
-    interests_multiple,
-    interests_single,
-    military_details,
-    military_status,
-    professional_details,
-)
 
-
-@pytest.mark.parametrize(
-    argnames="params",
-    argvalues=[
-        empty_update,
-        professional_details,
-        military_status,
-        military_details,
-        interests_empty,
-        interests_single,
-        interests_multiple,
-    ],
-    ids=[
-        "empty_update",
-        "professional_details",
-        "military_status",
-        "military_details",
-        "interests_empty",
-        "interests_single",
-        "interests_multiple",
-    ],
-)
-def test_professional_details_update(
-    authed_client: test.Client, authed_user: User, params
+def test_update_profile_random_params(
+    authed_client: test.Client, user: User, random_profile_dict
 ):
-    res = authed_client.patch(reverse("update_profile"), params)
+    res = authed_client.patch(
+        reverse("update_profile"), humps.camelize(random_profile_dict)
+    )
 
     assert res.status_code == 200
 
-    authed_user.refresh_from_db()
-    profile = authed_user.profile
+    user.refresh_from_db()
+    profile = user.profile
 
-    for key, val in params.items():
+    for key, val in random_profile_dict.items():
+        assert getattr(profile, key) == val
+
+
+def test_update_profile_frontend_params(
+    authed_client: test.Client, user: User, update_profile_params
+):
+    res = authed_client.patch(
+        reverse("update_profile"), humps.camelize(update_profile_params)
+    )
+
+    assert res.status_code == 200
+
+    user.refresh_from_db()
+    profile = user.profile
+
+    for key, val in update_profile_params.items():
         assert getattr(profile, key) == val
 
 
@@ -65,10 +53,10 @@ def test_update_requires_get_or_patch(
     argvalues=[("application/octet-stream", 415), ("text/html", 415)],
 )
 def test_update_requires_correct_format(
-    authed_client: test.Client, content_type: str, status: int
+    authed_client: test.Client, content_type: str, status: int, update_profile_params
 ):
     res = authed_client.patch(
-        reverse("update_profile"), professional_details, content_type=content_type
+        reverse("update_profile"), update_profile_params, content_type=content_type
     )
 
     assert res.status_code == status

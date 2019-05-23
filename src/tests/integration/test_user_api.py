@@ -1,28 +1,38 @@
 import pytest
+from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework.test import APIClient
 
-from tests.utils import FLATTENED_USER
 
-
-def test_user_api_required_auth(authed_client: APIClient):
+def test_user_api_required_auth(authed_client: APIClient, user: User):
     res = authed_client.get(reverse("view_user"))
 
     assert res.status_code == 200
 
-    user_data = res.data
-    for key, val in FLATTENED_USER.items():
-        assert user_data[key] == val
+    assert res.data["first_name"] == user.first_name
 
 
-def test_user_api_returns_correct_data(authed_client: APIClient):
+def test_user_api_returns_correct_data(authed_client: APIClient, user: User):
     res = authed_client.get(reverse("view_user"))
 
     assert res.status_code == 200
 
-    user_data = res.data
-    for key, val in FLATTENED_USER.items():
-        assert user_data[key] == val
+    assert res.data["last_name"] == user.last_name
+    assert res.data["email"] == user.email
+    assert res.data["username"] == user.username
+    assert res.data["zip"] == user.profile.zip
+    assert res.data["sign_in_count"] == user.profile.sign_in_count
+    assert res.data["mentor"] == user.profile.mentor
+    assert res.data["state"] == user.profile.state
+    assert res.data["address_1"] == user.profile.address_1
+    assert res.data["address_2"] == user.profile.address_2
+    assert res.data["city"] == user.profile.city
+    assert res.data["branch_of_service"] == user.profile.branch_of_service
+    assert res.data["years_of_service"] == user.profile.years_of_service
+    assert res.data["pay_grade"] == user.profile.pay_grade
+
+    specialty = res.data["military_occupational_specialty"]
+    assert specialty == user.profile.military_occupational_specialty
 
 
 @pytest.mark.parametrize(

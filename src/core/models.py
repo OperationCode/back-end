@@ -44,7 +44,7 @@ class Profile(models.Model):
     role_id = models.IntegerField(blank=True, null=True)
     military_status = models.CharField(max_length=256, blank=True, null=True)
 
-    slack_id = models.CharField(max_length=16)
+    slack_id = models.CharField(max_length=16, blank=True)
 
     def __str__(self):
         return f"Username: {self.user} Slack ID: {self.slack_id}"
