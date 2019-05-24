@@ -3,6 +3,9 @@ from rest_auth.registration.serializers import (
     RegisterSerializer as BaseRegisterSerializer,
 )
 from rest_auth.serializers import LoginSerializer as BaseLoginSerializer
+from rest_auth.serializers import (
+    PasswordResetConfirmSerializer as BasePasswordResetConfirmSerializer,
+)
 from rest_auth.serializers import UserDetailsSerializer as BaseUserDetailsSerializer
 from rest_framework import serializers, status
 from rest_framework.exceptions import PermissionDenied
@@ -39,6 +42,22 @@ class LoginSerializer(BaseLoginSerializer):
                 raise CustomValidationError("Email has not been verified")
             else:
                 raise CustomValidationError()
+
+
+# noinspection PyAbstractClass
+class PasswordResetConfirmSerializer(BasePasswordResetConfirmSerializer):
+    """
+    Extends the default PasswordResetConfirmSerializer in order to return
+    custom error messages
+    """
+
+    def validate(self, attrs):
+        try:
+            return super().validate(attrs)
+        except serializers.ValidationError:
+            raise CustomValidationError(
+                "Could not reset password.  Reset token expired or invalid."
+            )
 
 
 # noinspection PyAbstractClass
