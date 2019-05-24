@@ -10,7 +10,7 @@ from django.views.decorators.debug import sensitive_post_parameters
 from rest_auth.registration.views import RegisterView as BaseRegisterView
 from rest_auth.registration.views import SocialLoginView
 from rest_framework.generics import RetrieveUpdateAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from core.models import Profile
 from core.serializers import ProfileSerializer, UserSerializer
@@ -62,6 +62,7 @@ class RegisterView(BaseRegisterView):
 
 
 class GoogleLogin(SocialLoginView):
+    permission_classes = (AllowAny,)
     adapter_class = GoogleOAuth2Adapter
 
 
