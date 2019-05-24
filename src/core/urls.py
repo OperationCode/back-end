@@ -9,7 +9,7 @@ from . import views
 
 urlpatterns = [
     path(
-        "auth/password_reset/confirm/",
+        "auth/password/reset/confirm/",
         PasswordResetConfirmView.as_view(),
         name="password_reset_confirm",
     ),
