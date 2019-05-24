@@ -219,7 +219,7 @@ EMAIL_PORT = os.environ.get("EMAIL_PORT", "")
 
 # Django-Rest-Auth
 REST_SESSION_LOGIN = True
-SITE_ID = os.environ.get("SITE_ID", 3)
+SITE_ID = os.environ.get("SITE_ID", 1)
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 REST_USE_JWT = True
