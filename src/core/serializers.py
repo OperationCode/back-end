@@ -54,10 +54,12 @@ class PasswordResetConfirmSerializer(BasePasswordResetConfirmSerializer):
     def validate(self, attrs):
         try:
             return super().validate(attrs)
-        except serializers.ValidationError:
-            raise CustomValidationError(
-                "Could not reset password.  Reset token expired or invalid."
-            )
+        except serializers.ValidationError as ex:
+            if "new_password2" in ex.detail:
+                message = ex.detail["new_password2"][0]
+            else:
+                message = "Could not reset password.  Reset token expired or invalid."
+            raise CustomValidationError(message)
 
 
 # noinspection PyAbstractClass
