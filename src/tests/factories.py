@@ -1,27 +1,26 @@
 import threading
 
-# import factory
-from factory import (
-    DjangoModelFactory,
-    CREATE_STRATEGY,
-    LazyAttribute,
-    LazyFunction,
-    django,
-    SubFactory,
-    PostGeneration,
-    RelatedFactory,
-)
 from allauth.account.models import EmailAddress
 from django.conf import settings
 from django.db.models.signals import post_save
+from factory import (
+    CREATE_STRATEGY,
+    DjangoModelFactory,
+    LazyAttribute,
+    LazyFunction,
+    PostGeneration,
+    RelatedFactory,
+    SubFactory,
+    django,
+)
 
 from core.models import Profile
 from tests.test_data import (
-    fake,
     DEFAULT_PASSWORD,
+    fake,
     random_branch,
-    random_pay_grade,
     random_mos,
+    random_pay_grade,
 )
 
 

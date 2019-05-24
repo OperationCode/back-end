@@ -1,4 +1,5 @@
 from enum import Enum
+
 from faker import Factory as FakerFactory
 
 fake = FakerFactory.create()
