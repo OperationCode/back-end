@@ -53,9 +53,7 @@ def add_user_to_mailing_list(email: str) -> None:
     try:
         user = AuthUser.objects.get(email=email)
 
-        client = MailChimp(
-            settings.MAILCHIMP_API_KEY, mc_user=settings.MAILCHIMP_USERNAME
-        )
+        client = MailChimp(settings.MAILCHIMP_API_KEY)
         res = client.lists.members.create(
             settings.MAILCHIMP_LIST_ID,
             {
