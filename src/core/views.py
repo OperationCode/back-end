@@ -5,20 +5,20 @@ from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.debug import sensitive_post_parameters
 from rest_auth.registration.views import RegisterView as BaseRegisterView
-from rest_auth.registration.views import SocialLoginView
+from rest_auth.registration.views import SocialConnectView, SocialLoginView
+from rest_framework import serializers
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
+from core.exceptions import CustomValidationError
 from core.models import Profile
 from core.serializers import ProfileSerializer, UserSerializer
 
 sensitive_param = method_decorator(
     sensitive_post_parameters("password"), name="dispatch"
 )
-csrf_exempt_c = method_decorator(csrf_exempt, name="dispatch")
 
 
 class UpdateProfile(RetrieveUpdateAPIView):
@@ -65,8 +65,26 @@ class GoogleLogin(SocialLoginView):
     permission_classes = (AllowAny,)
     adapter_class = GoogleOAuth2Adapter
 
+    def post(self, request, *args, **kwargs):
+        try:
+            return super().post(request, *args, **kwargs)
+        except serializers.ValidationError as ex:
+            if "non_field_errors" in ex.detail:
+                raise CustomValidationError(
+                    ex.detail["non_field_errors"][0], status_code=400
+                )
+            raise ex
+
+
+class GoogleConnect(SocialConnectView):
+    adapter_class = GoogleOAuth2Adapter
+
 
 class FacebookLogin(SocialLoginView):
+    adapter_class = FacebookOAuth2Adapter
+
+
+class FacebookConnect(SocialConnectView):
     adapter_class = FacebookOAuth2Adapter
 
 

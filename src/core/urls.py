@@ -15,7 +15,17 @@ urlpatterns = [
     ),
     path("verify-email/", VerifyEmailView.as_view(), name="rest_verify_email"),
     path("auth/social/google/", views.GoogleLogin.as_view(), name="google_rest_login"),
+    path(
+        "auth/social/google/connect",
+        views.GoogleConnect.as_view(),
+        name="google_connect",
+    ),
     path("auth/social/facebook/", views.FacebookLogin.as_view(), name="fb_rest_login"),
+    path(
+        "auth/social/facebook/connect",
+        views.FacebookConnect.as_view(),
+        name="facebook_connect",
+    ),
     path("auth/social/github/", views.GithubLogin.as_view(), name="gh_rest_login"),
     path("auth/social/list", SocialAccountListView.as_view(), name="social_list"),
     path("auth/", include("rest_auth.urls")),
