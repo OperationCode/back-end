@@ -95,5 +95,10 @@ jobs:
             poetry run coverage xml
             /usr/local/bin/cc-test-reporter after-build -t coverage.py
 
+      - run:
+          name: Run Bandit security analysis
+          command: |
+            poetry run bandit -r .
+
       - store_test_results:
           path: test-results
