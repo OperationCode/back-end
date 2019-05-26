@@ -6,7 +6,6 @@ from rest_framework.test import APIClient
 from tests.test_data import DEFAULT_PASSWORD
 
 
-@pytest.mark.django_db
 def test_valid_rest_login(client: APIClient, user: User):
     res = client.post(
         reverse("rest_login"), {"email": user.email, "password": DEFAULT_PASSWORD}
@@ -37,21 +36,19 @@ def test_valid_rest_login(client: APIClient, user: User):
 #     assert "Email has not been verified" in res.data["error"]
 
 
-@pytest.mark.django_db
 def test_invalid_pass_rest_login(client: APIClient, user: User):
     res = client.post(
         reverse("rest_login"), {"email": user.email, "password": "wrongPass"}
     )
 
-    assert res.status_code == 401
-    assert "The email or password you entered is incorrect!" in res.data["error"]
+    assert res.status_code == 400
+    assert "Unable to log in with provided credentials." in res.data["error"]
 
 
-@pytest.mark.django_db
 def test_invalid_username_rest_login(client: APIClient, user: User):
     res = client.post(
         reverse("rest_login"), {"email": "wrong@email.com", "password": user.username}
     )
 
-    assert res.status_code == 401
-    assert "The email or password you entered is incorrect!" in res.data["error"]
+    assert res.status_code == 400
+    assert "Unable to log in with provided credentials." in res.data["error"]

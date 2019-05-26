@@ -1,5 +1,3 @@
-import pytest
-
 from core.handlers import custom_jwt_payload_handler
 
 from .. import factories as f

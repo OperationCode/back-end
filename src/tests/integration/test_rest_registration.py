@@ -114,7 +114,7 @@ def test_email_verification_with_invalid_token(
     res = client.post(reverse("rest_verify_email"), {"key": "abc123"})
 
     assert res.status_code == 404
-    assert res.data["detail"] == "Not found."
+    assert res.data["error"] == "Not found."
 
 
 @pytest.mark.django_db

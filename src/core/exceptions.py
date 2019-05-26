@@ -1,16 +1,34 @@
-from rest_framework import status
-from rest_framework.exceptions import PermissionDenied
+from typing import Optional
+
+from django.http import Http404
+from rest_framework import exceptions
+from rest_framework.exceptions import APIException, PermissionDenied
+from rest_framework.response import Response
+from rest_framework.views import set_rollback
 
 
-class CustomValidationError(PermissionDenied):
-    """
-    Exception that is re-raised on login validation exceptions
-    in order to define our own error message responses
-    """
+def custom_exception_handler(exc: APIException, context: dict) -> Optional[Response]:
+    if isinstance(exc, Http404):
+        exc = exceptions.NotFound()
+    elif isinstance(exc, PermissionDenied):
+        exc = exceptions.PermissionDenied()
 
-    default_status_code = status.HTTP_401_UNAUTHORIZED
-    default_detail = "The email or password you entered is incorrect!"
+    if isinstance(exc, exceptions.APIException):
+        headers = {}
+        if getattr(exc, "auth_header", None):
+            headers["WWW-Authenticate"] = exc.auth_header
+        if getattr(exc, "wait", None):
+            headers["Retry-After"] = int(exc.wait)
 
-    def __init__(self, detail=default_detail, status_code=default_status_code):
-        self.detail = {"error": detail}
-        self.status_code = status_code
+        if isinstance(exc.detail, (list, dict)):
+            if "non_field_errors" in exc.detail:
+                data = {"error": ", ".join(exc.detail["non_field_errors"])}
+            else:
+                data = exc.detail
+        else:
+            data = {"error": exc.detail}
+
+        set_rollback()
+        return Response(data, status=exc.status_code, headers=headers)
+
+    return None

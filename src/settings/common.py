@@ -115,6 +115,7 @@ REST_FRAMEWORK = {
         # "rest_framework.authentication.SessionAuthentication",
     ),
     "JSON_UNDERSCOREIZE": {"no_underscore_before_number": True},
+    "EXCEPTION_HANDLER": "core.exceptions.custom_exception_handler",
 }
 
 ROOT_URLCONF = "operationcode_backend.urls"
@@ -240,9 +241,7 @@ JWT_AUTH = {
 }
 
 REST_AUTH_SERIALIZERS = {
-    "LOGIN_SERIALIZER": "core.serializers.LoginSerializer",
-    "USER_DETAILS_SERIALIZER": "core.serializers.UserDetailsSerializer",
-    "PASSWORD_RESET_CONFIRM_SERIALIZER": "core.serializers.PasswordResetConfirmSerializer",
+    "USER_DETAILS_SERIALIZER": "core.serializers.UserDetailsSerializer"
 }
 
 REST_AUTH_REGISTER_SERIALIZERS = {

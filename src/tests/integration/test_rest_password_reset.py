@@ -69,7 +69,8 @@ def test_password_reset_confirm_bad_token(client: APIClient, user: User):
         },
     )
 
-    assert res.status_code == 401
+    assert res.status_code == 400
+    assert "token" in res.data
 
 
 def test_password_reset_login_with_new_password(client: APIClient, user: User):
@@ -96,25 +97,6 @@ def test_password_reset_login_with_new_password(client: APIClient, user: User):
     assert res.status_code == 200
 
 
-def test_password_reset_expired_error(client: APIClient, user: User):
-    uid = urlsafe_base64_encode(force_bytes(user.pk))
-    password = fake.password()
-
-    res = client.post(
-        reverse("password_reset_confirm"),
-        {
-            "newPassword1": password,
-            "newPassword2": password,
-            "token": "badToken",
-            "uid": uid,
-        },
-    )
-
-    assert res.status_code == 401
-    assert "error" in res.data
-    assert "expired" in res.data["error"]
-
-
 def test_password_reset_common_password_error(client: APIClient, user: User):
     uid = urlsafe_base64_encode(force_bytes(user.pk))
 
@@ -128,6 +110,5 @@ def test_password_reset_common_password_error(client: APIClient, user: User):
         },
     )
 
-    assert res.status_code == 401
-    assert "error" in res.data
-    assert "common" in res.data["error"]
+    assert res.status_code == 400
+    assert "new_password2" in res.data
