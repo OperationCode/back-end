@@ -2,11 +2,11 @@ from django.contrib.auth import get_user_model
 from rest_auth.registration.serializers import (
     RegisterSerializer as BaseRegisterSerializer,
 )
+from rest_auth.serializers import LoginSerializer as BaseLoginSerializer
 from rest_auth.serializers import (
-    UserDetailsSerializer as BaseUserDetailsSerializer,
-    LoginSerializer as BaseLoginSerializer,
     PasswordResetConfirmSerializer as BasePasswordResetConfirmSerializer,
 )
+from rest_auth.serializers import UserDetailsSerializer as BaseUserDetailsSerializer
 from rest_framework import serializers
 
 from core.models import Profile
