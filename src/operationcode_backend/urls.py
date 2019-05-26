@@ -12,7 +12,7 @@ urlpatterns = [
 ]
 
 ##############################################
-#    Static and media files in debug mode     #
+#    Static and media files in debug mode    #
 ##############################################
 if settings.DEBUG or settings.TESTING:
     import debug_toolbar

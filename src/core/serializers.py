@@ -2,10 +2,47 @@ from django.contrib.auth import get_user_model
 from rest_auth.registration.serializers import (
     RegisterSerializer as BaseRegisterSerializer,
 )
-from rest_auth.serializers import UserDetailsSerializer as BaseUserDetailsSerializer
+from rest_auth.serializers import (
+    UserDetailsSerializer as BaseUserDetailsSerializer,
+    LoginSerializer as BaseLoginSerializer,
+    PasswordResetConfirmSerializer as BasePasswordResetConfirmSerializer,
+)
 from rest_framework import serializers
 
 from core.models import Profile
+
+
+# noinspection PyAbstractClass
+class LoginSerializer(BaseLoginSerializer):
+    """
+    Extends the default LoginSerializer in order to return
+    custom error messages
+    """
+
+    def validate(self, attrs):
+        try:
+            return super().validate(attrs)
+        except serializers.ValidationError as ex:
+            ex.detail = "The email or password you entered is incorrect!"
+            raise ex
+
+
+# noinspection PyAbstractClass
+class PasswordResetConfirmSerializer(BasePasswordResetConfirmSerializer):
+    """
+    Extends the default PasswordResetConfirmSerializer in order to return
+    custom error messages
+    """
+
+    def validate(self, attrs):
+        try:
+            return super().validate(attrs)
+        except serializers.ValidationError as ex:
+            if "new_password2" in ex.detail:
+                ex.detail = ex.detail["new_password2"][0]
+            else:
+                ex.detail = "Could not reset password.  Reset token expired or invalid."
+            raise ex
 
 
 # noinspection PyAbstractClass

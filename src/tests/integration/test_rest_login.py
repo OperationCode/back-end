@@ -42,7 +42,7 @@ def test_invalid_pass_rest_login(client: APIClient, user: User):
     )
 
     assert res.status_code == 400
-    assert "Unable to log in with provided credentials." in res.data["error"]
+    assert res.data["error"] == "The email or password you entered is incorrect!"
 
 
 def test_invalid_username_rest_login(client: APIClient, user: User):
@@ -51,4 +51,4 @@ def test_invalid_username_rest_login(client: APIClient, user: User):
     )
 
     assert res.status_code == 400
-    assert "Unable to log in with provided credentials." in res.data["error"]
+    assert res.data["error"] == "The email or password you entered is incorrect!"

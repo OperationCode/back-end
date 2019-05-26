@@ -241,7 +241,9 @@ JWT_AUTH = {
 }
 
 REST_AUTH_SERIALIZERS = {
-    "USER_DETAILS_SERIALIZER": "core.serializers.UserDetailsSerializer"
+    "LOGIN_SERIALIZER": "core.serializers.LoginSerializer",
+    "USER_DETAILS_SERIALIZER": "core.serializers.UserDetailsSerializer",
+    "PASSWORD_RESET_CONFIRM_SERIALIZER": "core.serializers.PasswordResetConfirmSerializer",
 }
 
 REST_AUTH_REGISTER_SERIALIZERS = {
