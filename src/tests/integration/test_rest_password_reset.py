@@ -70,7 +70,10 @@ def test_password_reset_confirm_bad_token(client: APIClient, user: User):
     )
 
     assert res.status_code == 400
-    assert "token" in res.data
+    assert (
+        res.data["error"]
+        == "Could not reset password.  Reset token expired or invalid."
+    )
 
 
 def test_password_reset_login_with_new_password(client: APIClient, user: User):
@@ -111,4 +114,4 @@ def test_password_reset_common_password_error(client: APIClient, user: User):
     )
 
     assert res.status_code == 400
-    assert "new_password2" in res.data
+    assert res.data["error"] == "This password is too common."
