@@ -9,6 +9,14 @@ workflows:
     jobs:
       - build_test
 
+      - dockerhub_build_and_push:
+          requires:
+            - build_test
+          filters:
+            branches:
+              only:
+                - dockerhub
+
       # push new Docker image to ECS
       - aws-ecr/build_and_push_image:
           repo: back-end
@@ -37,7 +45,6 @@ workflows:
               only:
                 - master
                 - staging
-
 
 
 jobs:
@@ -102,3 +109,17 @@ jobs:
 
       - store_test_results:
           path: test-results
+
+  dockerhub_build_and_push:
+    docker:
+      - image: circleci/python:3.7.1
+
+    steps:
+      - checkout
+
+      - run:
+          name: Build and push to DockerHub
+          command: |
+            docker build -t operationcode/back-end -f docker/Dockerfile .
+            echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USERNAME} --password-stdin
+            docker push operationcode/back-end
