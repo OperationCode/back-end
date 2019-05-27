@@ -28,18 +28,20 @@ urlpatterns = [
     ),
     path("auth/social/github/", views.GithubLogin.as_view(), name="gh_rest_login"),
     path("auth/social/list", SocialAccountListView.as_view(), name="social_list"),
-    path("auth/", include("rest_auth.urls")),
     path("auth/token/refresh", refresh_jwt_token, name="refresh_jwt"),
     path("auth/token/verify", verify_jwt_token, name="verify_jwt"),
     path("auth/registration/", views.RegisterView.as_view(), name="rest_register"),
-    path("auth/profile", views.UpdateProfile.as_view(), name="update_profile"),
-    path("auth/user", views.UserView.as_view(), name="view_user"),
+    path("auth/profile", views.UpdateProfile.as_view(), name="legacy_update_profile"),
+    path("auth/profile/", views.UpdateProfile.as_view(), name="update_profile"),
+    path("auth/user", views.UserView.as_view(), name="legacy_view_user"),
+    path("auth/user/", views.UserView.as_view(), name="view_user"),
     # Used by allauth to send the "verification email sent" response to client
     path(
         "auth/account-email-verification-sent",
         TemplateView.as_view(),
         name="account_email_verification_sent",
     ),
+    path("auth/", include("rest_auth.urls")),
 ]
 
 # Used for social auth development
