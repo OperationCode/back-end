@@ -23,7 +23,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 version = "19.1.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Security oriented static analyser for python code."
 name = "bandit"
 optional = false
@@ -32,7 +32,8 @@ version = "1.6"
 
 [package.dependencies]
 GitPython = ">=1.0.1"
-PyYAML = ">=3.12"
+PyYAML = ">=3.13"
+colorama = ">=0.3.9"
 six = ">=1.10.0"
 stevedore = ">=1.20.0"
 
@@ -133,7 +134,7 @@ version = "7.0"
 [[package]]
 category = "dev"
 description = "Cross-platform colored terminal text."
-marker = "sys_platform == \"win32\""
+marker = "platform_system == \"Windows\" or sys_platform == \"win32\""
 name = "colorama"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
@@ -251,6 +252,17 @@ version = "1.11"
 [package.dependencies]
 Django = ">=1.11"
 sqlparse = ">=0.2.0"
+
+[[package]]
+category = "main"
+description = "Django middlewares to monitor your application with Prometheus.io."
+name = "django-prometheus"
+optional = false
+python-versions = "*"
+version = "1.0.15"
+
+[package.dependencies]
+prometheus-client = ">=0.0.21"
 
 [[package]]
 category = "main"
@@ -384,7 +396,7 @@ attrs = "*"
 flake8 = ">=3.0.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Git Object Database"
 name = "gitdb2"
 optional = false
@@ -395,7 +407,7 @@ version = "2.0.5"
 smmap2 = ">=2.0.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Python Git Library"
 name = "gitpython"
 optional = false
@@ -512,7 +524,7 @@ version = "1.3.2"
 coreapi = ">=2.2.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Python Build Reasonableness"
 name = "pbr"
 optional = false
@@ -526,6 +538,14 @@ name = "pluggy"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 version = "0.11.0"
+
+[[package]]
+category = "main"
+description = "Python client for the Prometheus monitoring system."
+name = "prometheus-client"
+optional = false
+python-versions = "*"
+version = "0.6.0"
 
 [[package]]
 category = "main"
@@ -677,7 +697,7 @@ python-versions = "*"
 version = "2019.1"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "YAML parser and emitter for Python"
 name = "pyyaml"
 optional = false
@@ -750,7 +770,7 @@ python-versions = ">=2.6, !=3.0.*, !=3.1.*"
 version = "1.12.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "A pure Python implementation of a sliding window memory map manager"
 name = "smmap2"
 optional = false
@@ -766,7 +786,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 version = "0.3.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Manage dynamic plugins for Python applications"
 name = "stevedore"
 optional = false
@@ -818,14 +838,14 @@ python-versions = "*"
 version = "0.1.7"
 
 [metadata]
-content-hash = "462ab55e0ae5b7a8b7a1edd25dae4594ddb9ffce61a04537e34ab764cba3f263"
+content-hash = "d23b45ee1d850c095231865fb79b10940223b381855ffd459abb3b9d843b93cb"
 python-versions = "^3.7"
 
 [metadata.hashes]
 appdirs = ["9e5896d1372858f8dd3344faf4e5014d21849c756c8d5701f78f8a103b372d92", "d8b24664561d0d34ddfaec54636d502d7cea6e29c3eaf68f3df6180863e2166e"]
 atomicwrites = ["03472c30eb2c5d1ba9227e4c2ca66ab8287fbfbbda3888aa93dc2e28fc6811b4", "75a9445bac02d8d058d5e1fe689654ba5a6556a1dfd8ce6ec55a0ed79866cfa6"]
 attrs = ["69c0dbf2ed392de1cb5ec704444b08a5ef81680a61cb899dc08127123af36a79", "f0b870f674851ecbfbbbd364d6b5cbdff9dcedbc7f3f5e18a6891057f21fe399"]
-bandit = ["6102b5d6afd9d966df5054e0bdfc2e73a24d0fea400ec25f2e54c134412158d7", "9413facfe9de1e1bd291d525c784e1beb1a55c9916b51dae12979af63a69ba4c"]
+bandit = []
 bcrypt = ["0ba875eb67b011add6d8c5b76afbd92166e98b1f1efab9433d5dc0fafc76e203", "21ed446054c93e209434148ef0b362432bb82bbdaf7beef70a32c221f3e33d1c", "28a0459381a8021f57230954b9e9a65bb5e3d569d2c253c5cac6cb181d71cf23", "2aed3091eb6f51c26b7c2fad08d6620d1c35839e7a362f706015b41bd991125e", "2fa5d1e438958ea90eaedbf8082c2ceb1a684b4f6c75a3800c6ec1e18ebef96f", "3a73f45484e9874252002793518da060fb11eaa76c30713faa12115db17d1430", "3e489787638a36bb466cd66780e15715494b6d6905ffdbaede94440d6d8e7dba", "44636759d222baa62806bbceb20e96f75a015a6381690d1bc2eda91c01ec02ea", "678c21b2fecaa72a1eded0cf12351b153615520637efcadc09ecf81b871f1596", "75460c2c3786977ea9768d6c9d8957ba31b5fbeb0aae67a5c0e96aab4155f18c", "8ac06fb3e6aacb0a95b56eba735c0b64df49651c6ceb1ad1cf01ba75070d567f", "8fdced50a8b646fff8fa0e4b1c5fd940ecc844b43d1da5a980cb07f2d1b1132f", "9b2c5b640a2da533b0ab5f148d87fb9989bf9bcb2e61eea6a729102a6d36aef9", "a9083e7fa9adb1a4de5ac15f9097eb15b04e2c8f97618f1b881af40abce382e1", "b7e3948b8b1a81c5a99d41da5fb2dc03ddb93b5f96fcd3fd27e643f91efa33e1", "b998b8ca979d906085f6a5d84f7b5459e5e94a13fc27c28a3514437013b6c2f6", "dd08c50bc6f7be69cd7ba0769acca28c846ec46b7a8ddc2acf4b9ac6f8a7457e", "de5badee458544ab8125e63e39afeedfcf3aef6a6e2282ac159c95ae7472d773", "ede2a87333d24f55a4a7338a6ccdccf3eaa9bed081d1737e0db4dbd1a4f7e6b6"]
 black = ["817243426042db1d36617910df579a54f1afd659adb96fc5032fcf4b36209739", "e030a9a28f542debc08acceb273f228ac422798e5215ba2a791a6ddeaaca22a5"]
 boto3 = ["000e266d8dfe8950972c62a4a129944d45ea5719912b197e796360064f2115e5", "df865952fd3e1b8a5e4c6f94cf03ef4238a16140a77811a187497c4c664b9753"]
@@ -845,6 +865,7 @@ django-background-tasks = ["35a9a54961f3e4486ab2f9482d1e8ac63ab4f47e5e0b7e654a22
 django-compat = ["3ac9a3bedc56b9365d9eb241bc5157d0c193769bf995f9a78dc1bc24e7c2331b"]
 django-cors-headers = ["0ac81a9a70ba9bf5569f19693f1ce566e46cabc710cdaa053409415c690033bb", "b57087e45e4418a6147b8a27ca9d19da2c16b3e4732b2372fe2d9774fc7c5bca"]
 django-debug-toolbar = ["89d75b60c65db363fb24688d977e5fbf0e73386c67acf562d278402a10fc3736", "c2b0134119a624f4ac9398b44f8e28a01c7686ac350a12a74793f3dd57a9eea0"]
+django-prometheus = ["571d89a13e2547e1c3d19901f155bde8e101323fbcb0439363d670bc61c8c541", "e8da2eb91cb20cfe0b8130305d34f3503766b7a08a244ce1031c36136beeb7a5"]
 django-rest-auth = ["f11e12175dafeed772f50d740d22caeab27e99a3caca24ec65e66a8d6de16571"]
 django-rest-swagger = ["48f6aded9937e90ae7cbe9e6c932b9744b8af80cc4e010088b3278c700e0685b", "b039b0288bab4665cd45dc5d16f94b13911bc4ad0ed55f74ad3b90aa31c87c17"]
 django-storages = ["8e35d2c7baeda5dc6f0b4f9a0fc142d25f9a1bf72b8cebfcbc5db4863abc552d", "b1a63cd5ea286ee5a9fb45de6c3c5c0ae132d58308d06f1ce9865cfcd5e470a7"]
@@ -873,6 +894,7 @@ oauthlib = ["0ce32c5d989a1827e3f1148f98b9085ed2370fc939bf524c9c851d8714797298", 
 openapi-codec = ["1bce63289edf53c601ea3683120641407ff6b708803b8954c8a876fe778d2145"]
 pbr = ["6901995b9b686cb90cceba67a0f6d4d14ae003cd59bc12beb61549bdfbe3bc89", "d950c64aeea5456bbd147468382a5bb77fe692c13c9f00f0219814ce5b642755"]
 pluggy = ["25a1bc1d148c9a640211872b4ff859878d422bccb59c9965e04eed468a0aa180", "964cedd2b27c492fbf0b7f58b3284a09cf7f99b0f715941fb24a439b3af1bd1a"]
+prometheus-client = ["1b38b958750f66f208bcd9ab92a633c0c994d8859c831f7abc1f46724fcee490"]
 psycopg2 = ["00cfecb3f3db6eb76dcc763e71777da56d12b6d61db6a2c6ccbbb0bff5421f8f", "076501fc24ae13b2609ba2303d88d4db79072562f0b8cc87ec1667dedff99dc1", "4e2b34e4c0ddfeddf770d7df93e269700b080a4d2ec514fec668d71895f56782", "5cacf21b6f813c239f100ef78a4132056f93a5940219ec25d2ef833cbeb05588", "61f58e9ecb9e4dc7e30be56b562f8fc10ae3addcfcef51b588eed10a5a66100d", "8954ff6e47247bdd134db602fcadfc21662835bd92ce0760f3842eacfeb6e0f3", "b6e8c854cdc623028e558a409b06ea2f16d13438335941c7765d0a42b5bedd33", "baca21c0f7344576346e260454d0007313ccca8c170684707a63946b27a56c8f", "bb1735378770fb95dbe392d29e71405d45c8bdcfa064f916504833a92ab03c55", "de3d3c46c1ee18f996db42d1eb44cf1565cc9e38fb1dbd9b773ff6b3fa8035d7", "dee885602bb200bdcb1d30f6da6c7bb207360bc786d0a364fe1540dd14af0bab"]
 py = ["64f65755aee5b381cea27766a3a147c3f15b9b6b9ac88676de66ba2ae36793fa", "dc639b046a6e2cff5bbe40194ad65936d6ba360b52b3c3fe1d08a82dd50b5e53"]
 pycodestyle = ["95a2219d12372f05704562a14ec30bc76b05a5b297b21a5dfe3f6fac3491ae56", "e40a936c9a450ad81df37f549d676d127b1b66000a6c500caa2b085bc0ca976c"]

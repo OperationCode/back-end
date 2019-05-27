@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     "storages",
     "corsheaders",
     "rest_framework_swagger",
+    "django_prometheus",
 ]
 
 AUTHENTICATION_BACKENDS = (
@@ -80,6 +81,7 @@ AUTHENTICATION_BACKENDS = (
 )
 
 MIDDLEWARE = [
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",  # Must be first
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -88,6 +90,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django_prometheus.middleware.PrometheusAfterMiddleware",  # Must be last
 ]
 
 PASSWORD_HASHERS = [
@@ -140,7 +143,7 @@ WSGI_APPLICATION = "operationcode_backend.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": os.environ.get("DB_ENGINE", "django.db.backends.sqlite3"),
+        "ENGINE": 'django_prometheus.db.backends.postgresql',
         "NAME": os.environ.get("DB_NAME", os.path.join(BASE_DIR, "db.sqlite3")),
         "USER": os.environ.get("DB_USER", ""),
         "PASSWORD": os.environ.get("DB_PASSWORD", ""),
