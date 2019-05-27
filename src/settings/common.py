@@ -143,7 +143,7 @@ WSGI_APPLICATION = "operationcode_backend.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": 'django_prometheus.db.backends.postgresql',
+        "ENGINE": os.environ.get("DB_ENGINE", 'django_prometheus.db.backends.sqlite3'),
         "NAME": os.environ.get("DB_NAME", os.path.join(BASE_DIR, "db.sqlite3")),
         "USER": os.environ.get("DB_USER", ""),
         "PASSWORD": os.environ.get("DB_PASSWORD", ""),
