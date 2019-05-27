@@ -51,7 +51,9 @@ class RegisterSerializer(BaseRegisterSerializer):
     password = serializers.CharField(write_only=True)
     first_name = serializers.CharField(write_only=True)
     last_name = serializers.CharField(write_only=True)
-    zip = serializers.CharField(write_only=True)
+    # legacy compat
+    zip = serializers.CharField(write_only=True, required=False)
+    zipcode = serializers.CharField(write_only=True, required=False)
 
     # Overrides the default required password fields
     password1 = None
@@ -65,7 +67,7 @@ class RegisterSerializer(BaseRegisterSerializer):
             "password1": self.validated_data.get("password", ""),
             "first_name": self.validated_data.get("first_name", ""),
             "last_name": self.validated_data.get("last_name", ""),
-            "zip": self.validated_data.get("zip", ""),
+            "zipcode": self.validated_data.get("zipcode", ""),
         }
 
     def validate(self, data):
@@ -93,8 +95,8 @@ class UserDetailsSerializer(BaseUserDetailsSerializer):
         """Move fields from Profile to user representation."""
         representation = super().to_representation(instance)
         profile = representation.pop("profile")
-        representation["zip"] = profile["zip"]
-        representation["mentor"] = profile["mentor"]
+        representation["zipcode"] = profile["zipcode"]
+        representation["is_mentor"] = profile["is_mentor"]
         return representation
 
 

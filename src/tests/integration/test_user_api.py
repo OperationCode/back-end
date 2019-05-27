@@ -20,9 +20,9 @@ def test_user_api_returns_correct_data(authed_client: APIClient, user: User):
     assert res.data["last_name"] == user.last_name
     assert res.data["email"] == user.email
     assert res.data["username"] == user.username
-    assert res.data["zip"] == user.profile.zip
+    assert res.data["zipcode"] == user.profile.zipcode
     assert res.data["sign_in_count"] == user.profile.sign_in_count
-    assert res.data["mentor"] == user.profile.mentor
+    assert res.data["is_mentor"] == user.profile.is_mentor
     assert res.data["state"] == user.profile.state
     assert res.data["address_1"] == user.profile.address_1
     assert res.data["address_2"] == user.profile.address_2

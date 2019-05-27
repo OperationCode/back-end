@@ -30,6 +30,6 @@ class AccountAdapter(DefaultAccountAdapter):
         to the newly created user
         """
         super().save_user(request, user, form)
-        user.profile.zip = form.cleaned_data["zip"]
+        user.profile.zipcode = form.cleaned_data["zipcode"]
         user.profile.save()
         return user

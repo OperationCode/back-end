@@ -19,7 +19,7 @@ def test_valid_rest_login(client: APIClient, user: User):
     assert returned_user["email"] == user.email
     assert returned_user["first_name"] == user.first_name
     assert returned_user["last_name"] == user.last_name
-    assert returned_user["zip"] == user.profile.zip
+    assert returned_user["zipcode"] == user.profile.zipcode
 
 
 # Commented out until email confirmation is required again

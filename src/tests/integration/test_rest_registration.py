@@ -52,7 +52,7 @@ def test_user_profile_created(client: APIClient, register_form: Dict[str, str]):
     assert len(users) == 1
 
     profile = users[0].profile
-    assert profile.zip == register_form["zip"]
+    assert profile.zipcode == register_form["zipcode"]
 
 
 @pytest.mark.django_db

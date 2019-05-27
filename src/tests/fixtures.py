@@ -41,7 +41,7 @@ def register_form() -> Dict[str, str]:
         "email": user.email,
         "firstName": user.first_name,
         "lastName": user.last_name,
-        "zip": user.profile.zip,
+        "zipcode": user.profile.zipcode,
     }
 
 

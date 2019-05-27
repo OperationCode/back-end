@@ -25,8 +25,8 @@ def custom_jwt_payload_handler(user: User) -> dict:
         "email": user.username,
         "firstName": user.first_name,
         "lastName": user.last_name,
-        "zipcode": profile.zip,
-        "isMentor": profile.mentor,
+        "zipcode": profile.zipcode,
+        "isMentor": profile.is_mentor,
         "exp": datetime.utcnow() + settings.JWT_AUTH["JWT_EXPIRATION_DELTA"],
         "orig_iat": timegm(datetime.utcnow().utctimetuple()),
     }

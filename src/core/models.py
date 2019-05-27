@@ -11,12 +11,12 @@ class Profile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
-    zip = models.CharField(max_length=256, blank=True, null=True)
+    zipcode = models.CharField(max_length=256, blank=True, null=True)
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
     remember_created_at = models.DateTimeField(blank=True, null=True)
     sign_in_count = models.IntegerField(blank=True, null=True)
-    mentor = models.BooleanField(blank=True, null=True, default=False)
+    is_mentor = models.BooleanField(blank=True, null=True, default=False)
     timezone = models.CharField(max_length=256, blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
     verified = models.BooleanField(default=False)
@@ -24,7 +24,7 @@ class Profile(models.Model):
     address_1 = models.CharField(max_length=256, blank=True, null=True)
     address_2 = models.CharField(max_length=256, blank=True, null=True)
     city = models.CharField(max_length=256, blank=True, null=True)
-    volunteer = models.BooleanField(blank=True, null=True, default=False)
+    is_volunteer = models.BooleanField(blank=True, null=True, default=False)
     branch_of_service = models.CharField(max_length=256, blank=True, null=True)
     years_of_service = models.FloatField(blank=True, null=True)
     pay_grade = models.CharField(max_length=256, blank=True, null=True)
@@ -40,9 +40,12 @@ class Profile(models.Model):
     company_name = models.CharField(max_length=256, blank=True, null=True)
     education_level = models.CharField(max_length=256, blank=True, null=True)
     interests = models.CharField(max_length=256, blank=True, null=True)
-    scholarship_info = models.BooleanField(blank=True, null=True)
+    wants_scholarship_info = models.BooleanField(blank=True, null=True)
     role_id = models.IntegerField(blank=True, null=True)
     military_status = models.CharField(max_length=256, blank=True, null=True)
+
+    programming_languages = models.CharField(max_length=256, blank=True, null=True)
+    disciplines = models.CharField(max_length=256, blank=True, null=True)
 
     slack_id = models.CharField(max_length=16, blank=True)
 

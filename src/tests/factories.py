@@ -45,9 +45,10 @@ class ProfileFactory(Factory):
     class Meta:
         model = Profile
 
-    zip = LazyFunction(fake.zipcode)
+    zipcode = LazyFunction(fake.zipcode)
     sign_in_count = LazyFunction(fake.random_digit)
-    mentor = LazyFunction(fake.pybool)
+    is_mentor = LazyFunction(fake.pybool)
+    is_volunteer = LazyFunction(fake.pybool)
     state = LazyFunction(fake.state)
     address_1 = fake.street_address()
     address_2 = None

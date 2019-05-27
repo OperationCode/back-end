@@ -9,4 +9,4 @@ def test_valid_token():
 
     assert token["firstName"] == user.first_name
     assert token["lastName"] == user.last_name
-    assert token["zipcode"] == user.profile.zip
+    assert token["zipcode"] == user.profile.zipcode
