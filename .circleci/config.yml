@@ -84,7 +84,7 @@ jobs:
             /usr/local/bin/cc-test-reporter before-build
 
       - save_cache:
-          key: v1-dependencies-{{ .Branch }}-{{ checksum "poetry.lock" }}
+          key: v1-dependencies-{{ checksum "poetry.lock" }}
           paths:
             - "/home/circleci/.cache/pypoetry/virtualenvs"
             - ".venv"
