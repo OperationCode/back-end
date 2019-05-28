@@ -62,7 +62,10 @@ jobs:
       - run: sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
 
       - restore_cache:  # ensure this step occurs *before* installing dependencies
-          key: v1-dependencies-{{ .Branch }}-{{ checksum "poetry.lock" }}
+          keys:
+            - v1-dependencies-{{ checksum "poetry.lock" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
 
       - run:
           name: Installing dependencies
