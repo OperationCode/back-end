@@ -1,0 +1,29 @@
+Welcome to Operation Code!
+
+Be on the lookout for an email invite to the Operation Code Slack
+community. Slack is where we communicate online in real-time to ask questions, collaborate, and share
+information. It's a pivotal aspect of our community! If you've never used Slack before, consider watching this
+instructional video on using the application.
+
+
+You've just joined a community of 5000+ software developers, veterans, and military spouses, who are all looking to
+further their skills and careers in tech! We are a decentralized organization, and we work both online (via Slack)
+and in local chapters across the country. We highly
+recommend giving yourself an introduction in the #general channel on Slack, and to sign up to go to your next local
+meetup! An example could be:
+    "Hi all. My name is David. I'm from Washington and I'm interested in web development!"
+Please read our Code of Conduct, as well.
+
+
+Are you interested in helping Operation Code's website through code or design, and building your experience and
+portfolio? We're open source and love onboarding new developers!
+Read more here, and join the #oc-projects channel on Slack - feel free to ask about anything.
+
+
+Again, welcome aboard, and don't forget to follow and share Operation Code on Twitter and Facebook.
+
+
+Cheers, and keep coding,
+    the Operation Code team :)
+
+P.S. - If you do not receive an invite from Slack within 24 hours, please email our support team, or ping us on Twitter at @operation_code.

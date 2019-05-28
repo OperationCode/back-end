@@ -44,8 +44,11 @@ class Profile(models.Model):
     role_id = models.IntegerField(blank=True, null=True)
     military_status = models.CharField(max_length=256, blank=True, null=True)
 
-    programming_languages = models.CharField(max_length=256, blank=True, null=True)
-    disciplines = models.CharField(max_length=256, blank=True, null=True)
+    programming_languages = models.CharField(
+        max_length=256, blank=True, null=True, default=""
+    )
+
+    disciplines = models.CharField(max_length=256, blank=True, null=True, default="")
 
     slack_id = models.CharField(max_length=16, blank=True)
 

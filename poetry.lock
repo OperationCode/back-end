@@ -23,7 +23,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 version = "19.1.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Security oriented static analyser for python code."
 name = "bandit"
 optional = false
@@ -32,7 +32,8 @@ version = "1.6"
 
 [package.dependencies]
 GitPython = ">=1.0.1"
-PyYAML = ">=3.12"
+PyYAML = ">=3.13"
+colorama = ">=0.3.9"
 six = ">=1.10.0"
 stevedore = ">=1.20.0"
 
@@ -133,7 +134,7 @@ version = "7.0"
 [[package]]
 category = "dev"
 description = "Cross-platform colored terminal text."
-marker = "sys_platform == \"win32\""
+marker = "platform_system == \"Windows\" or sys_platform == \"win32\""
 name = "colorama"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
@@ -205,6 +206,19 @@ Django = ">=1.11"
 python3-openid = ">=3.0.8"
 requests = "*"
 requests-oauthlib = ">=0.3.0"
+
+[[package]]
+category = "main"
+description = "Django email integration for Amazon SES, Mailgun, Mailjet, Postmark, SendGrid, SendinBlue, SparkPost and other transactional ESPs"
+name = "django-anymail"
+optional = false
+python-versions = "*"
+version = "6.0.1"
+
+[package.dependencies]
+django = ">=1.11"
+requests = ">=2.4.3"
+six = "*"
 
 [[package]]
 category = "main"
@@ -319,6 +333,14 @@ PyJWT = ">=1.5.2,<2.0.0"
 
 [[package]]
 category = "main"
+description = "Pythonic argument parser, that will make you smile"
+name = "docopt"
+optional = false
+python-versions = "*"
+version = "0.4.0"
+
+[[package]]
+category = "main"
 description = "Docutils -- Python Documentation Utilities"
 name = "docutils"
 optional = false
@@ -384,7 +406,7 @@ attrs = "*"
 flake8 = ">=3.0.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Git Object Database"
 name = "gitdb2"
 optional = false
@@ -395,7 +417,7 @@ version = "2.0.5"
 smmap2 = ">=2.0.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Python Git Library"
 name = "gitpython"
 optional = false
@@ -469,6 +491,18 @@ requests = ">=2.7.0"
 
 [[package]]
 category = "main"
+description = "A CLI client and Python API library for the Mandrill email as a service platform."
+name = "mandrill"
+optional = false
+python-versions = "*"
+version = "1.0.57"
+
+[package.dependencies]
+docopt = "0.4.0"
+requests = ">=0.13.2"
+
+[[package]]
+category = "main"
 description = "Safely add untrusted strings to HTML/XML markup."
 name = "markupsafe"
 optional = false
@@ -512,7 +546,7 @@ version = "1.3.2"
 coreapi = ">=2.2.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Python Build Reasonableness"
 name = "pbr"
 optional = false
@@ -556,7 +590,7 @@ category = "main"
 description = "C parser in Python"
 name = "pycparser"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+python-versions = "*"
 version = "2.19"
 
 [[package]]
@@ -602,7 +636,7 @@ six = ">=1.10.0"
 wcwidth = "*"
 
 [package.dependencies.more-itertools]
-python = ">=2.8"
+python = ">2.7"
 version = ">=4.0.0"
 
 [[package]]
@@ -677,11 +711,11 @@ python-versions = "*"
 version = "2019.1"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "YAML parser and emitter for Python"
 name = "pyyaml"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+python-versions = "*"
 version = "5.1"
 
 [[package]]
@@ -738,7 +772,7 @@ category = "main"
 description = "Simple, fast, extensible JSON encoder/decoder for Python"
 name = "simplejson"
 optional = false
-python-versions = ">=2.5, !=3.0.*, !=3.1.*, !=3.2.*"
+python-versions = "*"
 version = "3.16.0"
 
 [[package]]
@@ -750,7 +784,7 @@ python-versions = ">=2.6, !=3.0.*, !=3.1.*"
 version = "1.12.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "A pure Python implementation of a sliding window memory map manager"
 name = "smmap2"
 optional = false
@@ -766,7 +800,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 version = "0.3.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Manage dynamic plugins for Python applications"
 name = "stevedore"
 optional = false
@@ -818,14 +852,14 @@ python-versions = "*"
 version = "0.1.7"
 
 [metadata]
-content-hash = "462ab55e0ae5b7a8b7a1edd25dae4594ddb9ffce61a04537e34ab764cba3f263"
+content-hash = "a607f2c164995ce95cb92438ed32f6b00a8b01297dcdf84162bf18ae7028ab0e"
 python-versions = "^3.7"
 
 [metadata.hashes]
 appdirs = ["9e5896d1372858f8dd3344faf4e5014d21849c756c8d5701f78f8a103b372d92", "d8b24664561d0d34ddfaec54636d502d7cea6e29c3eaf68f3df6180863e2166e"]
 atomicwrites = ["03472c30eb2c5d1ba9227e4c2ca66ab8287fbfbbda3888aa93dc2e28fc6811b4", "75a9445bac02d8d058d5e1fe689654ba5a6556a1dfd8ce6ec55a0ed79866cfa6"]
 attrs = ["69c0dbf2ed392de1cb5ec704444b08a5ef81680a61cb899dc08127123af36a79", "f0b870f674851ecbfbbbd364d6b5cbdff9dcedbc7f3f5e18a6891057f21fe399"]
-bandit = ["6102b5d6afd9d966df5054e0bdfc2e73a24d0fea400ec25f2e54c134412158d7", "9413facfe9de1e1bd291d525c784e1beb1a55c9916b51dae12979af63a69ba4c"]
+bandit = []
 bcrypt = ["0ba875eb67b011add6d8c5b76afbd92166e98b1f1efab9433d5dc0fafc76e203", "21ed446054c93e209434148ef0b362432bb82bbdaf7beef70a32c221f3e33d1c", "28a0459381a8021f57230954b9e9a65bb5e3d569d2c253c5cac6cb181d71cf23", "2aed3091eb6f51c26b7c2fad08d6620d1c35839e7a362f706015b41bd991125e", "2fa5d1e438958ea90eaedbf8082c2ceb1a684b4f6c75a3800c6ec1e18ebef96f", "3a73f45484e9874252002793518da060fb11eaa76c30713faa12115db17d1430", "3e489787638a36bb466cd66780e15715494b6d6905ffdbaede94440d6d8e7dba", "44636759d222baa62806bbceb20e96f75a015a6381690d1bc2eda91c01ec02ea", "678c21b2fecaa72a1eded0cf12351b153615520637efcadc09ecf81b871f1596", "75460c2c3786977ea9768d6c9d8957ba31b5fbeb0aae67a5c0e96aab4155f18c", "8ac06fb3e6aacb0a95b56eba735c0b64df49651c6ceb1ad1cf01ba75070d567f", "8fdced50a8b646fff8fa0e4b1c5fd940ecc844b43d1da5a980cb07f2d1b1132f", "9b2c5b640a2da533b0ab5f148d87fb9989bf9bcb2e61eea6a729102a6d36aef9", "a9083e7fa9adb1a4de5ac15f9097eb15b04e2c8f97618f1b881af40abce382e1", "b7e3948b8b1a81c5a99d41da5fb2dc03ddb93b5f96fcd3fd27e643f91efa33e1", "b998b8ca979d906085f6a5d84f7b5459e5e94a13fc27c28a3514437013b6c2f6", "dd08c50bc6f7be69cd7ba0769acca28c846ec46b7a8ddc2acf4b9ac6f8a7457e", "de5badee458544ab8125e63e39afeedfcf3aef6a6e2282ac159c95ae7472d773", "ede2a87333d24f55a4a7338a6ccdccf3eaa9bed081d1737e0db4dbd1a4f7e6b6"]
 black = ["817243426042db1d36617910df579a54f1afd659adb96fc5032fcf4b36209739", "e030a9a28f542debc08acceb273f228ac422798e5215ba2a791a6ddeaaca22a5"]
 boto3 = ["000e266d8dfe8950972c62a4a129944d45ea5719912b197e796360064f2115e5", "df865952fd3e1b8a5e4c6f94cf03ef4238a16140a77811a187497c4c664b9753"]
@@ -841,6 +875,7 @@ coverage = ["0c5fe441b9cfdab64719f24e9684502a59432df7570521563d7b1aff27ac755f", 
 defusedxml = ["6687150770438374ab581bb7a1b327a847dd9c5749e396102de3fad4e8a3ef93", "f684034d135af4c6cbb949b8a4d2ed61634515257a67299e5f940fbaa34377f5"]
 django = ["6fcc3cbd55b16f9a01f37de8bcbe286e0ea22e87096557f1511051780338eaea", "bb407d0bb46395ca1241f829f5bd03f7e482f97f7d1936e26e98dacb201ed4ec"]
 django-allauth = ["4444434c2f43188e16e0a7732c3638e12787ca7e5032f69b6d30b2912f53809e"]
+django-anymail = ["cb70bc28c188a4424b212bc91593cbc4247f2f21440fef2d209400c6dce7a18e", "fdd87c6818b78f6d503e7dafeef679b6849613e0fe19129a30425914822630a3"]
 django-background-tasks = ["35a9a54961f3e4486ab2f9482d1e8ac63ab4f47e5e0b7e654a22f7002299ffae"]
 django-compat = ["3ac9a3bedc56b9365d9eb241bc5157d0c193769bf995f9a78dc1bc24e7c2331b"]
 django-cors-headers = ["0ac81a9a70ba9bf5569f19693f1ce566e46cabc710cdaa053409415c690033bb", "b57087e45e4418a6147b8a27ca9d19da2c16b3e4732b2372fe2d9774fc7c5bca"]
@@ -851,6 +886,7 @@ django-storages = ["8e35d2c7baeda5dc6f0b4f9a0fc142d25f9a1bf72b8cebfcbc5db4863abc
 djangorestframework = ["376f4b50340a46c15ae15ddd0c853085f4e66058f97e4dbe7d43ed62f5e60651", "c12869cfd83c33d579b17b3cb28a2ae7322a53c3ce85580c2a2ebe4e3f56c4fb"]
 djangorestframework-camel-case = ["4bb2e41fb8a5d3745e20c5ee0842ebc6f6bac602b3286c3dd913b01760a2abb0", "5b957f9cf16730f153a0ab4add9ff17fb41b7fceaa7edad29b0536b515bffd16"]
 djangorestframework-jwt = ["5efe33032f3a4518a300dc51a51c92145ad95fb6f4b272e5aa24701db67936a7", "ab15dfbbe535eede8e2e53adaf52ef0cf018ee27dbfad10cbc4cbec2ab63d38c"]
+docopt = ["b752582228e280b7be3677c5a758a352e352ad0bde3a849fd51f79239e88e475"]
 docutils = ["02aec4bd92ab067f6ff27a38a38a41173bf01bed8f89157768c1573f53e474a6", "51e64ef2ebfb29cae1faa133b3710143496eca21c530f3f71424d77687764274", "7a4bd47eaf6596e1295ecb11361139febe29b084a87bf005bf899f9a42edc3c6"]
 entrypoints = ["589f874b313739ad35be6e0cd7efde2a4e9b6fea91edcc34e58ecbb8dbe56d19", "c70dd71abe5a8c85e55e12c19bd91ccfeec11a6e99044204511f9ed547d48451"]
 factory-boy = ["728df59b372c9588b83153facf26d3d28947fc750e8e3c95cefa9bed0e6394ee", "faf48d608a1735f0d0a3c9cbf536d64f9132b547dae7ba452c4d99a79e84a370"]
@@ -866,6 +902,7 @@ itypes = ["c6e77bb9fd68a4bfeb9d958fea421802282451a25bac4913ec94db82a899c073"]
 jinja2 = ["065c4f02ebe7f7cf559e49ee5a95fb800a9e4528727aec6f24402a5374c65013", "14dd6caf1527abb21f08f86c784eac40853ba93edb79552aa1e4b8aef1b61c7b"]
 jmespath = ["3720a4b1bd659dd2eecad0666459b9788813e032b83e7ba58578e48254e0a0e6", "bde2aef6f44302dfb30320115b17d030798de8c4110e28d5cf6cf91a7a31074c"]
 mailchimp3 = ["8ba4fd1c913a71ee895a4087cd3a8e25721547fa0b7e637f87dee82c3b3e9848", "d1fc0de0e4e1f0b5a00b567a8b99385e38280d16f942c29d4e8fe3b920da7a20"]
+mandrill = ["69664b8926481e593aa3d1fb41d7a31685a77cb38b46be2c4fe1db66d911b7ac"]
 markupsafe = ["00bc623926325b26bb9605ae9eae8a215691f33cae5df11ca5424f06f2d1f473", "09027a7803a62ca78792ad89403b1b7a73a01c8cb65909cd876f7fcebd79b161", "09c4b7f37d6c648cb13f9230d847adf22f8171b1ccc4d5682398e77f40309235", "1027c282dad077d0bae18be6794e6b6b8c91d58ed8a8d89a89d59693b9131db5", "24982cc2533820871eba85ba648cd53d8623687ff11cbb805be4ff7b4c971aff", "29872e92839765e546828bb7754a68c418d927cd064fd4708fab9fe9c8bb116b", "43a55c2930bbc139570ac2452adf3d70cdbb3cfe5912c71cdce1c2c6bbd9c5d1", "46c99d2de99945ec5cb54f23c8cd5689f6d7177305ebff350a58ce5f8de1669e", "500d4957e52ddc3351cabf489e79c91c17f6e0899158447047588650b5e69183", "535f6fc4d397c1563d08b88e485c3496cf5784e927af890fb3c3aac7f933ec66", "62fe6c95e3ec8a7fad637b7f3d372c15ec1caa01ab47926cfdf7a75b40e0eac1", "6dd73240d2af64df90aa7c4e7481e23825ea70af4b4922f8ede5b9e35f78a3b1", "717ba8fe3ae9cc0006d7c451f0bb265ee07739daf76355d06366154ee68d221e", "79855e1c5b8da654cf486b830bd42c06e8780cea587384cf6545b7d9ac013a0b", "7c1699dfe0cf8ff607dbdcc1e9b9af1755371f92a68f706051cc8c37d447c905", "88e5fcfb52ee7b911e8bb6d6aa2fd21fbecc674eadd44118a9cc3863f938e735", "8defac2f2ccd6805ebf65f5eeb132adcf2ab57aa11fdf4c0dd5169a004710e7d", "98c7086708b163d425c67c7a91bad6e466bb99d797aa64f965e9d25c12111a5e", "9add70b36c5666a2ed02b43b335fe19002ee5235efd4b8a89bfcf9005bebac0d", "9bf40443012702a1d2070043cb6291650a0841ece432556f784f004937f0f32c", "ade5e387d2ad0d7ebf59146cc00c8044acbd863725f887353a10df825fc8ae21", "b00c1de48212e4cc9603895652c5c410df699856a2853135b3967591e4beebc2", "b1282f8c00509d99fef04d8ba936b156d419be841854fe901d8ae224c59f0be5", "b2051432115498d3562c084a49bba65d97cf251f5a331c64a12ee7e04dacc51b", "ba59edeaa2fc6114428f1637ffff42da1e311e29382d81b339c1817d37ec93c6", "c8716a48d94b06bb3b2524c2b77e055fb313aeb4ea620c8dd03a105574ba704f", "cd5df75523866410809ca100dc9681e301e3c27567cf498077e8551b6d20e42f", "e249096428b3ae81b08327a63a485ad0878de3fb939049038579ac0ef61e17e7"]
 mccabe = ["ab8a6258860da4b6677da4bd2fe5dc2c659cff31b3ee4f7f5d64e79735b80d42", "dd8d182285a0fe56bace7f45b5e7d1a6ebcbf524e8f3bd87eb0f125271b8831f"]
 more-itertools = ["2112d2ca570bb7c3e53ea1a35cd5df42bb0fd10c45f0fb97178679c3c03d64c7", "c3e4748ba1aad8dba30a4886b0b1a2004f9a863837b8654e7059eebf727afa5a"]

@@ -65,7 +65,7 @@ def test_slack_invite_task_created(
 
     assert res.status_code == 201
 
-    tasks = BackgroundTask.objects.all()
+    tasks = BackgroundTask.objects.filter(task_name="core.tasks.send_slack_invite_job")
 
     assert len(tasks) == 1
     assert tasks[0].task_name.split(".")[-1] == "send_slack_invite_job"
@@ -131,9 +131,11 @@ def test_mailing_list_task_created(
     res = client.post(reverse("rest_verify_email"), {"key": groups["key"]})
 
     assert res.status_code == 200
-    tasks = BackgroundTask.objects.all()
+    tasks = BackgroundTask.objects.filter(
+        task_name="core.tasks.add_user_to_mailing_list"
+    )
 
-    assert len(tasks) == 2
+    assert len(tasks) == 1
     assert any(
         task.task_name.split(".")[-1] == "add_user_to_mailing_list" for task in tasks
     )

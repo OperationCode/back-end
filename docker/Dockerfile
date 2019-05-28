@@ -25,6 +25,11 @@ RUN pip install poetry && \
 # The `built-image` stage is the base for all remaining images
 # Pulls all of the built dependencies from the builder stage
 FROM base as built-image
+ENV PIP_DISABLE_PIP_VERSION_CHECK on
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+ENV PIP_NO_BINARY psycopg2
+
 # copy installed deps from builder image
 COPY --from=builder /opt/venv /opt/venv
 # Add libpq which psycopg2 needs at runtime
@@ -68,6 +73,15 @@ LABEL dev=true
 EXPOSE 8000
 WORKDIR /src
 
+CMD python manage.py collectstatic --no-input;\
+    gunicorn operationcode_backend.wsgi -b 0.0.0.0:8000 -w 3 --access-logfile=- --error-logfile=- --capture-output --logger-class "operationcode_backend.custom_logging.CustomGunicornLogger"
+
+# The `Staging` stage is the same configuration as prod, the only
+# difference being it doesn't process background tasks
+# The resulting image will run the application using a
+# production webserver and configuration
+FROM app As Staging
+EXPOSE 8000
 CMD python manage.py collectstatic --no-input;\
     gunicorn operationcode_backend.wsgi -b 0.0.0.0:8000 -w 3 --access-logfile=- --error-logfile=- --capture-output --logger-class "operationcode_backend.custom_logging.CustomGunicornLogger"
 

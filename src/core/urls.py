@@ -13,7 +13,7 @@ urlpatterns = [
         PasswordResetConfirmView.as_view(),
         name="password_reset_confirm",
     ),
-    path("verify-email/", VerifyEmailView.as_view(), name="rest_verify_email"),
+    path("auth/verify-email/", VerifyEmailView.as_view(), name="rest_verify_email"),
     path("auth/social/google/", views.GoogleLogin.as_view(), name="google_rest_login"),
     path(
         "auth/social/google/connect",

@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "django.contrib.sites",
     "core.apps.CoreConfig",
     "api.apps.ApiConfig",
+    "anymail",
     "background_task",
     "rest_framework",
     "rest_framework.authtoken",
@@ -213,10 +214,18 @@ MAILCHIMP_LIST_ID = os.environ.get("MAILCHIMP_LIST_ID", "")
 EMAIL_BACKEND = os.environ.get(
     "EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
 )
-EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
-EMAIL_PORT = os.environ.get("EMAIL_PORT", "")
+DEFAULT_FROM_EMAIL = "noreply@operationcode.org"
+SERVER_EMAIL = "noreplyerrors@operationcode.org"
+# EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
+# EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+# EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+# EMAIL_PORT = os.environ.get("EMAIL_PORT", "")
+
+
+MANDRILL_API_KEY = os.environ.get("MANDRILL_API_KEY")
+if MANDRILL_API_KEY and "anymail" in EMAIL_BACKEND:
+    ANYMAIL = {"MANDRILL_API_KEY": MANDRILL_API_KEY}
+
 
 # Django-Rest-Auth
 REST_SESSION_LOGIN = True

@@ -5,17 +5,26 @@ from background_task import background
 from django.conf import settings
 from django.contrib.auth.models import User as AuthUser
 from django.core.mail import send_mail
+from django.template.loader import render_to_string
 from mailchimp3 import MailChimp
 
 logger = logging.getLogger(__name__)
 
 
 @background(schedule=0)
-def send_welcome_email(email: str, message: str) -> None:
-    logger.info(f"Sending email with message: {message}")
+def send_welcome_email(email: str) -> None:
+    logger.info(f"Sending welcome email to: {email}")
+
+    email_string = render_to_string("registration/welcome.html")
+    text_string = render_to_string("registration/welcome.txt")
     try:
         response = send_mail(
-            "Subject here", message, "test@test.org", [email], fail_silently=False
+            "Welcome to Operation Code!",
+            text_string,
+            "staff@operationcode.org",
+            [email],
+            html_message=email_string,
+            fail_silently=False,
         )
         logger.info(f"Email to {email} response", response)
 

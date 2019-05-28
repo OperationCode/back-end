@@ -23,6 +23,7 @@ workflows:
           # TODO: This will be dynamic once we have a prod environment
           tag: staging
           dockerfile: docker/Dockerfile
+          extra-build-args: --target Staging
           requires:
             - build_test
           filters:
@@ -126,6 +127,6 @@ jobs:
       - run:
           name: Build and push to DockerHub
           command: |
-            docker build -t operationcode/back-end -f docker/Dockerfile .
+            docker build -t operationcode/back-end:${CIRCLE_BRANCH} -f docker/Dockerfile .
             echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USERNAME} --password-stdin
             docker push operationcode/back-end

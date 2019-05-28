@@ -14,7 +14,7 @@ from core.tasks import (
     send_welcome_email,
 )
 
-TEST_EMAIL = "test@test.test"
+TEST_EMAIL = "test@test.com"
 
 
 def mocked_run_next_task(queue=None):
@@ -30,12 +30,12 @@ run_next_task = mocked_run_next_task
 
 @pytest.mark.django_db
 def test_send_welcome_email(mailoutbox: List[EmailMultiAlternatives]):
-    send_welcome_email(TEST_EMAIL, "test")
+    send_welcome_email(TEST_EMAIL)
     run_next_task()
 
     assert len(mailoutbox) == 1
     assert TEST_EMAIL in mailoutbox[0].to
-    assert mailoutbox[0].body == "test"
+    assert mailoutbox[0].body is not None
 
 
 @pytest.mark.django_db
