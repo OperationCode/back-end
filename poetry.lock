@@ -55,11 +55,11 @@ description = "The uncompromising code formatter."
 name = "black"
 optional = false
 python-versions = ">=3.6"
-version = "18.9b0"
+version = "19.3b0"
 
 [package.dependencies]
 appdirs = "*"
-attrs = ">=17.4.0"
+attrs = ">=18.1.0"
 click = ">=6.5"
 toml = ">=0.9.4"
 
@@ -590,7 +590,7 @@ category = "main"
 description = "C parser in Python"
 name = "pycparser"
 optional = false
-python-versions = "*"
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 version = "2.19"
 
 [[package]]
@@ -636,7 +636,7 @@ six = ">=1.10.0"
 wcwidth = "*"
 
 [package.dependencies.more-itertools]
-python = ">2.7"
+python = ">=2.8"
 version = ">=4.0.0"
 
 [[package]]
@@ -715,7 +715,7 @@ category = "dev"
 description = "YAML parser and emitter for Python"
 name = "pyyaml"
 optional = false
-python-versions = "*"
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 version = "5.1"
 
 [[package]]
@@ -772,7 +772,7 @@ category = "main"
 description = "Simple, fast, extensible JSON encoder/decoder for Python"
 name = "simplejson"
 optional = false
-python-versions = "*"
+python-versions = ">=2.5, !=3.0.*, !=3.1.*, !=3.2.*"
 version = "3.16.0"
 
 [[package]]
@@ -852,7 +852,7 @@ python-versions = "*"
 version = "0.1.7"
 
 [metadata]
-content-hash = "a607f2c164995ce95cb92438ed32f6b00a8b01297dcdf84162bf18ae7028ab0e"
+content-hash = "7b464b23095d62320c34d9ffc88ebf9a3436770ee3f4ea8ae68eae1e91a39464"
 python-versions = "^3.7"
 
 [metadata.hashes]
@@ -861,7 +861,7 @@ atomicwrites = ["03472c30eb2c5d1ba9227e4c2ca66ab8287fbfbbda3888aa93dc2e28fc6811b
 attrs = ["69c0dbf2ed392de1cb5ec704444b08a5ef81680a61cb899dc08127123af36a79", "f0b870f674851ecbfbbbd364d6b5cbdff9dcedbc7f3f5e18a6891057f21fe399"]
 bandit = []
 bcrypt = ["0ba875eb67b011add6d8c5b76afbd92166e98b1f1efab9433d5dc0fafc76e203", "21ed446054c93e209434148ef0b362432bb82bbdaf7beef70a32c221f3e33d1c", "28a0459381a8021f57230954b9e9a65bb5e3d569d2c253c5cac6cb181d71cf23", "2aed3091eb6f51c26b7c2fad08d6620d1c35839e7a362f706015b41bd991125e", "2fa5d1e438958ea90eaedbf8082c2ceb1a684b4f6c75a3800c6ec1e18ebef96f", "3a73f45484e9874252002793518da060fb11eaa76c30713faa12115db17d1430", "3e489787638a36bb466cd66780e15715494b6d6905ffdbaede94440d6d8e7dba", "44636759d222baa62806bbceb20e96f75a015a6381690d1bc2eda91c01ec02ea", "678c21b2fecaa72a1eded0cf12351b153615520637efcadc09ecf81b871f1596", "75460c2c3786977ea9768d6c9d8957ba31b5fbeb0aae67a5c0e96aab4155f18c", "8ac06fb3e6aacb0a95b56eba735c0b64df49651c6ceb1ad1cf01ba75070d567f", "8fdced50a8b646fff8fa0e4b1c5fd940ecc844b43d1da5a980cb07f2d1b1132f", "9b2c5b640a2da533b0ab5f148d87fb9989bf9bcb2e61eea6a729102a6d36aef9", "a9083e7fa9adb1a4de5ac15f9097eb15b04e2c8f97618f1b881af40abce382e1", "b7e3948b8b1a81c5a99d41da5fb2dc03ddb93b5f96fcd3fd27e643f91efa33e1", "b998b8ca979d906085f6a5d84f7b5459e5e94a13fc27c28a3514437013b6c2f6", "dd08c50bc6f7be69cd7ba0769acca28c846ec46b7a8ddc2acf4b9ac6f8a7457e", "de5badee458544ab8125e63e39afeedfcf3aef6a6e2282ac159c95ae7472d773", "ede2a87333d24f55a4a7338a6ccdccf3eaa9bed081d1737e0db4dbd1a4f7e6b6"]
-black = ["817243426042db1d36617910df579a54f1afd659adb96fc5032fcf4b36209739", "e030a9a28f542debc08acceb273f228ac422798e5215ba2a791a6ddeaaca22a5"]
+black = ["09a9dcb7c46ed496a9850b76e4e825d6049ecd38b611f1224857a79bd985a8cf", "68950ffd4d9169716bcb8719a56c07a2f4485354fec061cdd5910aa07369731c"]
 boto3 = ["000e266d8dfe8950972c62a4a129944d45ea5719912b197e796360064f2115e5", "df865952fd3e1b8a5e4c6f94cf03ef4238a16140a77811a187497c4c664b9753"]
 botocore = ["6c3273c9881b412d665f7cab0216a5f3284bedd72937ee4d5702b265ea6e702e", "6d03ec48f297fc429262603345d1e264f50064719dca7aadcff998014d935f9a"]
 certifi = ["59b7658e26ca9c7339e00f8f4636cdfe59d34fa37b9b04f6f9e9926b3cece1a5", "b26104d6835d1f5e49452a26eb2ff87fe7090b89dfcaee5ea2212697e1e1d7ae"]
