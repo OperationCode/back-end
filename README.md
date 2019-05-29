@@ -30,8 +30,6 @@ You can get help from multiple professional developers, including people who hav
 Our website is currently served by code located [here](https://github.com/OperationCode/operationcode_backend), 
 but that repository is no longer being actively developed.
 
-This documentation is bad, and yes I feel bad.
-
 ## Maintainers
 For information about the maintainers of the project, check out [MAINTAINERS.md](MAINTAINERS.md).
 
@@ -76,9 +74,6 @@ poetry run isort -rc .
 ## Running [Bandit](https://github.com/PyCQA/bandit)
 Bandit is a tool designed to find common security issues in Python code. 
 
-From within the `back-end/` directory you can run the following Bandit commands: 
+From within the `back-end/` directory you can run the following Bandit command: 
 
-- `bandit -r -b 20190522-banditBaseline.json .` runs the all Bandit tests recursively and compares to a pre-established baseline (see below for more detail)
-- `bandit -r .` runs all bandit tests recursively without a filter (may result in false positives on the `src/test/` folder)
-
-The `20190522-banditBaseline.json` file includes output from an initial Bandit run (dated appropriately) and lists several false positives. Running against the baseline will filter out these results. 
+- `bandit -r .` runs all bandit tests recursively with only filters defined in the `.bandit` file.
