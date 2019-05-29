@@ -2,7 +2,6 @@ from settings.components.rest import REST_FRAMEWORK
 
 MEDIA_ROOT = "/tmp"  # nosec
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
-DEBUG = True
 TESTING = True
 
 REST_FRAMEWORK = {**REST_FRAMEWORK, "TEST_REQUEST_DEFAULT_FORMAT": "json"}
