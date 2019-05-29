@@ -30,7 +30,7 @@ sentry-sdk = "^0.7.14"
 
 [tool.poetry.dev-dependencies]
 bandit = "^1.6"
-black = {version = "^18.3-alpha.0", allows-prereleases = true}
+black = {version = "^19.3b0", allows-prereleases = true}
 coverage = "^4.5"
 django-debug-toolbar = "^1.11"
 factory_boy = "^2.12"
