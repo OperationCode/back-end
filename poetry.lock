@@ -295,6 +295,14 @@ simplejson = "*"
 
 [[package]]
 category = "main"
+description = "Organize Django settings into multiple files and directories. Easily override and modify settings. Use wildcards and optional settings files."
+name = "django-split-settings"
+optional = false
+python-versions = "*"
+version = "0.3.0"
+
+[[package]]
+category = "main"
 description = "Support for many storage backends in Django"
 name = "django-storages"
 optional = false
@@ -685,6 +693,14 @@ six = ">=1.5"
 
 [[package]]
 category = "main"
+description = "Strict separation of settings from code."
+name = "python-decouple"
+optional = false
+python-versions = "*"
+version = "3.1"
+
+[[package]]
+category = "main"
 description = "Add .env support to your django/flask apps in development and deployments"
 name = "python-dotenv"
 optional = false
@@ -852,7 +868,7 @@ python-versions = "*"
 version = "0.1.7"
 
 [metadata]
-content-hash = "a607f2c164995ce95cb92438ed32f6b00a8b01297dcdf84162bf18ae7028ab0e"
+content-hash = "e2ba2a896d32dde3c3d6504149b834eee9dacdce4d17a93a7d5c383478b03e46"
 python-versions = "^3.7"
 
 [metadata.hashes]
@@ -882,6 +898,7 @@ django-cors-headers = ["0ac81a9a70ba9bf5569f19693f1ce566e46cabc710cdaa053409415c
 django-debug-toolbar = ["89d75b60c65db363fb24688d977e5fbf0e73386c67acf562d278402a10fc3736", "c2b0134119a624f4ac9398b44f8e28a01c7686ac350a12a74793f3dd57a9eea0"]
 django-rest-auth = ["f11e12175dafeed772f50d740d22caeab27e99a3caca24ec65e66a8d6de16571"]
 django-rest-swagger = ["48f6aded9937e90ae7cbe9e6c932b9744b8af80cc4e010088b3278c700e0685b", "b039b0288bab4665cd45dc5d16f94b13911bc4ad0ed55f74ad3b90aa31c87c17"]
+django-split-settings = ["04f6b551111fdbcb4f669ac9004ac2d4a27197a36ca88444cb896378807ed777", "14b164dbd724e52aa9a0b0338eefa988a8a0f17f7cba34e0f983e5348682aeb7"]
 django-storages = ["8e35d2c7baeda5dc6f0b4f9a0fc142d25f9a1bf72b8cebfcbc5db4863abc552d", "b1a63cd5ea286ee5a9fb45de6c3c5c0ae132d58308d06f1ce9865cfcd5e470a7"]
 djangorestframework = ["376f4b50340a46c15ae15ddd0c853085f4e66058f97e4dbe7d43ed62f5e60651", "c12869cfd83c33d579b17b3cb28a2ae7322a53c3ce85580c2a2ebe4e3f56c4fb"]
 djangorestframework-camel-case = ["4bb2e41fb8a5d3745e20c5ee0842ebc6f6bac602b3286c3dd913b01760a2abb0", "5b957f9cf16730f153a0ab4add9ff17fb41b7fceaa7edad29b0536b515bffd16"]
@@ -922,6 +939,7 @@ pytest-django = ["30d773f1768e8f214a3106f1090e00300ce6edfcac8c55fd13b675fe1cbd1c
 pytest-mock = ["43ce4e9dd5074993e7c021bb1c22cbb5363e612a2b5a76bc6d956775b10758b7", "5bf5771b1db93beac965a7347dc81c675ec4090cb841e49d9d34637a25c30568"]
 pytest-pythonpath = ["63fc546ace7d2c845c1ee289e8f7a6362c2b6bae497d10c716e58e253e801d62"]
 python-dateutil = ["7e6584c74aeed623791615e26efd690f29817a27c73085b78e4bad02493df2fb", "c89805f6f4d64db21ed966fda138f8a5ed7a4fdbc1a8ee329ce1b74e3c74da9e"]
+python-decouple = ["1317df14b43efee4337a4aa02914bf004f010cd56d6c4bd894e6474ec8c4fe2d"]
 python-dotenv = ["156f218846bd90e0d537915545cde4a987947c2cecc628b50f9955fdde72534a", "6640acd76e6cab84648e4fec16c9d19de6700971f9d91d045e7120622167bfda"]
 python3-openid = ["0086da6b6ef3161cfe50fb1ee5cceaf2cda1700019fda03c2c5c440ca6abe4fa", "628d365d687e12da12d02c6691170f4451db28d6d68d050007e4a40065868502"]
 pytz = ["303879e36b721603cc54604edcac9d20401bdbe31e1e4fdee5b9f98d5d31dfda", "d747dd3d23d77ef44c6a3526e274af6efeb0a6f1afd5a69ba4d5be4098c8e141"]
