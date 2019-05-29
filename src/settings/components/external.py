@@ -12,6 +12,6 @@ MAILCHIMP_USERNAME = config("MAILCHIMP_USERNAME", default="")
 MAILCHIMP_LIST_ID = config("MAILCHIMP_LIST_ID", default="")
 
 # Mandrill anymail configs
-MANDRILL_API_KEY = config("MANDRILL_API_KEY")
+MANDRILL_API_KEY = config("MANDRILL_API_KEY", default="")
 if MANDRILL_API_KEY:
     ANYMAIL = {"MANDRILL_API_KEY": MANDRILL_API_KEY}
