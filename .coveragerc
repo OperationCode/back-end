@@ -4,11 +4,7 @@ omit =
     */environments/local.py.template
     */environments/production.py
     */virtualenvs/*
-    src/api/__init__.py
-    src/operationcode_backend/__init__.py
-    src/core/__init__.py
-    src/tests/integration/__init__.py
-    src/core/migrations/__init__.py
-    src/api/migrations/__init__.py
-    src/tests/__init__.py
-    src/tests/unit/__init__.py
+    *__init__.py
+exclude_lines =
+    def __repr__
+    def __str__
