@@ -57,7 +57,6 @@ jobs:
           CC_TEST_REPORTER_ID: 91944b115a88fcc2040da46325f3606d096c281149ab4fcff022f06b09a700c0
           DJANGO_ENV: testing
 
-    parallelism: 4
     steps:
       - checkout
       - run: sudo chown -R circleci:circleci /usr/local/bin
