@@ -97,7 +97,7 @@ jobs:
       - run:
           name: Run Pytest
           command: |
-            poetry run coverage run -m pytest --junitxml=test-results/pytest/results.xml --circleci-parallelize
+            poetry run coverage run -m pytest --junitxml=test-results/pytest/results.xml
 
       - run:
           name: Run linting and coverage
