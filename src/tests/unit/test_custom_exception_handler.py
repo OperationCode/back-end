@@ -1,7 +1,7 @@
 from rest_framework.exceptions import (
     APIException,
-    PermissionDenied,
     AuthenticationFailed,
+    PermissionDenied,
 )
 
 from core.exceptions import custom_exception_handler
@@ -19,7 +19,7 @@ def test_permission_denied_formatted_correctly():
 
 def test_auth_header_formatted_correctly(client):
     ex = AuthenticationFailed(mock_detail)
-    setattr(ex, "auth_header", 'Bearer realm="api"')
+    ex.auth_header = 'Bearer realm="api"'
     response = custom_exception_handler(ex, {})
 
     assert response.status_code == 401
@@ -28,7 +28,7 @@ def test_auth_header_formatted_correctly(client):
 
 def test_retry_header_formatted_correctly(client):
     ex = APIException(mock_detail)
-    setattr(ex, "wait", "30")
+    ex.wait = "30"
     response = custom_exception_handler(ex, {})
 
     assert response.status_code == 500
