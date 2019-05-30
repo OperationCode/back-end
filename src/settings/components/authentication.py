@@ -43,7 +43,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Django-Rest-Auth
 # https://django-rest-auth.readthedocs.io/en/latest/
-REST_SESSION_LOGIN = True
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 REST_USE_JWT = True

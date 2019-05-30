@@ -1,6 +1,7 @@
 import os
 
 from settings.components import config
+from settings.components.base import DATABASES
 
 ALLOWED_HOSTS = ["operationcode.org", "pybot.operationcode.org"]
 DEBUG = False
@@ -15,6 +16,14 @@ try:
     ALLOWED_HOSTS.append(local_ip)
 except Exception as ex:  # pragma: no cover
     print(ex)
+
+
+DATABASES = {
+    "default": {
+        **DATABASES["default"],
+        "ENGINE": config("DB_ENGINE", default="django.db.backends.postgresql"),
+    }
+}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
