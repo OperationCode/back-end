@@ -1,0 +1,6 @@
+[report]
+omit =
+    */environments/development.py
+    */environments/local.py.template
+    */environments/production.py
+    */virtualenvs/*

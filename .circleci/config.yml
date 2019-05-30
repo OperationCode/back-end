@@ -97,7 +97,7 @@ jobs:
       - run:
           name: Run Pytest
           command: |
-            poetry run coverage run --omit="/home/circleci/.cache/pypoetry/virtualenvs/*" -m pytest --junitxml=test-results/pytest/results.xml --circleci-parallelize
+            poetry run coverage run -m pytest --junitxml=test-results/pytest/results.xml --circleci-parallelize
 
       - run:
           name: Run linting and coverage
@@ -131,4 +131,4 @@ jobs:
           command: |
             docker build -t operationcode/back-end:${CIRCLE_BRANCH} -f docker/Dockerfile .
             echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USERNAME} --password-stdin
-            docker push operationcode/back-end
+            docker push operationcode/back-end:${CIRCLE_BRANCH}
