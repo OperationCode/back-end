@@ -6,5 +6,8 @@ omit =
     */virtualenvs/*
     *__init__.py
 exclude_lines =
+    # Don't complain about missing debug-only code:
     def __repr__
     def __str__
+    # Have to re-enable the standard pragma
+    pragma: no cover
