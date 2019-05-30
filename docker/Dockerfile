@@ -89,6 +89,8 @@ CMD python manage.py collectstatic --no-input;\
 # a target stage set. The resulting image will run the application using a
 # production webserver and configuration
 FROM app As Prod
+
+ENV DB_ENGINE django.db.backends.postgresql
 EXPOSE 8000
 CMD python manage.py collectstatic --no-input;\
     python manage.py process_tasks &\
