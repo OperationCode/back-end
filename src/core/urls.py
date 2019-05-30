@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.urls import include, path
 from django.views.generic import TemplateView
 from rest_auth.registration.views import SocialAccountListView, VerifyEmailView
@@ -43,13 +42,3 @@ urlpatterns = [
     ),
     path("auth/", include("rest_auth.urls")),
 ]
-
-# Used for social auth development
-if settings.DEBUG or settings.TESTING:
-    urlpatterns += [
-        path("dev/", include("allauth.account.urls")),
-        path("dev/", include("allauth.socialaccount.providers.google.urls")),
-        path("dev/", include("allauth.socialaccount.providers.facebook.urls")),
-        path("dev/", include("allauth.socialaccount.providers.github.urls")),
-        path("dev/social/", include("allauth.socialaccount.urls")),
-    ]

@@ -40,6 +40,8 @@ ENV PATH="/opt/venv/bin:$PATH"
 # The `app` stage is used as the base for images that don't
 # need the development dependencies
 FROM built-image as app
+
+ENV DJANGO_ENV production
 RUN mkdir /static
 COPY src /src
 WORKDIR /src
@@ -49,6 +51,8 @@ WORKDIR /src
 # the development dependencies. The duplication of the COPY instruction
 # avoids breaking the cache for that later when the poetry.lock changes
 FROM built-image AS dev-base
+
+ENV DJANGO_ENV development
 COPY poetry.lock pyproject.toml ./
 RUN pip install poetry \
     && poetry config settings.virtualenvs.create false \

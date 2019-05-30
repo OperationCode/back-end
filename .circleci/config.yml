@@ -15,7 +15,8 @@ workflows:
           filters:
             branches:
               only:
-                - dockerhub
+                - master
+                - staging
 
       # push new Docker image to ECS
       - aws-ecr/build_and_push_image:
@@ -55,6 +56,7 @@ jobs:
         environment: # environment variables for primary container
           PIPENV_VENV_IN_PROJECT: true
           CC_TEST_REPORTER_ID: 91944b115a88fcc2040da46325f3606d096c281149ab4fcff022f06b09a700c0
+          DJANGO_ENV: testing
 
     steps:
       - checkout
@@ -95,7 +97,7 @@ jobs:
       - run:
           name: Run Pytest
           command: |
-            poetry run coverage run --omit="/home/circleci/.cache/pypoetry/virtualenvs/*" -m pytest --junitxml=test-results/pytest/results.xml
+            poetry run coverage run -m pytest --junitxml=test-results/pytest/results.xml
 
       - run:
           name: Run linting and coverage
