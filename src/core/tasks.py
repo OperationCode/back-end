@@ -28,7 +28,7 @@ def send_welcome_email(email: str) -> None:
         )
         logger.info(f"Email to {email} response", response)
 
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         logger.exception("Exception trying to send welcome email to user", e)
 
 
@@ -73,5 +73,5 @@ def add_user_to_mailing_list(email: str) -> None:
         )
 
         logger.info("Added user to email list.  Response: ", res)
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         logger.exception(f"Exception while adding email {email} to mailing list.", e)
