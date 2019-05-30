@@ -129,4 +129,4 @@ jobs:
           command: |
             docker build -t operationcode/back-end:${CIRCLE_BRANCH} -f docker/Dockerfile .
             echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USERNAME} --password-stdin
-            docker push operationcode/back-end
+            docker push operationcode/back-end:${CIRCLE_BRANCH}
