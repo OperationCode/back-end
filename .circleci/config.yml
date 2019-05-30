@@ -15,7 +15,8 @@ workflows:
           filters:
             branches:
               only:
-                - dockerhub
+                - master
+                - staging
 
       # push new Docker image to ECS
       - aws-ecr/build_and_push_image:
