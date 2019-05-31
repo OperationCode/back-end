@@ -44,9 +44,9 @@ INSTALLED_APPS = [
     # django-cors-headers
     # https://github.com/ottoyiu/django-cors-headers
     "corsheaders",
-    # django-rest-swagger
-    # https://django-rest-swagger.readthedocs.io/en/latest/
-    "rest_framework_swagger",
+    # drf-yasg : Yet another Swagger generator
+    # https://drf-yasg.readthedocs.io/en/stable/readme.html
+    "drf_yasg",
 ]
 
 ROOT_URLCONF = "operationcode_backend.urls"
