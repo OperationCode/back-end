@@ -1,6 +1,7 @@
 ### Environments
 *.env
 !example.env
+local.py
 env/
 venv/
 ENV/
@@ -23,7 +24,6 @@ gen
 !.vscode/extensions.json
 
 ### Python
-
 # Django stuff:
 *.log
 local_settings.py
