@@ -9,6 +9,8 @@ DEBUG = False
 if config("EXTRA_HOSTS", default=""):
     ALLOWED_HOSTS += [s.strip() for s in os.environ["EXTRA_HOSTS"].split(",")]
 
+# Needed for AWS health check
+# https://docs.aws.amazon.com/elasticloadbalancing/latest/application/target-group-health-checks.html
 try:
     import socket
 
@@ -16,7 +18,6 @@ try:
     ALLOWED_HOSTS.append(local_ip)
 except Exception as ex:  # pragma: no cover
     print(ex)
-
 
 DATABASES = {
     "default": {
