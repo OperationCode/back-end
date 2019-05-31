@@ -78,3 +78,5 @@ GITHUB_AUTH_CALLBACK_URL = config(
     "GITHUB_AUTH_CALLBACK_URL",
     default="http://localhost:8000/dev/github/login/callback/",
 )
+
+CORS_ORIGIN_ALLOW_ALL = True
