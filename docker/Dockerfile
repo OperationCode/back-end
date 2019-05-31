@@ -42,6 +42,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 FROM built-image as app
 
 ENV DJANGO_ENV production
+ENV DB_ENGINE django.db.backends.postgresql
 RUN mkdir /static
 COPY src /src
 WORKDIR /src
@@ -94,7 +95,6 @@ CMD python manage.py collectstatic --no-input;\
 # production webserver and configuration
 FROM app As Prod
 
-ENV DB_ENGINE django.db.backends.postgresql
 EXPOSE 8000
 CMD python manage.py collectstatic --no-input;\
     python manage.py process_tasks &\
