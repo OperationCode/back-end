@@ -1,0 +1,12 @@
+engines:
+  bandit:
+    enabled: true
+
+plugins:
+  radon:
+    enabled: true
+  sonar-python:
+    enabled: true
+    config:
+      tests_patterns:
+        - src/tests/**

@@ -37,7 +37,7 @@ def get_logo_and_users(logo: InMemoryUploadedFile) -> Tuple[str, str]:
     if settings.DEBUG or settings.TESTING:
         users = "@AllenAnthes"
     else:  # pragma: no cover
-        users = "@wimo7083 @jhampton @kylemh"
+        users = "@AllenAnthes @kylemh @wimo7083"
 
     logo_url = f"{settings.MEDIA_URL}logos/{school_logo}"
     return logo_url, users
