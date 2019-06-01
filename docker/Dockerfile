@@ -9,7 +9,15 @@ ENV PYTHONUNBUFFERED 1
 ENV PIP_NO_BINARY psycopg2
 
 # Install tools for building dependencies
-RUN apk update && apk add --no-cache libffi-dev postgresql-dev gcc python3-dev musl-dev
+RUN apk update && \
+    apk add --no-cache libffi-dev \
+                       postgresql-dev \
+                       gcc \
+                       python3-dev \
+                       musl-dev \
+                       # Pillow dependencies
+                       zlib-dev \
+                       jpeg-dev
 
 RUN python -m venv /opt/venv
 # Make sure we use the virtualenv:
