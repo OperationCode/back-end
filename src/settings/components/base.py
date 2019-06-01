@@ -8,6 +8,7 @@ INSTALLED_APPS = [
     # Our apps
     "core.apps.CoreConfig",
     "api.apps.ApiConfig",
+    "frontend.apps.FrontendConfig",
     # Default Django apps:
     "django.contrib.admin",
     "django.contrib.auth",
@@ -47,6 +48,9 @@ INSTALLED_APPS = [
     # drf-yasg : Yet another Swagger generator
     # https://drf-yasg.readthedocs.io/en/stable/readme.html
     "drf_yasg",
+    # temp frontend apps
+    "widget_tweaks",
+    "snowpenguin.django.recaptcha2",
 ]
 
 ROOT_URLCONF = "operationcode_backend.urls"

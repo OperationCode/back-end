@@ -17,3 +17,6 @@ DATABASES = {
         "NAME": str(BASE_DIR.joinpath("db.sqlite3")),
     }
 }
+
+# Temporary frontend configs
+RECAPTCHA_DISABLE = True
