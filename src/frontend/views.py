@@ -6,11 +6,15 @@ import requests
 from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.template.loader import render_to_string
-from django.views.generic import FormView
+from django.views.generic import FormView, TemplateView
 
 from .forms import CodeSchoolForm
 
 logger = logging.getLogger(__name__)
+
+
+class IndexView(TemplateView):
+    template_name = "frontend/index.html"
 
 
 class CodeschoolFormView(FormView):
