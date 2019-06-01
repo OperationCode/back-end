@@ -21,8 +21,7 @@ workflows:
       # push new Docker image to ECS
       - aws-ecr/build_and_push_image:
           repo: back-end
-          # TODO: This will be dynamic once we have a prod environment
-          tag: staging
+          tag: '${CIRCLE_BRANCH}'
           dockerfile: docker/Dockerfile
           extra-build-args: --target Staging
           requires:
@@ -35,9 +34,8 @@ workflows:
 
       # Update ECS task and service, then replace the current one
       - aws-ecs/deploy-service-update:
-          # TODO: This will be dynamic once we have a prod environment
-          family: 'backend-staging'
-          service-name: 'backend-staging'
+          family: 'backend-${CIRCLE_BRANCH}'
+          service-name: 'backend-${CIRCLE_BRANCH}'
           cluster-name: 'python-oc-services'
           verify-revision-is-deployed: true
           requires:
