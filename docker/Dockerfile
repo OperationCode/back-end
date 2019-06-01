@@ -15,7 +15,6 @@ RUN apk update && \
                        gcc \
                        python3-dev \
                        musl-dev \
-                       # Pillow dependencies
                        zlib-dev \
                        jpeg-dev
 
@@ -41,7 +40,7 @@ ENV PIP_NO_BINARY psycopg2
 # copy installed deps from builder image
 COPY --from=builder /opt/venv /opt/venv
 # Add libpq which psycopg2 needs at runtime
-RUN apk add --no-cache libpq
+RUN apk add --no-cache libpq libjpeg-turbo
 # Make sure we use the virtualenv
 ENV PATH="/opt/venv/bin:$PATH"
 
