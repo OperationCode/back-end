@@ -21,7 +21,7 @@ workflows:
       # push new Docker image to ECS
       - aws-ecr/build_and_push_image:
           repo: back-end
-          tag: '${CIRCLE_BRANCH}'
+          tag: '${CIRCLE_BUILD_NUM}'
           dockerfile: docker/Dockerfile
           extra-build-args: --target Staging
           requires:
@@ -37,6 +37,7 @@ workflows:
           family: 'backend-${CIRCLE_BRANCH}'
           service-name: 'backend-${CIRCLE_BRANCH}'
           cluster-name: 'python-oc-services'
+          container-image-name-updates: 'container=backend,tag=${CIRCLE_BUILD_NUM}'
           verify-revision-is-deployed: true
           requires:
             - aws-ecr/build_and_push_image
@@ -127,6 +128,6 @@ jobs:
       - run:
           name: Build and push to DockerHub
           command: |
-            docker build -t operationcode/back-end:${CIRCLE_BRANCH} -f docker/Dockerfile .
+            docker build -t operationcode/back-end:${CIRCLE_BUILD_NUM} -f docker/Dockerfile .
             echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USERNAME} --password-stdin
-            docker push operationcode/back-end:${CIRCLE_BRANCH}
+            docker push operationcode/back-end:${CIRCLE_BUILD_NUM}
