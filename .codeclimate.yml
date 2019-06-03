@@ -1,3 +1,4 @@
+version: "2"
 plugins:
   bandit:
     enabled: true
@@ -8,3 +9,6 @@ plugins:
     config:
       tests_patterns:
         - src/tests/**
+
+exclude_patterns:
+  - "**/migrations/"
