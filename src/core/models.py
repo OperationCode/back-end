@@ -11,44 +11,44 @@ class Profile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
-    zipcode = models.CharField(max_length=256, blank=True, null=True)
+    zipcode = models.CharField(max_length=512, blank=True, null=True)
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
     remember_created_at = models.DateTimeField(blank=True, null=True)
     sign_in_count = models.IntegerField(blank=True, null=True)
     is_mentor = models.BooleanField(blank=True, null=True, default=False)
-    timezone = models.CharField(max_length=256, blank=True, null=True)
+    timezone = models.CharField(max_length=512, blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
     verified = models.BooleanField(default=False)
-    state = models.CharField(max_length=256, blank=True, null=True)
-    address_1 = models.CharField(max_length=256, blank=True, null=True)
-    address_2 = models.CharField(max_length=256, blank=True, null=True)
-    city = models.CharField(max_length=256, blank=True, null=True)
+    state = models.CharField(max_length=512, blank=True, null=True)
+    address_1 = models.CharField(max_length=512, blank=True, null=True)
+    address_2 = models.CharField(max_length=512, blank=True, null=True)
+    city = models.CharField(max_length=512, blank=True, null=True)
     is_volunteer = models.BooleanField(blank=True, null=True, default=False)
-    branch_of_service = models.CharField(max_length=256, blank=True, null=True)
+    branch_of_service = models.CharField(max_length=512, blank=True, null=True)
     years_of_service = models.FloatField(blank=True, null=True)
-    pay_grade = models.CharField(max_length=256, blank=True, null=True)
+    pay_grade = models.CharField(max_length=512, blank=True, null=True)
     military_occupational_specialty = models.CharField(
-        max_length=256, blank=True, null=True
+        max_length=512, blank=True, null=True
     )
-    github = models.CharField(max_length=256, blank=True, null=True)
-    twitter = models.CharField(max_length=256, blank=True, null=True)
-    linkedin = models.CharField(max_length=256, blank=True, null=True)
-    employment_status = models.CharField(max_length=256, blank=True, null=True)
-    education = models.CharField(max_length=256, blank=True, null=True)
-    company_role = models.CharField(max_length=256, blank=True, null=True)
-    company_name = models.CharField(max_length=256, blank=True, null=True)
-    education_level = models.CharField(max_length=256, blank=True, null=True)
-    interests = models.CharField(max_length=256, blank=True, null=True)
+    github = models.CharField(max_length=512, blank=True, null=True)
+    twitter = models.CharField(max_length=512, blank=True, null=True)
+    linkedin = models.CharField(max_length=512, blank=True, null=True)
+    employment_status = models.CharField(max_length=512, blank=True, null=True)
+    education = models.CharField(max_length=512, blank=True, null=True)
+    company_role = models.CharField(max_length=512, blank=True, null=True)
+    company_name = models.CharField(max_length=512, blank=True, null=True)
+    education_level = models.CharField(max_length=512, blank=True, null=True)
+    interests = models.CharField(max_length=512, blank=True, null=True)
     wants_scholarship_info = models.BooleanField(blank=True, null=True)
     role_id = models.IntegerField(blank=True, null=True)
-    military_status = models.CharField(max_length=256, blank=True, null=True)
+    military_status = models.CharField(max_length=512, blank=True, null=True)
 
     programming_languages = models.CharField(
-        max_length=256, blank=True, null=True, default=""
+        max_length=512, blank=True, null=True, default=""
     )
 
-    disciplines = models.CharField(max_length=256, blank=True, null=True, default="")
+    disciplines = models.CharField(max_length=512, blank=True, null=True, default="")
 
     slack_id = models.CharField(max_length=16, blank=True)
 
