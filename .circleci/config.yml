@@ -128,6 +128,11 @@ jobs:
       - run:
           name: Build and push to DockerHub
           command: |
-            docker build -t operationcode/back-end:${CIRCLE_WORKFLOW_ID} -f docker/Dockerfile .
+            if ["$CIRCLE_BRANCH" == "master"];then
+              docker build -t operationcode/back-end:${CIRCLE_WORKFLOW_ID} -f docker/Dockerfile .
+            else:
+              docker build -t operationcode/back-end:${CIRCLE_WORKFLOW_ID} -f docker/Dockerfile --target Staging .
+            fi
+
             echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USERNAME} --password-stdin
             docker push operationcode/back-end:${CIRCLE_WORKFLOW_ID}
