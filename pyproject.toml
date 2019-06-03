@@ -29,7 +29,7 @@ psycopg2 = "^2.8"
 python-decouple = "^3.1"
 mailchimp3 = "^3.0"
 mandrill = "^1.0"
-python-dotenv = "^0.10.1"
+python-dotenv = "^0.10.3"
 requests = "^2.21"
 sentry-sdk = "^0.9.0"
 
