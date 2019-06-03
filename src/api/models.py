@@ -1,8 +1,7 @@
 from django.db import models
-
-from core.models import OldUserObj
 from django_prometheus.models import ExportModelOperationsMixin
 
+from core.models import OldUserObj
 
 """
 https://github.com/korfuri/django-prometheus#monitoring-your-models
@@ -10,7 +9,7 @@ When adding a new model use the prometheus mixin to monitor and export three met
 1. django_model_inserts_total{model=${model}}
 2. django_model_updates_total{model=${model}}
 3.  django_model_deletes_total{model=${model}}
- 
+
 class CustomModelName(ExportModelOperationsMixin('${model}'), models.Model):
 
 migrations will also be monitored
@@ -19,7 +18,9 @@ migrations will also be monitored
 """
 
 
-class ActiveAdminComment(ExportModelOperationsMixin('active_admin_comments'), models.Model):
+class ActiveAdminComment(
+    ExportModelOperationsMixin("active_admin_comments"), models.Model
+):
     namespace = models.CharField(max_length=256, blank=True, null=True)
     body = models.TextField(blank=True, null=True)
     resource_type = models.CharField(max_length=256, blank=True, null=True)
@@ -34,7 +35,7 @@ class ActiveAdminComment(ExportModelOperationsMixin('active_admin_comments'), mo
         db_table = "active_admin_comments"
 
 
-class AdminUser(ExportModelOperationsMixin('admin_user'), models.Model):
+class AdminUser(ExportModelOperationsMixin("admin_user"), models.Model):
     email = models.CharField(unique=True, max_length=256)
     encrypted_password = models.CharField(max_length=256)
     reset_password_token = models.CharField(
@@ -56,7 +57,9 @@ class AdminUser(ExportModelOperationsMixin('admin_user'), models.Model):
         db_table = "admin_users"
 
 
-class ArInternalMetadata(ExportModelOperationsMixin('ar_internal_metadata'), models.Model):
+class ArInternalMetadata(
+    ExportModelOperationsMixin("ar_internal_metadata"), models.Model
+):
     key = models.CharField(primary_key=True, max_length=256)
     value = models.CharField(max_length=256, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -67,7 +70,7 @@ class ArInternalMetadata(ExportModelOperationsMixin('ar_internal_metadata'), mod
         db_table = "ar_internal_metadata"
 
 
-class OldCodeSchool(ExportModelOperationsMixin('old_code_school'), models.Model):
+class OldCodeSchool(ExportModelOperationsMixin("old_code_school"), models.Model):
     name = models.CharField(max_length=256, blank=True, null=True)
     url = models.CharField(max_length=256, blank=True, null=True)
     logo = models.CharField(max_length=256, blank=True, null=True)
@@ -91,7 +94,7 @@ class OldCodeSchool(ExportModelOperationsMixin('old_code_school'), models.Model)
         db_table = "code_schools"
 
 
-class CodeSchool(ExportModelOperationsMixin('code_school'), models.Model):
+class CodeSchool(ExportModelOperationsMixin("code_school"), models.Model):
     name = models.CharField(max_length=256, blank=True, null=True)
     url = models.CharField(max_length=256, blank=True, null=True)
     logo = models.CharField(max_length=256, blank=True, null=True)
@@ -114,7 +117,7 @@ class CodeSchool(ExportModelOperationsMixin('code_school'), models.Model):
         db_table = "api_code_schools"
 
 
-class Event(ExportModelOperationsMixin('event'), models.Model):
+class Event(ExportModelOperationsMixin("event"), models.Model):
     name = models.CharField(max_length=256, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     url = models.CharField(max_length=256, blank=True, null=True)
@@ -138,7 +141,7 @@ class Event(ExportModelOperationsMixin('event'), models.Model):
         db_table = "events"
 
 
-class GitHubStatistic(ExportModelOperationsMixin('github_statistic'), models.Model):
+class GitHubStatistic(ExportModelOperationsMixin("github_statistic"), models.Model):
     git_hub_user = models.ForeignKey(
         "GitHubUser", models.DO_NOTHING, blank=True, null=True
     )
@@ -160,7 +163,7 @@ class GitHubStatistic(ExportModelOperationsMixin('github_statistic'), models.Mod
         db_table = "git_hub_statistics"
 
 
-class GitHubUser(ExportModelOperationsMixin('github_user'), models.Model):
+class GitHubUser(ExportModelOperationsMixin("github_user"), models.Model):
     user_id = models.IntegerField(blank=True, null=True)
     git_hub_login = models.CharField(max_length=256, blank=True, null=True)
     avatar_url = models.CharField(max_length=256, blank=True, null=True)
@@ -175,7 +178,7 @@ class GitHubUser(ExportModelOperationsMixin('github_user'), models.Model):
         db_table = "git_hub_users"
 
 
-class OldLocation(ExportModelOperationsMixin('old_location'), models.Model):
+class OldLocation(ExportModelOperationsMixin("old_location"), models.Model):
     va_accepted = models.BooleanField(blank=True, null=True)
     address1 = models.CharField(max_length=256, blank=True, null=True)
     address2 = models.CharField(max_length=256, blank=True, null=True)
@@ -202,7 +205,7 @@ class OldLocation(ExportModelOperationsMixin('old_location'), models.Model):
         db_table = "locations"
 
 
-class Location(ExportModelOperationsMixin('location'), models.Model):
+class Location(ExportModelOperationsMixin("location"), models.Model):
     va_accepted = models.BooleanField(blank=True, null=True)
     address1 = models.CharField(max_length=256, blank=True, null=True)
     address2 = models.CharField(max_length=256, blank=True, null=True)
@@ -224,7 +227,7 @@ class Location(ExportModelOperationsMixin('location'), models.Model):
         db_table = "api_locations"
 
 
-class Request(ExportModelOperationsMixin('request'), models.Model):
+class Request(ExportModelOperationsMixin("request"), models.Model):
     service_id = models.IntegerField(blank=True, null=True)
     language = models.CharField(max_length=256, blank=True, null=True)
     details = models.TextField(blank=True, null=True)
@@ -240,7 +243,7 @@ class Request(ExportModelOperationsMixin('request'), models.Model):
         db_table = "requests"
 
 
-class Resource(ExportModelOperationsMixin('resource'), models.Model):
+class Resource(ExportModelOperationsMixin("resource"), models.Model):
     name = models.CharField(max_length=256, blank=True, null=True)
     url = models.CharField(max_length=256, blank=True, null=True)
     category = models.CharField(max_length=256, blank=True, null=True)
@@ -256,7 +259,7 @@ class Resource(ExportModelOperationsMixin('resource'), models.Model):
         db_table = "resources"
 
 
-class Role(ExportModelOperationsMixin('role'), models.Model):
+class Role(ExportModelOperationsMixin("role"), models.Model):
     title = models.CharField(max_length=256, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -269,7 +272,7 @@ class Role(ExportModelOperationsMixin('role'), models.Model):
         db_table = "roles"
 
 
-class SchemaMigration(ExportModelOperationsMixin('schema_migration'), models.Model):
+class SchemaMigration(ExportModelOperationsMixin("schema_migration"), models.Model):
     version = models.CharField(primary_key=True, max_length=256)
 
     class Meta:
@@ -277,7 +280,9 @@ class SchemaMigration(ExportModelOperationsMixin('schema_migration'), models.Mod
         db_table = "schema_migrations"
 
 
-class ScholarshipApplication(ExportModelOperationsMixin('scholarship_application'), models.Model):
+class ScholarshipApplication(
+    ExportModelOperationsMixin("scholarship_application"), models.Model
+):
     reason = models.TextField(blank=True, null=True)
     terms_accepted = models.BooleanField(blank=True, null=True)
     user = models.ForeignKey(OldUserObj, models.DO_NOTHING, blank=True, null=True)
@@ -292,7 +297,7 @@ class ScholarshipApplication(ExportModelOperationsMixin('scholarship_application
         db_table = "scholarship_applications"
 
 
-class Scholarship(ExportModelOperationsMixin('scholarship'), models.Model):
+class Scholarship(ExportModelOperationsMixin("scholarship"), models.Model):
     name = models.CharField(max_length=256, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     location = models.CharField(max_length=256, blank=True, null=True)
@@ -307,7 +312,7 @@ class Scholarship(ExportModelOperationsMixin('scholarship'), models.Model):
         db_table = "scholarships"
 
 
-class Service(ExportModelOperationsMixin('service'), models.Model):
+class Service(ExportModelOperationsMixin("service"), models.Model):
     name = models.CharField(max_length=256, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -317,7 +322,7 @@ class Service(ExportModelOperationsMixin('service'), models.Model):
         db_table = "services"
 
 
-class SlackUser(ExportModelOperationsMixin('slack_user'), models.Model):
+class SlackUser(ExportModelOperationsMixin("slack_user"), models.Model):
     slack_id = models.CharField(max_length=256, blank=True, null=True)
     slack_name = models.CharField(max_length=256, blank=True, null=True)
     slack_real_name = models.CharField(max_length=256, blank=True, null=True)
@@ -332,7 +337,7 @@ class SlackUser(ExportModelOperationsMixin('slack_user'), models.Model):
         db_table = "slack_users"
 
 
-class Tagging(ExportModelOperationsMixin('tagging'), models.Model):
+class Tagging(ExportModelOperationsMixin("tagging"), models.Model):
     tag_id = models.IntegerField(blank=True, null=True)
     taggable_type = models.CharField(max_length=256, blank=True, null=True)
     taggable_id = models.IntegerField(blank=True, null=True)
@@ -359,7 +364,7 @@ class Tagging(ExportModelOperationsMixin('tagging'), models.Model):
         )
 
 
-class Tag(ExportModelOperationsMixin('tag'), models.Model):
+class Tag(ExportModelOperationsMixin("tag"), models.Model):
     name = models.CharField(unique=True, max_length=256, blank=True, null=True)
     taggings_count = models.IntegerField(blank=True, null=True)
 
@@ -371,7 +376,7 @@ class Tag(ExportModelOperationsMixin('tag'), models.Model):
         db_table = "tags"
 
 
-class OldTeamMember(ExportModelOperationsMixin('old_team_member'), models.Model):
+class OldTeamMember(ExportModelOperationsMixin("old_team_member"), models.Model):
     name = models.CharField(max_length=256, blank=True, null=True)
     role = models.CharField(max_length=256, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -389,7 +394,7 @@ class OldTeamMember(ExportModelOperationsMixin('old_team_member'), models.Model)
         db_table = "team_members"
 
 
-class TeamMember(ExportModelOperationsMixin('team_member'), models.Model):
+class TeamMember(ExportModelOperationsMixin("team_member"), models.Model):
     name = models.CharField(max_length=256, blank=True, null=True)
     role = models.CharField(max_length=256, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -406,7 +411,7 @@ class TeamMember(ExportModelOperationsMixin('team_member'), models.Model):
         db_table = "api_team_members"
 
 
-class Vote(ExportModelOperationsMixin('vote'), models.Model):
+class Vote(ExportModelOperationsMixin("vote"), models.Model):
     user = models.ForeignKey(OldUserObj, models.DO_NOTHING, blank=True, null=True)
     resource = models.ForeignKey(Resource, models.DO_NOTHING, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

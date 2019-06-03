@@ -2,9 +2,10 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django_prometheus.models import ExportModelOperationsMixin
 
 
-class Profile(models.Model):
+class Profile(ExportModelOperationsMixin("profile"), models.Model):
     """
     Model used to extend Django's base User model
     """
@@ -71,7 +72,7 @@ def create_profile(instance: User, created: bool, **kwargs: dict) -> None:
             Profile.objects.create(user=instance)
 
 
-class OldUserObj(models.Model):
+class OldUserObj(ExportModelOperationsMixin("old_user"), models.Model):
     email = models.CharField(unique=True, max_length=256, blank=True, null=True)
     zip = models.CharField(max_length=256, blank=True, null=True)
     latitude = models.FloatField(blank=True, null=True)
