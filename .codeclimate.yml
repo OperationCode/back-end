@@ -12,3 +12,4 @@ plugins:
 
 exclude_patterns:
   - "**/migrations/"
+  - "./src/tests/*"
