@@ -1,6 +1,5 @@
+from django.contrib.auth.models import User
 from django.db import models
-
-from core.models import OldUserObj
 
 
 class CodeSchool(models.Model):
@@ -48,21 +47,6 @@ class Location(models.Model):
         db_table = "api_locations"
 
 
-class ScholarshipApplication(models.Model):
-    reason = models.TextField(blank=True, null=True)
-    terms_accepted = models.BooleanField(blank=True, null=True)
-    user = models.ForeignKey(OldUserObj, models.DO_NOTHING, blank=True, null=True)
-    scholarship = models.ForeignKey(
-        "Scholarship", models.DO_NOTHING, blank=True, null=True
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        managed = False
-        db_table = "scholarship_applications"
-
-
 class Scholarship(models.Model):
     name = models.CharField(max_length=256, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
@@ -73,9 +57,22 @@ class Scholarship(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        managed = False
-        db_table = "scholarships"
+    def __str__(self):
+        return f"{self.name} - {self.location}"
+
+
+class ScholarshipApplication(models.Model):
+    reason = models.TextField(blank=True, null=True)
+    terms_accepted = models.BooleanField(blank=True, null=True)
+    user = models.ForeignKey(User, models.DO_NOTHING, blank=True, null=True)
+    scholarship = models.ForeignKey(
+        Scholarship, models.DO_NOTHING, blank=True, null=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user} - {self.scholarship}"
 
 
 class TeamMember(models.Model):
