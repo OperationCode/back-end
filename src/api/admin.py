@@ -1,55 +1,14 @@
 from django.contrib import admin
 
 from api.models import (
-    ActiveAdminComment,
-    AdminUser,
-    ArInternalMetadata,
     CodeSchool,
-    Event,
-    GitHubStatistic,
-    GitHubUser,
     Location,
-    OldCodeSchool,
-    OldLocation,
-    OldTeamMember,
-    Request,
-    Resource,
-    Role,
-    SchemaMigration,
     Scholarship,
     ScholarshipApplication,
-    Service,
-    SlackUser,
-    Tag,
     TeamMember,
-    Vote,
 )
 
-admin.site.register(
-    [
-        ActiveAdminComment,
-        AdminUser,
-        ArInternalMetadata,
-        Event,
-        GitHubStatistic,
-        GitHubUser,
-        Location,
-        OldCodeSchool,
-        OldLocation,
-        OldTeamMember,
-        Request,
-        Resource,
-        Role,
-        SchemaMigration,
-        Scholarship,
-        ScholarshipApplication,
-        Service,
-        SlackUser,
-        Tag,
-        TeamMember,
-        Vote,
-    ]
-)
+admin.site.register([Location, Scholarship, ScholarshipApplication, TeamMember])
 
 
 @admin.register(CodeSchool)
