@@ -8,7 +8,40 @@ from api.models import (
     TeamMember,
 )
 
-admin.site.register([Location, Scholarship, ScholarshipApplication, TeamMember])
+
+@admin.register(Scholarship)
+class ScholarshipAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "location",
+        "open_time",
+        "close_time",
+        "created_at",
+        "updated_at",
+    )
+
+
+@admin.register(ScholarshipApplication)
+class ScholarshipApplicationAdmin(admin.ModelAdmin):
+    list_display = ("user", "scholarship", "terms_accepted", "created_at", "updated_at")
+
+
+@admin.register(TeamMember)
+class TeamMemberAdmin(admin.ModelAdmin):
+    list_display = ("name", "email", "role", "group", "image_src")
+
+
+@admin.register(Location)
+class LocationAdmin(admin.ModelAdmin):
+    list_display = (
+        "code_school",
+        "va_accepted",
+        "address1",
+        "address2",
+        "city",
+        "state",
+        "zip",
+    )
 
 
 @admin.register(CodeSchool)
@@ -35,4 +68,4 @@ class CodeSchoolAdmin(admin.ModelAdmin):
         "is_partner",
     )
 
-    search_fields = ("name", "rep_name", "rep_email")
+    search_fields = ("name", "rep_name", "rep_email", "url")
