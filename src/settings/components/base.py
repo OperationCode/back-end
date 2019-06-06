@@ -106,7 +106,7 @@ SUIT_CONFIG = {
         "-",
         "api",
         {"app": "background_task", "icon": "icon-tasks"},
-    ),
+    )
 }
 
 # Internationalization
