@@ -40,7 +40,5 @@ MEDIAFILES_LOCATION = "media"
 STATICFILES_STORAGE = "custom_storages.StaticStorage"
 DEFAULT_FILE_STORAGE = "custom_storages.MediaStorage"
 
-SITE_ID = 4
-
 # Temporary frontend configs
 GITHUB_REPO = config("GITHUB_REPO", "OperationCode/operationcode_backend")
