@@ -103,7 +103,7 @@ jobs:
             echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USERNAME} --password-stdin
 
             if [[ "$CIRCLE_BRANCH" == "master" ]]; then
-              docker build -t operationcode/back-end:${CIRCLE_BRANCH}${CIRCLE_WORKFLOW_ID} -f docker/Dockerfile .
+              docker build -t operationcode/back-end:${CIRCLE_BRANCH}${CIRCLE_WORKFLOW_ID} -t operationcode/back-end:latest -f docker/Dockerfile .
             else
               docker build -t operationcode/back-end:${CIRCLE_BRANCH}${CIRCLE_WORKFLOW_ID} -f docker/Dockerfile --target Staging .
             fi

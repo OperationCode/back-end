@@ -104,6 +104,7 @@ CMD python manage.py collectstatic --no-input;\
 # production webserver and configuration
 FROM app As Prod
 
+ENV DJANGO_ENV production
 EXPOSE 8000
 CMD python manage.py collectstatic --no-input;\
     python manage.py process_tasks &\
