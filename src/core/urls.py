@@ -46,4 +46,5 @@ urlpatterns = [
         name="account_email_verification_sent",
     ),
     path("auth/", include("rest_auth.urls")),
+    path("auth/accounts/", include("allauth.socialaccount.urls")),
 ]
