@@ -26,6 +26,9 @@ INSTALLED_APPS = [
     # django-background-tasks
     # https://django-background-tasks.readthedocs.io/en/latest/
     "background_task",
+    # django-suit-daterange-filter
+    # https://github.com/f213/django-suit-daterange-filter
+    "date_range_filter",
     # django-rest-framework
     # https://www.django-rest-framework.org/
     "rest_framework",

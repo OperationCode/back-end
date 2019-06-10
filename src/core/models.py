@@ -10,6 +10,7 @@ class Profile(models.Model):
     """
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 
     zipcode = models.CharField(max_length=512, blank=True, null=True)
     latitude = models.FloatField(blank=True, null=True)

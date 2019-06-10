@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
+from date_range_filter import DateRangeFilter
 
 from .models import Profile
 
@@ -31,6 +32,7 @@ class ProfileAdmin(admin.ModelAdmin):
         "is_volunteer",
         "military_status",
         "branch_of_service",
+        "created_at",
     )
 
     list_filter = (
@@ -39,5 +41,6 @@ class ProfileAdmin(admin.ModelAdmin):
         "is_volunteer",
         "military_status",
         "branch_of_service",
+        ("created_at", DateRangeFilter),
     )
     search_fields = ("user__email",)
