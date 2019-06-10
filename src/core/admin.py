@@ -21,7 +21,7 @@ class ExtendedUserAdmin(UserAdmin):
 
 
 @admin.register(Profile)
-class CodeSchoolAdmin(admin.ModelAdmin):
+class ProfileAdmin(admin.ModelAdmin):
     list_display = (
         "user",
         "zipcode",
@@ -30,7 +30,14 @@ class CodeSchoolAdmin(admin.ModelAdmin):
         "state",
         "is_volunteer",
         "military_status",
+        "branch_of_service",
     )
 
-    list_filter = ("is_mentor", "state", "is_volunteer", "military_status")
+    list_filter = (
+        "is_mentor",
+        "state",
+        "is_volunteer",
+        "military_status",
+        "branch_of_service",
+    )
     search_fields = ("user__email",)
