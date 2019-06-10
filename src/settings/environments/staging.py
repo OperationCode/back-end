@@ -21,7 +21,9 @@ except Exception as ex:  # pragma: no cover
 DATABASES = {
     "default": {
         **DATABASES["default"],
-        "ENGINE": config("DB_ENGINE", default="django.db.backends.postgresql"),
+        "ENGINE": config(
+            "DB_ENGINE", default="django_prometheus.db.backends.postgresql"
+        ),
     }
 }
 
