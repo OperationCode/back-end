@@ -75,8 +75,7 @@ FROM app As Staging
 
 ENV DJANGO_ENV staging
 EXPOSE 8000
-CMD python manage.py collectstatic --no-input;\
-    gunicorn operationcode_backend.wsgi -b 0.0.0.0:8000 -w 3 --access-logfile=- --error-logfile=- --capture-output --logger-class "operationcode_backend.custom_logging.CustomGunicornLogger"
+CMD gunicorn operationcode_backend.wsgi -b 0.0.0.0:8000 -w 3 --access-logfile=- --error-logfile=- --capture-output --logger-class "operationcode_backend.custom_logging.CustomGunicornLogger"
 
 # The `Prod` stage creates an image that will run the application using a
 # production webserver and the `environments/production.py` configuration
