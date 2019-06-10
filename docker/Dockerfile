@@ -83,8 +83,7 @@ FROM app As Prod
 
 ENV DJANGO_ENV production
 EXPOSE 8000
-CMD python manage.py collectstatic --no-input;\
-    python manage.py process_tasks &\
+CMD python manage.py process_tasks &\
     gunicorn operationcode_backend.wsgi -b 0.0.0.0:8000 -w 3 --access-logfile=- --error-logfile=- --capture-output --logger-class "operationcode_backend.custom_logging.CustomGunicornLogger"
 
 
