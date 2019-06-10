@@ -22,19 +22,17 @@
 
 
 # Welcome!
-
-This is a work in progress rewrite of the current [OperationCode](https://operationcode.org) backend. 
+This is the back-end application for [OperationCode](https://operationcode.org).
 We highly recommend [joining our organization](https://operationcode.org/join) to receive an invite to our Slack team. 
 From there, you'll want to join the `#oc-python-projects` and `#oc-projects` channels.
 You can get help from multiple professional developers, including people who have worked on the application since day 1!
-Our website is currently served by code located [here](https://github.com/OperationCode/operationcode_backend), 
-but that repository is no longer being actively developed.
+
+Before contributing, please review our [Contributing Guide](CONTRIBUTING.md)
 
 ## Maintainers
 For information about the maintainers of the project, check out [MAINTAINERS.md](MAINTAINERS.md).
 
 ## Quick Start
-
 Recommended versions of tools used within the repo:
 - `python@3.7` or greater (in some environments, you may need to specify version of python i.e. `python test.py` vs `python3 test.py`))
 - `git@2.17.1` or greater
