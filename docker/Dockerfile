@@ -39,8 +39,10 @@ ENV PIP_NO_BINARY psycopg2
 
 # copy installed deps from builder image
 COPY --from=builder /opt/venv /opt/venv
-# Add libpq which psycopg2 needs at runtime
+
+# Add libpq and libjpeg which psycopg2 and pillow need at runtime
 RUN apk add --no-cache libpq libjpeg-turbo
+
 # Make sure we use the virtualenv
 ENV PATH="/opt/venv/bin:$PATH"
 
@@ -55,6 +57,38 @@ COPY src /src
 WORKDIR /src
 
 
+# `Shell` will build an image that, when run, drops you into a
+# python shell with the application context loaded
+# Note this stage name is capitalised, this is purely
+# a convetion for stages which result in useful images. Think of it like
+# hint that this is a public interface
+FROM app AS Shell
+LABEL shell=true
+CMD python manage.py shell
+
+
+# The `Staging` stage is the same configuration as prod, the only
+# difference being it doesn't process background tasks
+# The resulting image will run the application using a
+# production webserver and the `environments/staging.py` configuration
+FROM app As Staging
+
+ENV DJANGO_ENV staging
+EXPOSE 8000
+CMD python manage.py collectstatic --no-input;\
+    gunicorn operationcode_backend.wsgi -b 0.0.0.0:8000 -w 3 --access-logfile=- --error-logfile=- --capture-output --logger-class "operationcode_backend.custom_logging.CustomGunicornLogger"
+
+# The `Prod` stage creates an image that will run the application using a
+# production webserver and the `environments/production.py` configuration
+FROM app As Prod
+
+ENV DJANGO_ENV production
+EXPOSE 8000
+CMD python manage.py collectstatic --no-input;\
+    python manage.py process_tasks &\
+    gunicorn operationcode_backend.wsgi -b 0.0.0.0:8000 -w 3 --access-logfile=- --error-logfile=- --capture-output --logger-class "operationcode_backend.custom_logging.CustomGunicornLogger"
+
+
 # The `dev-base` stage is used as the base for images that require
 # the development dependencies. The duplication of the COPY instruction
 # avoids breaking the cache for that later when the poetry.lock changes
@@ -67,18 +101,8 @@ RUN pip install poetry \
     && poetry install --no-interaction --no-ansi
 COPY . /
 
-
-# `Shell` will build an image that, when run, drops you into a
-# python shell with the application context loaded
-# Note this stage name is capitalised, this is purely
-# a convetion for stages which result in useful images. Think of it like
-# hint that this is a public interface
-FROM app AS Shell
-LABEL shell=true
-CMD python manage.py shell
-
-
-# `Dev` runs the application using the development web server, and enables
+# The `Dev` stage is the default stage if the Dockerfile is run without a target stage set.
+# It runs the application using the development web server, and enables
 # developer tools like the debugger and interactive expcetions
 FROM dev-base AS Dev
 LABEL dev=true
@@ -86,26 +110,4 @@ EXPOSE 8000
 WORKDIR /src
 
 CMD python manage.py collectstatic --no-input;\
-    gunicorn operationcode_backend.wsgi -b 0.0.0.0:8000 -w 3 --access-logfile=- --error-logfile=- --capture-output --logger-class "operationcode_backend.custom_logging.CustomGunicornLogger"
-
-# The `Staging` stage is the same configuration as prod, the only
-# difference being it doesn't process background tasks
-# The resulting image will run the application using a
-# production webserver and configuration
-FROM app As Staging
-
-ENV DJANGO_ENV staging
-EXPOSE 8000
-CMD python manage.py collectstatic --no-input;\
-    gunicorn operationcode_backend.wsgi -b 0.0.0.0:8000 -w 3 --access-logfile=- --error-logfile=- --capture-output --logger-class "operationcode_backend.custom_logging.CustomGunicornLogger"
-
-# The `Prod` stage is the default stage if the Dockerfile is run without
-# a target stage set. The resulting image will run the application using a
-# production webserver and configuration
-FROM app As Prod
-
-ENV DJANGO_ENV production
-EXPOSE 8000
-CMD python manage.py collectstatic --no-input;\
-    python manage.py process_tasks &\
     gunicorn operationcode_backend.wsgi -b 0.0.0.0:8000 -w 3 --access-logfile=- --error-logfile=- --capture-output --logger-class "operationcode_backend.custom_logging.CustomGunicornLogger"
