@@ -6,6 +6,7 @@ from allauth.account.models import EmailAddress
 from background_task.models import Task as BackgroundTask
 from django.contrib.auth.models import User
 from django.core.mail import EmailMultiAlternatives
+from django.http import HttpResponseNotFound
 from django.urls import reverse
 from rest_framework.test import APIClient
 
@@ -114,7 +115,7 @@ def test_email_verification_with_invalid_token(
     res = client.post(reverse("rest_verify_email"), {"key": "abc123"})
 
     assert res.status_code == 404
-    assert res.data["error"] == "Not found."
+    assert isinstance(res, HttpResponseNotFound)
 
 
 @pytest.mark.django_db

@@ -14,7 +14,7 @@ def test_permission_denied_formatted_correctly():
     response = custom_exception_handler(ex, {})
 
     assert response.status_code == 403
-    assert response.data["error"] == PermissionDenied.default_detail
+    assert response.data["error"] == mock_detail
 
 
 def test_auth_header_formatted_correctly(client):

@@ -33,6 +33,7 @@ mandrill = "^1.0"
 python-dotenv = "^0.10.3"
 requests = "^2.21"
 sentry-sdk = "^0.9.0"
+django-suit = "^0.2.26"
 
 [tool.poetry.dev-dependencies]
 bandit = "^1.6"

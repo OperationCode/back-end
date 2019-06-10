@@ -9,6 +9,9 @@ INSTALLED_APPS = [
     "core.apps.CoreConfig",
     "api.apps.ApiConfig",
     "frontend.apps.FrontendConfig",
+    # Django Suit Admin Console
+    # https://django-suit.readthedocs.io
+    "suit",
     # Default Django apps:
     "django.contrib.admin",
     "django.contrib.auth",
@@ -83,6 +86,28 @@ DATABASES = {
         "HOST": config("DB_HOST", default=""),
         "PORT": config("DB_PORT", default=""),
     }
+}
+
+# Django Suit (Admin Console)
+# https://django-suit.readthedocs.io
+SUIT_CONFIG = {
+    "MENU": (
+        {
+            "label": "Users",
+            "icon": "icon-user",
+            "models": (
+                "auth.user",
+                "core.profile",
+                "auth.group",
+                "account.emailaddress",
+            ),
+        },
+        {"app": "socialaccount", "icon": "icon-thumbs-up"},
+        "sites",
+        "-",
+        "api",
+        {"app": "background_task", "icon": "icon-tasks"},
+    )
 }
 
 # Internationalization

@@ -1,7 +1,7 @@
 from django.urls import include, path
 from django.views.generic import TemplateView
 from rest_auth.registration.views import SocialAccountListView, VerifyEmailView
-from rest_auth.views import PasswordResetConfirmView
+from rest_auth.views import PasswordChangeView, PasswordResetConfirmView
 from rest_framework_jwt.views import refresh_jwt_token, verify_jwt_token
 
 from . import views
@@ -11,6 +11,11 @@ urlpatterns = [
         "auth/password/reset/confirm/",
         PasswordResetConfirmView.as_view(),
         name="password_reset_confirm",
+    ),
+    path(
+        "auth/password/change/",
+        PasswordChangeView.as_view(),
+        name="rest_password_change",
     ),
     path("auth/verify-email/", VerifyEmailView.as_view(), name="rest_verify_email"),
     path("auth/social/google/", views.GoogleLogin.as_view(), name="google_rest_login"),

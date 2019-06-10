@@ -9,38 +9,10 @@ workflows:
     jobs:
       - build_test
 
+      # push new Docker image to Docker Hub
       - dockerhub_build_and_push:
           requires:
             - build_test
-          filters:
-            branches:
-              only:
-                - master
-                - staging
-
-      # push new Docker image to ECS
-      - aws-ecr/build_and_push_image:
-          repo: back-end
-          tag: '${CIRCLE_WORKFLOW_ID}'
-          dockerfile: docker/Dockerfile
-          extra-build-args: --target Staging
-          requires:
-            - build_test
-          filters:
-            branches:
-              only:
-                - master
-                - staging
-
-      # Update ECS task and service, then replace the current one
-      - aws-ecs/deploy-service-update:
-          family: 'backend-${CIRCLE_BRANCH}'
-          service-name: 'backend-${CIRCLE_BRANCH}'
-          cluster-name: 'python-oc-services'
-          container-image-name-updates: 'container=backend,tag=${CIRCLE_WORKFLOW_ID}'
-          verify-revision-is-deployed: true
-          requires:
-            - aws-ecr/build_and_push_image
           filters:
             branches:
               only:
@@ -130,10 +102,11 @@ jobs:
           command: |
             echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USERNAME} --password-stdin
 
-            if ["$CIRCLE_BRANCH" == "master"]; then
-              docker build -t operationcode/back-end:${CIRCLE_WORKFLOW_ID} -f docker/Dockerfile .
+            if [[ "$CIRCLE_BRANCH" == "master" ]]; then
+              docker build -t operationcode/back-end:${CIRCLE_BRANCH}${CIRCLE_WORKFLOW_ID} -t operationcode/back-end:latest -f docker/Dockerfile .
+              docker push operationcode/back-end:latest
             else
-              docker build -t operationcode/back-end:${CIRCLE_WORKFLOW_ID} -f docker/Dockerfile --target Staging .
+              docker build -t operationcode/back-end:${CIRCLE_BRANCH}${CIRCLE_WORKFLOW_ID} -f docker/Dockerfile --target Staging .
             fi
 
-            docker push operationcode/back-end:${CIRCLE_WORKFLOW_ID}
+            docker push operationcode/back-end:${CIRCLE_BRANCH}${CIRCLE_WORKFLOW_ID}
