@@ -53,6 +53,7 @@ class CodeSchoolAdmin(admin.ModelAdmin):
         "hardware_included",
         "has_online",
         "online_only",
+        "has_housing",
         "mooc",
         "is_partner",
         "rep_name",
@@ -64,6 +65,7 @@ class CodeSchoolAdmin(admin.ModelAdmin):
         "hardware_included",
         "has_online",
         "online_only",
+        "has_housing",
         "mooc",
         "is_partner",
     )

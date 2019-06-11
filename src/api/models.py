@@ -9,6 +9,7 @@ class CodeSchool(models.Model):
     full_time = models.BooleanField(blank=True, null=True)
     hardware_included = models.BooleanField(blank=True, null=True)
     has_online = models.BooleanField(blank=True, null=True)
+    has_housing = models.BooleanField(default=False, null=True)
     online_only = models.BooleanField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
