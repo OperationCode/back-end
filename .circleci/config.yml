@@ -1,9 +1,5 @@
 version: 2.1
 
-orbs:
-  aws-ecr: circleci/aws-ecr@4.0.1
-  aws-ecs: circleci/aws-ecs@0.0.8
-
 workflows:
   build_test_deploy:
     jobs:
@@ -18,7 +14,6 @@ workflows:
               only:
                 - master
                 - staging
-
 
 jobs:
   build_test:
@@ -46,8 +41,6 @@ jobs:
           command: |
             sudo pip install poetry
             poetry install
-            curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > /usr/local/bin/cc-test-reporter
-            chmod +x /usr/local/bin/cc-test-reporter
 
       - run:
           name: Initializing CodeClimate
