@@ -79,4 +79,7 @@ GITHUB_AUTH_CALLBACK_URL = config(
     default="http://localhost:8000/dev/github/login/callback/",
 )
 
+RECAPTCHA_PUBLIC_KEY = config("RECAPTCHA_PUBLIC_KEY", "MyRecaptchaKey123")
+RECAPTCHA_PRIVATE_KEY = config("RECAPTCHA_PRIVATE_KEY", "MyRecaptchaPrivateKey456")
+
 CORS_ORIGIN_ALLOW_ALL = True
