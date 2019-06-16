@@ -43,4 +43,4 @@ DEFAULT_FILE_STORAGE = "custom_storages.MediaStorage"
 EMAIL_BACKEND = "anymail.backends.mandrill.EmailBackend"
 
 # Temporary frontend configs
-GITHUB_REPO = config("GITHUB_REPO", "OperationCode/operationcode_backend")
+GITHUB_REPO = config("GITHUB_REPO", "OperationCode/back-end")
