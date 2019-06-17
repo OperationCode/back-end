@@ -1,8 +1,9 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django_prometheus.models import ExportModelOperationsMixin
 
 
-class CodeSchool(models.Model):
+class CodeSchool(ExportModelOperationsMixin("code_school"), models.Model):
     name = models.CharField(max_length=256, blank=True, null=True)
     url = models.CharField(max_length=256, blank=True, null=True)
     logo = models.CharField(max_length=256, blank=True, null=True)
@@ -26,7 +27,7 @@ class CodeSchool(models.Model):
         db_table = "api_code_schools"
 
 
-class Location(models.Model):
+class Location(ExportModelOperationsMixin("location"), models.Model):
     va_accepted = models.BooleanField(blank=True, null=True)
     address1 = models.CharField(max_length=256, blank=True, null=True)
     address2 = models.CharField(max_length=256, blank=True, null=True)
@@ -48,7 +49,7 @@ class Location(models.Model):
         db_table = "api_locations"
 
 
-class Scholarship(models.Model):
+class Scholarship(ExportModelOperationsMixin("scholarship"), models.Model):
     name = models.CharField(max_length=256, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     location = models.CharField(max_length=256, blank=True, null=True)
@@ -62,7 +63,9 @@ class Scholarship(models.Model):
         return f"{self.name} - {self.location}"
 
 
-class ScholarshipApplication(models.Model):
+class ScholarshipApplication(
+    ExportModelOperationsMixin("scholarship_application"), models.Model
+):
     reason = models.TextField(blank=True, null=True)
     terms_accepted = models.BooleanField(blank=True, null=True)
     user = models.ForeignKey(User, models.DO_NOTHING, blank=True, null=True)
@@ -76,7 +79,7 @@ class ScholarshipApplication(models.Model):
         return f"{self.user} - {self.scholarship}"
 
 
-class TeamMember(models.Model):
+class TeamMember(ExportModelOperationsMixin("team_member"), models.Model):
     name = models.CharField(max_length=256, blank=True, null=True)
     role = models.CharField(max_length=256, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
