@@ -2,12 +2,16 @@ from django.contrib.auth import get_user_model
 from rest_auth.registration.serializers import (
     RegisterSerializer as BaseRegisterSerializer,
 )
+from rest_auth.registration.serializers import (
+    SocialLoginSerializer as BaseSocialLoginSerializer,
+)
 from rest_auth.serializers import LoginSerializer as BaseLoginSerializer
 from rest_auth.serializers import (
     PasswordResetConfirmSerializer as BasePasswordResetConfirmSerializer,
 )
 from rest_auth.serializers import UserDetailsSerializer as BaseUserDetailsSerializer
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from core.models import Profile
 
@@ -42,6 +46,26 @@ class PasswordResetConfirmSerializer(BasePasswordResetConfirmSerializer):
                 ex.detail = ex.detail["new_password2"][0]
             else:
                 ex.detail = "Could not reset password.  Reset token expired or invalid."
+            raise ex
+
+
+# noinspection PyAbstractClass
+class SocialLoginSerializer(BaseSocialLoginSerializer):
+    """
+    Extends default SocialLoginSerializer to add additional details to some
+    failed login attempts
+    """
+
+    def validate(self, attrs):
+        try:
+            res = super().validate(attrs)
+            return res
+        except ValidationError as ex:
+            if "User is already registered with this e-mail address." in ex.detail:
+                ex.detail[0] = (
+                    "User is already registered with this e-mail address. "
+                    "Please login using the form above."
+                )
             raise ex
 
 
