@@ -54,8 +54,9 @@ INSTALLED_APPS = [
     # drf-yasg : Yet another Swagger generator
     # https://drf-yasg.readthedocs.io/en/stable/readme.html
     "drf_yasg",
-    # temp frontend apps
+    # https://github.com/korfuri/django-prometheus
     "django_prometheus",
+    # temp frontend apps
     "widget_tweaks",
     "snowpenguin.django.recaptcha2",
 ]
@@ -82,7 +83,7 @@ WSGI_APPLICATION = "operationcode_backend.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": config("DB_ENGINE", default="django_prometheus.db.backends.sqlite3"),
+        "ENGINE": config("DB_ENGINE", default="django.db.backends.sqlite3"),
         "NAME": config("DB_NAME", default=str(BASE_DIR.joinpath("db.sqlite3"))),
         "USER": config("DB_USER", default=""),
         "PASSWORD": config("DB_PASSWORD", default=""),
