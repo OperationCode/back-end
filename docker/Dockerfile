@@ -85,27 +85,3 @@ ENV DJANGO_ENV production
 EXPOSE 8000
 CMD python manage.py process_tasks &\
     gunicorn operationcode_backend.wsgi -b 0.0.0.0:8000 -w 3 --access-logfile=- --error-logfile=- --capture-output --logger-class "operationcode_backend.custom_logging.CustomGunicornLogger"
-
-
-# The `dev-base` stage is used as the base for images that require
-# the development dependencies. The duplication of the COPY instruction
-# avoids breaking the cache for that later when the poetry.lock changes
-FROM built-image AS dev-base
-
-ENV DJANGO_ENV development
-COPY poetry.lock pyproject.toml ./
-RUN pip install poetry \
-    && poetry config settings.virtualenvs.create false \
-    && poetry install --no-interaction --no-ansi
-COPY . /
-
-# The `Dev` stage is the default stage if the Dockerfile is run without a target stage set.
-# It runs the application using the development web server, and enables
-# developer tools like the debugger and interactive expcetions
-FROM dev-base AS Dev
-LABEL dev=true
-EXPOSE 8000
-WORKDIR /src
-
-CMD python manage.py collectstatic --no-input;\
-    gunicorn operationcode_backend.wsgi -b 0.0.0.0:8000 -w 3 --access-logfile=- --error-logfile=- --capture-output --logger-class "operationcode_backend.custom_logging.CustomGunicornLogger"
