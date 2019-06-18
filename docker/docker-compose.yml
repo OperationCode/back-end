@@ -20,3 +20,17 @@ services:
       - pybot.env
     ports:
       - 5000:5000
+
+  db:
+    image: postgres:9.6.11
+    container_name: backend-postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=operationcode_production
+
+
+volumes:
+  postgres_data:
