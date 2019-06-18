@@ -1,12 +1,25 @@
 version: 2.1
 
+orbs:
+  docker: circleci/docker@0.5.1
+
 workflows:
   build_test_deploy:
     jobs:
       - build_test
 
-      # push new Docker image to Docker Hub
-      - dockerhub_build_and_push:
+      - docker/publish:
+          image: operationcode/back-end
+          dockerfile: docker/Dockerfile
+          tag: ${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}
+          extra_build_args: -t operationcode/back-end:${CIRCLE_BRANCH}
+          after_build:
+            - run:
+                name: Tag and Push
+                command: |
+                  IMAGE_ID=operationcode/back-end
+                  docker tag ${IMAGE_ID}:${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM} ${IMAGE_ID}:${CIRCLE_BRANCH}
+                  docker push ${IMAGE_ID}:${CIRCLE_BRANCH}
           requires:
             - build_test
           filters:
@@ -79,34 +92,3 @@ jobs:
 
       - store_test_results:
           path: test-results
-
-  dockerhub_build_and_push:
-    docker:
-      - image: circleci/python:3.7.1
-
-    steps:
-      - checkout
-
-      - setup_remote_docker:
-          docker_layer_caching: true
-
-      - run:
-          name: Build and push to DockerHub
-          command: |
-            echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USERNAME} --password-stdin
-
-            if [[ "$CIRCLE_BRANCH" == "master" ]]; then
-              docker build -f docker/Dockerfile --target Prod \
-                      -t operationcode/back-end:${CIRCLE_BRANCH}-${CIRCLE_WORKFLOW_ID} \
-                      -t operationcode/back-end:master \
-                      -t operationcode/back-end:latest .
-            else
-              docker build -f docker/Dockerfile --target Staging \
-                      -t operationcode/back-end:${CIRCLE_BRANCH}-${CIRCLE_WORKFLOW_ID} \
-                      -t operationcode/back-end:staging \
-                      -t operationcode/back-end:latest .
-            fi
-
-            docker push operationcode/back-end:latest
-            docker push operationcode/back-end:${CIRCLE_BRANCH}
-            docker push operationcode/back-end:${CIRCLE_BRANCH}-${CIRCLE_WORKFLOW_ID}
