@@ -67,21 +67,10 @@ LABEL shell=true
 CMD python manage.py shell
 
 
-# The `Staging` stage is the same configuration as prod, the only
-# difference being it doesn't process background tasks
-# The resulting image will run the application using a
-# production webserver and the `environments/staging.py` configuration
-FROM app As Staging
-
-ENV DJANGO_ENV staging
-EXPOSE 8000
-CMD gunicorn operationcode_backend.wsgi -b 0.0.0.0:8000 -w 3 --access-logfile=- --error-logfile=- --capture-output --logger-class "operationcode_backend.custom_logging.CustomGunicornLogger"
-
 # The `Prod` stage creates an image that will run the application using a
 # production webserver and the `environments/production.py` configuration
 FROM app As Prod
 
-ENV DJANGO_ENV production
 EXPOSE 8000
 CMD python manage.py process_tasks &\
     gunicorn operationcode_backend.wsgi -b 0.0.0.0:8000 -w 3 --access-logfile=- --error-logfile=- --capture-output --logger-class "operationcode_backend.custom_logging.CustomGunicornLogger"
