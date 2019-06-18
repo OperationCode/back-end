@@ -12,7 +12,11 @@ from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from core.models import Profile
-from core.serializers import ProfileSerializer, SocialLoginSerializer, UserSerializer
+from core.serializers import (
+    ProfileSerializer,
+    CustomSocialLoginSerializer,
+    UserSerializer,
+)
 
 sensitive_param = method_decorator(
     sensitive_post_parameters("password"), name="dispatch"
@@ -62,7 +66,7 @@ class RegisterView(BaseRegisterView):
 class GoogleLogin(SocialLoginView):
     permission_classes = (AllowAny,)
     adapter_class = GoogleOAuth2Adapter
-    serializer_class = SocialLoginSerializer
+    serializer_class = CustomSocialLoginSerializer
 
 
 class GoogleConnect(SocialConnectView):
@@ -71,7 +75,7 @@ class GoogleConnect(SocialConnectView):
 
 class FacebookLogin(SocialLoginView):
     adapter_class = FacebookOAuth2Adapter
-    serializer_class = SocialLoginSerializer
+    serializer_class = CustomSocialLoginSerializer
 
 
 class FacebookConnect(SocialConnectView):

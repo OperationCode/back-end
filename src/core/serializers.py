@@ -50,7 +50,7 @@ class PasswordResetConfirmSerializer(BasePasswordResetConfirmSerializer):
 
 
 # noinspection PyAbstractClass
-class SocialLoginSerializer(BaseSocialLoginSerializer):
+class CustomSocialLoginSerializer(BaseSocialLoginSerializer):
     """
     Extends default SocialLoginSerializer to add additional details to some
     failed login attempts
