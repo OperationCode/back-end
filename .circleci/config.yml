@@ -11,15 +11,15 @@ workflows:
       - docker/publish:
           image: operationcode/back-end
           dockerfile: docker/Dockerfile
-          tag: ${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}
-          extra_build_args: -t operationcode/back-end:${CIRCLE_BRANCH}
+          tag: ${CIRCLE_BRANCH}
           after_build:
             - run:
                 name: Tag and Push
                 command: |
                   IMAGE_ID=operationcode/back-end
-                  docker tag ${IMAGE_ID}:${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM} ${IMAGE_ID}:${CIRCLE_BRANCH}
-                  docker push ${IMAGE_ID}:${CIRCLE_BRANCH}
+                  docker tag ${IMAGE_ID}:${CIRCLE_BRANCH} ${IMAGE_ID}:${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}
+                  docker push ${IMAGE_ID}:${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}
+                  echo "Successfully pushed $IMAGE_ID:$CIRCLE_BRANCH-$CIRCLE_BUILD_NUM"
           requires:
             - build_test
           filters:
