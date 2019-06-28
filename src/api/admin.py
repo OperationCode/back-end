@@ -56,6 +56,7 @@ class CodeSchoolAdmin(admin.ModelAdmin):
         "has_housing",
         "mooc",
         "is_partner",
+        "is_vet_tec_approved",
         "rep_name",
         "rep_email",
     )
@@ -68,6 +69,7 @@ class CodeSchoolAdmin(admin.ModelAdmin):
         "has_housing",
         "mooc",
         "is_partner",
+        "is_vet_tec_approved",
     )
 
     search_fields = ("name", "rep_name", "rep_email", "url")

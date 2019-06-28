@@ -18,6 +18,7 @@ class CodeSchool(models.Model):
     is_partner = models.BooleanField()
     rep_name = models.CharField(max_length=256, blank=True, null=True)
     rep_email = models.CharField(max_length=256, blank=True, null=True)
+    is_vet_tec_approved = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.name} - {self.url}"
