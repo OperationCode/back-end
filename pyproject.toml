@@ -33,7 +33,7 @@ mailchimp3 = "^3.0"
 mandrill = "^1.0"
 python-dotenv = "^0.10.3"
 requests = "^2.21"
-sentry-sdk = "^0.10.0"
+sentry-sdk = "^0.10.1"
 
 [tool.poetry.dev-dependencies]
 bandit = "^1.6"
