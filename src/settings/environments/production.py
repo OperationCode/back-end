@@ -44,3 +44,4 @@ EMAIL_BACKEND = "anymail.backends.mandrill.EmailBackend"
 
 # Temporary frontend configs
 GITHUB_REPO = config("GITHUB_REPO", "OperationCode/back-end")
+GITHUB_AUTH_CALLBACK_URL = "https://www.operationcode.org/"

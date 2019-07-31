@@ -75,8 +75,7 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 GITHUB_AUTH_CALLBACK_URL = config(
-    "GITHUB_AUTH_CALLBACK_URL",
-    default="http://localhost:8000/dev/github/login/callback/",
+    "GITHUB_AUTH_CALLBACK_URL", default="http://localhost:3000/"
 )
 
 RECAPTCHA_PUBLIC_KEY = config("RECAPTCHA_PUBLIC_KEY", "MyRecaptchaKey123")
