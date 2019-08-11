@@ -36,6 +36,12 @@ urlpatterns = [
     path("auth/token/verify", verify_jwt_token, name="verify_jwt"),
     path("auth/registration/", views.RegisterView.as_view(), name="rest_register"),
     path("auth/profile/", views.UpdateProfile.as_view(), name="update_profile"),
+    path("auth/me/", views.UpdateProfile.as_view(), name="update_my_profile"),
+    path(
+        "auth/profile/admin/",
+        views.AdminUpdateProfile.as_view(),
+        name="admin_update_profile",
+    ),
     path("auth/user/", views.UserView.as_view(), name="view_user"),
     # Used by allauth to send the "verification email sent" response to client
     path(
