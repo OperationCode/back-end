@@ -83,11 +83,11 @@ class AdminUpdateProfile(RetrieveUpdateAPIView):
 
     @swagger_auto_schema(manual_parameters=[email_param])
     def patch(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
+        return super().patch(request, *args, **kwargs)
 
     @swagger_auto_schema(manual_parameters=[email_param])
     def put(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
+        return super().put(request, *args, **kwargs)
 
 
 class UserView(RetrieveUpdateAPIView):
