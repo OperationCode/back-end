@@ -6,6 +6,8 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.decorators import method_decorator
 from django.views.decorators.debug import sensitive_post_parameters
+from drf_yasg.openapi import IN_QUERY, TYPE_STRING, Parameter
+from drf_yasg.utils import swagger_auto_schema
 from rest_auth.registration.views import RegisterView as BaseRegisterView
 from rest_auth.registration.views import SocialConnectView, SocialLoginView
 from rest_framework.generics import RetrieveUpdateAPIView
@@ -21,6 +23,14 @@ from core.serializers import (
 
 sensitive_param = method_decorator(
     sensitive_post_parameters("password"), name="dispatch"
+)
+
+email_param = Parameter(
+    "email",
+    IN_QUERY,
+    "Email belonging to the Profile's User instance",
+    required=True,
+    type=TYPE_STRING,
 )
 
 
@@ -45,6 +55,10 @@ class UpdateProfile(RetrieveUpdateAPIView):
 
 
 class AdminUpdateProfile(RetrieveUpdateAPIView):
+    """
+    Read or update user profiles
+    """
+
     serializer_class = ProfileSerializer
     queryset = Profile.objects.all()
     permission_classes = (HasGroupPermission,)
@@ -62,6 +76,18 @@ class AdminUpdateProfile(RetrieveUpdateAPIView):
             return profile
 
         return None
+
+    @swagger_auto_schema(manual_parameters=[email_param])
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @swagger_auto_schema(manual_parameters=[email_param])
+    def patch(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @swagger_auto_schema(manual_parameters=[email_param])
+    def put(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
 
 class UserView(RetrieveUpdateAPIView):
