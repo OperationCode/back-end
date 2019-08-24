@@ -10,6 +10,7 @@ from drf_yasg.openapi import IN_QUERY, TYPE_STRING, Parameter
 from drf_yasg.utils import swagger_auto_schema
 from rest_auth.registration.views import RegisterView as BaseRegisterView
 from rest_auth.registration.views import SocialConnectView, SocialLoginView
+from rest_framework.exceptions import NotFound, ValidationError, bad_request
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
@@ -69,13 +70,17 @@ class AdminUpdateProfile(RetrieveUpdateAPIView):
     }
 
     def get_object(self):
-        email = self.request.query_params["email"]
+        email = self.request.query_params.get("email")
         if email:
-            profile = Profile.objects.get(user__email=email)
+            try:
+                profile = Profile.objects.get(user__email=email)
+            except Profile.DoesNotExist:
+                raise NotFound
+
             self.check_permissions(self.request)
             return profile
 
-        return None
+        raise ValidationError({"error": "Missing email query param"})
 
     @swagger_auto_schema(manual_parameters=[email_param])
     def get(self, request, *args, **kwargs):

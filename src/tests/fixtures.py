@@ -2,7 +2,7 @@ from typing import Dict
 
 import factory
 import pytest
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from rest_framework.test import APIClient
 from rest_framework_jwt.settings import api_settings
 
@@ -25,8 +25,38 @@ def user(db) -> User:
 
 
 @pytest.fixture
+def profile_admin_group(db) -> Group:
+    group = Group(name="ProfileAdmin")
+    group.save()
+    return group
+
+
+@pytest.fixture
+def profile_admin(user: User, profile_admin_group: Group) -> User:
+    user.groups.add(profile_admin_group)
+    user.save()
+    return user
+
+
+@pytest.fixture
 def authed_client(client, user: User):
     payload = jwt_payload_handler(user)
+    jwt = jwt_encode_handler(payload)
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {jwt}")
+    return client
+
+
+@pytest.fixture
+def authed_admin_client(client, admin_user: User):
+    payload = jwt_payload_handler(admin_user)
+    jwt = jwt_encode_handler(payload)
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {jwt}")
+    return client
+
+
+@pytest.fixture
+def profile_admin_client(client, profile_admin: User):
+    payload = jwt_payload_handler(profile_admin)
     jwt = jwt_encode_handler(payload)
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {jwt}")
     return client
