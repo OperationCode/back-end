@@ -343,8 +343,8 @@ category = "main"
 description = "Web APIs for Django, made easy."
 name = "djangorestframework"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-version = "3.9.0"
+python-versions = ">=3.5"
+version = "3.10.3"
 
 [[package]]
 category = "main"
@@ -993,7 +993,7 @@ python-versions = ">=2.7"
 version = "0.5.2"
 
 [metadata]
-content-hash = "c3a8ed70e6022faef4ae5d788832822a175b627c21ee48e36fd9cc82d0eded76"
+content-hash = "d0d639b4e009371e1a2767fbd443226b08e40d223d1fc1ffe1ad94fbde5ccec1"
 python-versions = "^3.7"
 
 [metadata.hashes]
@@ -1028,7 +1028,7 @@ django-storages = ["8e35d2c7baeda5dc6f0b4f9a0fc142d25f9a1bf72b8cebfcbc5db4863abc
 django-suit = ["19ed865a478dfca81cb5f50a70317700dd70da92c465093251d0e14330a2b92b"]
 django-suit-daterange-filter = ["e5baaf380f450597310efc53e6ce08555d0873cfaecb809759d2474fbecfae71"]
 django-widget-tweaks = ["65c960f3d75008a285e4b10f4d21f9eae4160fd77a0f6097ad545185f8648bd6", "f2e2c9c9be1ccc59061e248dcc2144f4906d594abe1a563902f4bdf6aa14e432"]
-djangorestframework = ["607865b0bb1598b153793892101d881466bd5a991de12bd6229abb18b1c86136", "63f76cbe1e7d12b94c357d7e54401103b2e52aef0f7c1650d6c820ad708776e5"]
+djangorestframework = ["5488aed8f8df5ec1d70f04b2114abc52ae6729748a176c453313834a9ee179c8", "dc81cbf9775c6898a580f6f1f387c4777d12bd87abf0f5406018d32ccae71090"]
 djangorestframework-camel-case = ["4bb2e41fb8a5d3745e20c5ee0842ebc6f6bac602b3286c3dd913b01760a2abb0", "5b957f9cf16730f153a0ab4add9ff17fb41b7fceaa7edad29b0536b515bffd16"]
 djangorestframework-jwt = ["5efe33032f3a4518a300dc51a51c92145ad95fb6f4b272e5aa24701db67936a7", "ab15dfbbe535eede8e2e53adaf52ef0cf018ee27dbfad10cbc4cbec2ab63d38c"]
 docopt = ["b752582228e280b7be3677c5a758a352e352ad0bde3a849fd51f79239e88e475"]
