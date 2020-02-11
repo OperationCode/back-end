@@ -122,10 +122,6 @@ spew = False
 #
 
 daemon = False
-# raw_env = [
-#     'DJANGO_SECRET_KEY=something',
-#     'SPAM=eggs',
-# ]
 pidfile = None
 umask = 0
 user = None
