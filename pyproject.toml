@@ -25,7 +25,7 @@ django-suit = "^0.2.26"
 django-suit-daterange-filter = "^0.0.6"
 django-widget-tweaks = "^1.4"
 drf-yasg = "^1.16"
-gunicorn = "^19.9"
+gunicorn = "^20.0.4"
 packaging = "^19.1"
 pillow = "^6.0"
 psycopg2 = "^2.8"
@@ -36,10 +36,11 @@ python-dotenv = "^0.10.3"
 requests = "^2.21"
 sentry-sdk = "^0.10.1"
 six = "^1.12"
+honeycomb-beeline = "^2.11.4"
 
 [tool.poetry.dev-dependencies]
 bandit = "^1.6"
-black = {version = "^19.3b0", allows-prereleases = true}
+black = {version = "^19.3b0"}
 coverage = "^4.5"
 django-debug-toolbar = "^2.0"
 factory_boy = "^2.12"

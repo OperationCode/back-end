@@ -25,7 +25,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY poetry.lock pyproject.toml ./
 
 RUN pip install poetry && \
-    poetry config settings.virtualenvs.create false && \
+    poetry config virtualenvs.create false && \
     poetry install --no-dev --no-interaction --no-ansi
 
 
@@ -73,4 +73,4 @@ FROM app As Prod
 
 EXPOSE 8000
 CMD python manage.py process_tasks &\
-    gunicorn operationcode_backend.wsgi -b 0.0.0.0:8000 -w 3 --access-logfile=- --error-logfile=- --capture-output --logger-class "operationcode_backend.custom_logging.CustomGunicornLogger"
+  gunicorn operationcode_backend.wsgi -c /src/gunicorn_config.py
