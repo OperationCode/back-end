@@ -45,9 +45,9 @@ jobs:
 
       - restore_cache:  # ensure this step occurs *before* installing dependencies
           keys:
-            - v1-dependencies-{{ checksum "poetry.lock" }}
+            - v2-dependencies-{{ checksum "poetry.lock" }}
             # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
+            - v2-dependencies-
 
       - run:
           name: Installing dependencies
