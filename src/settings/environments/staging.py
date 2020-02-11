@@ -26,8 +26,8 @@ DATABASES = {
 }
 
 # Honeycomb beeline auto-instrumentation
-if "beeline.middleware.django.HoneyMiddleware" not in MIDDLEWARE:
-    MIDDLEWARE += ("beeline.middleware.django.HoneyMiddleware",)
+if "beeline.middleware.django.HoneyMiddleware" not in MIDDLEWARE:  # noqa: F821
+    MIDDLEWARE += ("beeline.middleware.django.HoneyMiddleware",)  # noqa: F821
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/

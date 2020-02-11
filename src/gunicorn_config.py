@@ -2,7 +2,6 @@
 
 #
 # Server socket
-#
 #   bind - The socket to bind.
 #
 #       A string of the form: 'HOST', 'HOST:PORT', 'unix:PATH'.
@@ -203,8 +202,10 @@ def when_ready(server):
 def worker_int(worker):
     worker.log.info("worker received INT or QUIT signal")
 
-    ## get traceback info
-    import threading, sys, traceback
+    # get traceback info
+    import threading
+    import sys
+    import traceback
 
     id2name = {th.ident: th.name for th in threading.enumerate()}
     code = []
@@ -224,7 +225,8 @@ def worker_abort(worker):
 # Added for Honeycomb instrumentation
 def post_worker_init(worker):
     worker.log.info("beeline initialization in process pid %s", worker.pid)
-    import os, beeline
+    import os
+    import beeline
 
     # only proceed if the environment variables have beens upplied
     if "HONEYCOMB_WRITEKEY" in os.environ and "HONEYCOMB_DATASET" in os.environ:
