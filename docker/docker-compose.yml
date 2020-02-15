@@ -2,27 +2,31 @@ version: '3.6'
 services:
 
   backend:
-    image: back-end:latest
+    image: operationcode/back-end:latest
     build:
       context: ..
       dockerfile: docker/Dockerfile
-      target: Staging
-    container_name: backend02
+      target: Prod
+    depends_on:
+      - db
+    container_name: backend
     env_file:
       - .env
     ports:
       - 8000:8000
 
   pybot:
-    image: pybot:latest
-    container_name: pybot01
+    image: operationcode/pybot:latest
+    depends_on:
+      - db
+    container_name: pybot
     env_file:
       - pybot.env
     ports:
       - 5000:5000
 
   db:
-    image: postgres:9.6.11
+    image: postgres:9.6
     container_name: backend-postgres
     ports:
       - 5432:5432

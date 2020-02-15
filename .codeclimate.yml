@@ -13,3 +13,4 @@ plugins:
 exclude_patterns:
   - "**/migrations/"
   - "./src/tests/*"
+  - "./src/gunicorn_config.py"
