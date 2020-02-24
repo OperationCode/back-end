@@ -10,13 +10,9 @@ if config("EXTRA_HOSTS", default=""):
     ALLOWED_HOSTS += [s.strip() for s in os.environ["EXTRA_HOSTS"].split(",")]
 
 # Needed for AWS health check
-try:
-    import socket
-
-    local_ip = str(socket.gethostbyname(socket.gethostname()))
-    ALLOWED_HOSTS.append(local_ip)
-except Exception as ex:  # pragma: no cover
-    print(ex)
+if "allow_cidr.middleware.AllowCIDRMiddleware" not in MIDDLEWARE:  # noqa: F821
+    MIDDLEWARE += ("allow_cidr.middleware.AllowCIDRMiddleware",)  # noqa: F821
+ALLOWED_CIDR_NETS = ["192.168.0.0/16", "10.0.0.0/8", "172.16.0.0/12", "100.64.0.0/10"]
 
 DATABASES = {
     "default": {

@@ -226,6 +226,18 @@ requests-oauthlib = ">=0.3.0"
 
 [[package]]
 category = "main"
+description = "A Django Middleware to enable use of CIDR IP ranges in ALLOWED_HOSTS."
+name = "django-allow-cidr"
+optional = false
+python-versions = "*"
+version = "0.3.1"
+
+[package.dependencies]
+Django = ">=1.8"
+netaddr = ">=0.7.19"
+
+[[package]]
+category = "main"
 description = "Django email integration for Amazon SES, Mailgun, Mailjet, Postmark, SendGrid, SendinBlue, SparkPost and other transactional ESPs"
 name = "django-anymail"
 optional = false
@@ -678,6 +690,14 @@ name = "more-itertools"
 optional = false
 python-versions = ">=3.5"
 version = "8.2.0"
+
+[[package]]
+category = "main"
+description = "A network address manipulation library for Python"
+name = "netaddr"
+optional = false
+python-versions = "*"
+version = "0.7.19"
 
 [[package]]
 category = "main"
@@ -1176,7 +1196,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools"]
 
 [metadata]
-content-hash = "db705ca995bc426c04a4f00e1673687439f042c7581b058a99f0f2032e276bf3"
+content-hash = "ad880e105ed81a7b5a1f2dca231852823d95d2a7e8bc61c3584ada41e7cb762e"
 python-versions = "^3.7"
 
 [metadata.files]
@@ -1326,6 +1346,10 @@ django = [
 ]
 django-allauth = [
     {file = "django-allauth-0.39.1.tar.gz", hash = "sha256:4444434c2f43188e16e0a7732c3638e12787ca7e5032f69b6d30b2912f53809e"},
+]
+django-allow-cidr = [
+    {file = "django-allow-cidr-0.3.1.tar.gz", hash = "sha256:d9a3b22c14e91c26ddd010c278ddf7e2c69a5421c862a3a3cd448ae57fd833e8"},
+    {file = "django_allow_cidr-0.3.1-py2.py3-none-any.whl", hash = "sha256:e8708c0511a78b80d9b74f718ee46685a1425e6d3520143bd00c773fdca56cc7"},
 ]
 django-anymail = [
     {file = "django-anymail-6.1.0.tar.gz", hash = "sha256:947c9c5de009036771ff9c4295da1836c950fdee4d7c27441181ce1021c370a8"},
@@ -1509,6 +1533,10 @@ mccabe = [
 more-itertools = [
     {file = "more-itertools-8.2.0.tar.gz", hash = "sha256:b1ddb932186d8a6ac451e1d95844b382f55e12686d51ca0c68b6f61f2ab7a507"},
     {file = "more_itertools-8.2.0-py3-none-any.whl", hash = "sha256:5dd8bcf33e5f9513ffa06d5ad33d78f31e1931ac9a18f33d37e77a180d393a7c"},
+]
+netaddr = [
+    {file = "netaddr-0.7.19-py2.py3-none-any.whl", hash = "sha256:56b3558bd71f3f6999e4c52e349f38660e54a7a8a9943335f73dfc96883e08ca"},
+    {file = "netaddr-0.7.19.tar.gz", hash = "sha256:38aeec7cdd035081d3a4c306394b19d677623bf76fa0913f6695127c7753aefd"},
 ]
 oauthlib = [
     {file = "oauthlib-3.1.0-py2.py3-none-any.whl", hash = "sha256:df884cd6cbe20e32633f1db1072e9356f53638e4361bef4e8b03c9127c9328ea"},
