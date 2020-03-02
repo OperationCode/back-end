@@ -3,7 +3,7 @@ import os
 from settings.components import config
 from settings.components.base import DATABASES
 
-ALLOWED_HOSTS = ["operationcode.org", "api.staging.operationcode.org"]
+ALLOWED_HOSTS = ["api.staging.operationcode.org"]
 DEBUG = False
 
 if config("EXTRA_HOSTS", default=""):
