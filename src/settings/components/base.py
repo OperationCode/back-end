@@ -59,8 +59,8 @@ INSTALLED_APPS = [
     "snowpenguin.django.recaptcha2",
     # django-health-check
     # https://django-health-check.readthedocs.io/en/latest/
-    'health_check',                             # required
-    'health_check.db',                          # stock Django health checkers
+    "health_check",  # required
+    "health_check.db",  # stock Django health checkers
 ]
 
 ROOT_URLCONF = "operationcode_backend.urls"
