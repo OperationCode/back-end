@@ -38,6 +38,7 @@ sentry-sdk = "^0.10.1"
 six = "^1.12"
 honeycomb-beeline = "^2.11.4"
 django-allow-cidr = "^0.3.1"
+django-health-check = "^3.12.1"
 
 [tool.poetry.dev-dependencies]
 bandit = "^1.6"
