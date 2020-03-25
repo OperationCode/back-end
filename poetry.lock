@@ -1025,7 +1025,7 @@ description = "A utility library for mocking out the `requests` Python library."
 name = "responses"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-version = "0.10.9"
+version = "0.10.12"
 
 [package.dependencies]
 requests = ">=2.0"
@@ -1207,7 +1207,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools"]
 
 [metadata]
-content-hash = "61babe314304f60419b60f31a5983a3094a54ba90a6672fe1cb226eb90c95ff3"
+content-hash = "2197a8d1cb5ae5212a854c687c9b63d7a40bda76fcad445fe07bf31929129774"
 python-versions = "^3.7"
 
 [metadata.files]
@@ -1730,8 +1730,8 @@ requests-oauthlib = [
     {file = "requests_oauthlib-1.3.0-py3.7.egg", hash = "sha256:fa6c47b933f01060936d87ae9327fead68768b69c6c9ea2109c48be30f2d4dbc"},
 ]
 responses = [
-    {file = "responses-0.10.9-py2.py3-none-any.whl", hash = "sha256:515fd7c024097e5da76e9c4cf719083d181f1c3ddc09c2e0e49284ce863dd263"},
-    {file = "responses-0.10.9.tar.gz", hash = "sha256:8ce8cb4e7e1ad89336f8865af152e0563d2e7f0e0b86d2cf75f015f819409243"},
+    {file = "responses-0.10.12-py2.py3-none-any.whl", hash = "sha256:0474ce3c897fbcc1aef286117c93499882d5c440f06a805947e4b1cb5ab3d474"},
+    {file = "responses-0.10.12.tar.gz", hash = "sha256:f83613479a021e233e82d52ffb3e2e0e2836d24b0cc88a0fa31978789f78d0e5"},
 ]
 "ruamel.yaml" = [
     {file = "ruamel.yaml-0.16.7-py2.py3-none-any.whl", hash = "sha256:dba517a7e330b6caf476b757022d21efa13c32694bfba1e057ce59a374f18f0a"},
