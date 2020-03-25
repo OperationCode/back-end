@@ -242,7 +242,7 @@ description = "Django email integration for Amazon SES, Mailgun, Mailjet, Postma
 name = "django-anymail"
 optional = false
 python-versions = "*"
-version = "6.1.0"
+version = "7.0.0"
 
 [package.dependencies]
 django = ">=1.11"
@@ -1207,7 +1207,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools"]
 
 [metadata]
-content-hash = "61babe314304f60419b60f31a5983a3094a54ba90a6672fe1cb226eb90c95ff3"
+content-hash = "45ecd9b7289fdb4be1b33be515a4e3c1ee5e746d5b923831f36470c6159ef616"
 python-versions = "^3.7"
 
 [metadata.files]
@@ -1363,8 +1363,8 @@ django-allow-cidr = [
     {file = "django_allow_cidr-0.3.1-py2.py3-none-any.whl", hash = "sha256:e8708c0511a78b80d9b74f718ee46685a1425e6d3520143bd00c773fdca56cc7"},
 ]
 django-anymail = [
-    {file = "django-anymail-6.1.0.tar.gz", hash = "sha256:947c9c5de009036771ff9c4295da1836c950fdee4d7c27441181ce1021c370a8"},
-    {file = "django_anymail-6.1.0-py2.py3-none-any.whl", hash = "sha256:72549db8823c144a334bf88c8e749becb1fc82911658129549f46bfb84de311c"},
+    {file = "django-anymail-7.0.0.tar.gz", hash = "sha256:dfa4a00a1608d40893cf818ed3632046a0bb01cf2a2bb3a64d31ff146151533a"},
+    {file = "django_anymail-7.0.0-py2.py3-none-any.whl", hash = "sha256:7930d5f841c9be7e044a9e6bf3492aedf7aa641716b6c1f8f52411658f674131"},
 ]
 django-background-tasks = [
     {file = "django-background-tasks-1.2.5.tar.gz", hash = "sha256:e1b19e8d495a276c9d64c5a1ff8b41132f75d2f58e45be71b78650dad59af9de"},
