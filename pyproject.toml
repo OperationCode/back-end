@@ -53,7 +53,7 @@ pyhumps = "^1.2"
 pytest = "^5.0"
 pytest-django = "^3.5"
 pytest-env = "^0.6.2"
-pytest-mock = "^1.10"
+pytest-mock = "^3.0"
 pytest-pythonpath = "^0.7.3"
 responses = "^0.10.6"
 
