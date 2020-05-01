@@ -6,6 +6,7 @@ from api.models import (
     Scholarship,
     ScholarshipApplication,
     TeamMember,
+    SuccessStory,
 )
 
 
@@ -73,3 +74,12 @@ class CodeSchoolAdmin(admin.ModelAdmin):
     )
 
     search_fields = ("name", "rep_name", "rep_email", "url")
+
+@admin.register(SuccessStory)
+class SuccessStoryAdmin(admin.ModelAdmin):
+    list_display = (
+        "created_by",
+        "created_at",
+        "text",
+        "is_approved",
+    )

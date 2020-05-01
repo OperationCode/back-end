@@ -7,6 +7,7 @@ from api.models import (
     Scholarship,
     ScholarshipApplication,
     TeamMember,
+    SuccessStory,
 )
 from api.serializers import (
     CodeSchoolSerializer,
@@ -14,6 +15,7 @@ from api.serializers import (
     ScholarshipApplicationSerializer,
     ScholarshipSerializer,
     TeamMemberSerializer,
+    SuccessStorySerializer,
 )
 
 
@@ -41,3 +43,9 @@ class ScholarshipApplicationViewSet(ReadOnlyModelViewSet):
 class TeamMemberViewSet(ReadOnlyModelViewSet):
     serializer_class = TeamMemberSerializer
     queryset = TeamMember.objects.all()
+
+
+class SuccessStoryViewSet(ReadOnlyModelViewSet):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = SuccessStorySerializer
+    queryset = SuccessStory.objects.all()
