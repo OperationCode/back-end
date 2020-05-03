@@ -6,18 +6,26 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0008_codeschool_is_vet_tec_approved'),
+        ("api", "0008_codeschool_is_vet_tec_approved"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='SuccessStory',
+            name="SuccessStory",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_by', models.CharField(blank=True, max_length=256, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('text', models.TextField(blank=True, null=True)),
-                ('is_approved', models.BooleanField(blank=True, null=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_by", models.CharField(blank=True, max_length=256, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("text", models.TextField(blank=True, null=True)),
+                ("is_approved", models.BooleanField(blank=True, null=True)),
             ],
         ),
     ]

@@ -104,4 +104,4 @@ class SuccessStory(models.Model):
         return f"{self.created_by} - {self.is_approved}"
 
     class Meta:
-        verbose_name_plural = 'Success Stories'
+        verbose_name_plural = "Success Stories"

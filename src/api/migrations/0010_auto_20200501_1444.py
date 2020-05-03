@@ -6,12 +6,11 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0009_successstory'),
+        ("api", "0009_successstory"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='successstory',
-            options={'verbose_name_plural': 'Success Stories'},
+            name="successstory", options={"verbose_name_plural": "Success Stories"},
         ),
     ]

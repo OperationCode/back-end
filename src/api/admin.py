@@ -75,6 +75,7 @@ class CodeSchoolAdmin(admin.ModelAdmin):
 
     search_fields = ("name", "rep_name", "rep_email", "url")
 
+
 @admin.register(SuccessStory)
 class SuccessStoryAdmin(admin.ModelAdmin):
     list_display = (
