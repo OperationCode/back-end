@@ -1,8 +1,7 @@
 import pytest
 from django.db import models
-
 from api.models import SuccessStory
-
+from tests.factories import SuccessFactory
 
 @pytest.mark.django_db
 def test_success_save():
@@ -17,3 +16,8 @@ def test_success_save():
     assert test_obj.created_at
     assert test_obj.text == "This is some test text"
     assert test_obj.is_approved
+
+@pytest.mark.django_db
+def test_Story_Creation():
+    story = SuccessFactory
+    assert SuccessStory == story

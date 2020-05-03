@@ -95,10 +95,10 @@ class TeamMember(models.Model):
 
 
 class SuccessStory(models.Model):
-    created_by = models.CharField(max_length=256, blank=True, null=True)
+    created_by = models.ForeignKey(User, models.DO_NOTHING, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     text = models.TextField(blank=True, null=True)
-    is_approved = models.BooleanField(blank=True, null=True)
+    is_approved = models.BooleanField( default=False)
 
     def __str__(self):
         return f"{self.created_by} - {self.is_approved}"

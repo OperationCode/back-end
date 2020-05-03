@@ -1,5 +1,12 @@
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.viewsets import ReadOnlyModelViewSet
+from rest_framework.permissions import (
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+)
+
+from rest_framework.viewsets import (
+    ReadOnlyModelViewSet,
+    ModelViewSet,
+    )
 
 from api.models import (
     CodeSchool,
@@ -45,7 +52,7 @@ class TeamMemberViewSet(ReadOnlyModelViewSet):
     queryset = TeamMember.objects.all()
 
 
-class SuccessStoryViewSet(ReadOnlyModelViewSet):
-    permission_classes = (IsAuthenticated,)
+class SuccessStoryViewSet(ModelViewSet):
     serializer_class = SuccessStorySerializer
     queryset = SuccessStory.objects.all()
+    permission_classes = (IsAuthenticatedOrReadOnly,)

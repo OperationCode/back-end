@@ -1,4 +1,5 @@
 import threading
+import datetime
 
 from allauth.account.models import EmailAddress
 from django.conf import settings
@@ -14,6 +15,7 @@ from factory import (
     django,
 )
 
+from api.models import SuccessStory
 from core.models import Profile
 from tests.test_data import (
     DEFAULT_PASSWORD,
@@ -21,6 +23,7 @@ from tests.test_data import (
     random_branch,
     random_mos,
     random_pay_grade,
+    random_text,
 )
 
 
@@ -86,3 +89,14 @@ class UserFactory(Factory):
     )
     profile = RelatedFactory(ProfileFactory, "user")
     active_email = RelatedFactory(EmailAddressFactory, "user", email=email)
+
+class SuccessFactory(DjangoModelFactory):
+    class Meta:
+        model = SuccessStory
+
+    created_by = SubFactory("tests.factories.UserFactory", active_email=None)
+    created_on = datetime.datetime.now()
+    text = fake.random_text
+    is_approved = LazyFunction(fake.pybool)
+
+
