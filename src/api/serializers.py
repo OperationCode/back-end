@@ -5,8 +5,8 @@ from api.models import (
     Location,
     Scholarship,
     ScholarshipApplication,
-    TeamMember,
     SuccessStory,
+    TeamMember,
 )
 
 

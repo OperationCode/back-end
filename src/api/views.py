@@ -6,16 +6,16 @@ from api.models import (
     Location,
     Scholarship,
     ScholarshipApplication,
-    TeamMember,
     SuccessStory,
+    TeamMember,
 )
 from api.serializers import (
     CodeSchoolSerializer,
     LocationSerializer,
     ScholarshipApplicationSerializer,
     ScholarshipSerializer,
-    TeamMemberSerializer,
     SuccessStorySerializer,
+    TeamMemberSerializer,
 )
 
 

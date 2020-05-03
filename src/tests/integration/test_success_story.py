@@ -1,6 +1,7 @@
 import pytest
-from api.models import SuccessStory
 from django.db import models
+
+from api.models import SuccessStory
 
 
 @pytest.mark.django_db
@@ -15,4 +16,4 @@ def success_save_test():
     assert test_obj.created_by == "Bob Vila"
     assert test_obj.created_at
     assert test_obj.text == "This is some test text"
-    assert test_obj.is_approved == True
+    assert test_obj.is_approved
