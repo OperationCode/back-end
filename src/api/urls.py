@@ -5,6 +5,7 @@ from api import views
 
 router = routers.DefaultRouter()
 router.register("codeschools", views.CodeSchoolViewSet)
+router.register("code_schools", views.CodeSchoolViewSet)  # legacy route
 router.register("locations", views.LocationViewSet)
 router.register("scholarships", views.ScholarshipViewSet)
 router.register("scholarshipApplications", views.ScholarshipApplicationViewSet)
