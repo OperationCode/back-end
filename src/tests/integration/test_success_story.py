@@ -5,7 +5,7 @@ from api.models import SuccessStory
 
 
 @pytest.mark.django_db
-def success_save_test():
+def test_success_save():
     test_obj = SuccessStory(
         created_by="Bob Vila",
         created_at=models.DateTimeField(auto_now_add=True),
