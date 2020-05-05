@@ -95,6 +95,7 @@ class UserFactory(Factory):
 class SuccessFactory(DjangoModelFactory):
     class Meta:
         model = SuccessStory
+
     created_at = datetime.datetime.now()
     text = LazyFunction(fake.paragraph)
     is_approved = LazyFunction(fake.pybool)

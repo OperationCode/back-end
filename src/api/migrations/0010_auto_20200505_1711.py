@@ -8,22 +8,26 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0009_successstory'),
+        ("api", "0009_successstory"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='successstory',
-            options={'verbose_name_plural': 'Success Stories'},
+            name="successstory", options={"verbose_name_plural": "Success Stories"},
         ),
         migrations.AlterField(
-            model_name='successstory',
-            name='created_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.DO_NOTHING, to=settings.AUTH_USER_MODEL),
+            model_name="successstory",
+            name="created_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AlterField(
-            model_name='successstory',
-            name='is_approved',
+            model_name="successstory",
+            name="is_approved",
             field=models.BooleanField(default=False),
         ),
     ]
