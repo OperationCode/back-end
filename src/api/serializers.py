@@ -5,6 +5,7 @@ from api.models import (
     Location,
     Scholarship,
     ScholarshipApplication,
+    SuccessStory,
     TeamMember,
 )
 
@@ -38,4 +39,10 @@ class ScholarshipApplicationSerializer(serializers.HyperlinkedModelSerializer):
 class TeamMemberSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = TeamMember
+        fields = "__all__"
+
+
+class SuccessStorySerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = SuccessStory
         fields = "__all__"

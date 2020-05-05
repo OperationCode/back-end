@@ -92,3 +92,22 @@ class TeamMember(models.Model):
 
     class Meta:
         db_table = "api_team_members"
+
+
+class SuccessStory(models.Model):
+    """
+    Model that holds user success stories.
+    """
+
+    created_by = models.ForeignKey(
+        User, models.DO_NOTHING, blank=True, null=True, unique=False
+    )
+    created_at = models.DateTimeField(auto_now_add=True, unique=False)
+    text = models.TextField(blank=True, null=True, unique=False)
+    is_approved = models.BooleanField(default=False, unique=False)
+
+    def __str__(self):
+        return f"{self.created_by} - {self.is_approved}"
+
+    class Meta:
+        verbose_name_plural = "Success Stories"

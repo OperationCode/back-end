@@ -85,3 +85,11 @@ def random_profile_dict(request):
     profile = request.param
     profile.pop("user")
     return request.param
+
+
+@pytest.fixture
+def success_story(db, user):
+    story = f.SuccessFactory()
+    story.created_by = user
+    story.save()
+    return story

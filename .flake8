@@ -12,3 +12,4 @@ ignore =
 exclude =
     __pycache__
     testing.py
+    migrations
