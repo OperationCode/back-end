@@ -14,9 +14,8 @@ def random_branch():
 
 
 def random_text():
-    return (
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis tristique dapibus risus, vitae ultricies ipsum porta vel. Proin eget aliquet."
-    )
+    return fake.random_text(max_nb_chars=200)
+    
 
 def random_pay_grade():
     return f"{fake.random_element(('E', 'O'))}{fake.random_digit()}"

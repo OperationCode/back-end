@@ -1,12 +1,5 @@
-from rest_framework.permissions import (
-    IsAuthenticated,
-    IsAuthenticatedOrReadOnly,
-)
-
-from rest_framework.viewsets import (
-    ReadOnlyModelViewSet,
-    ModelViewSet,
-    )
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from api.models import (
     CodeSchool,

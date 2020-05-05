@@ -1,5 +1,5 @@
-import threading
 import datetime
+import threading
 
 from allauth.account.models import EmailAddress
 from django.conf import settings
@@ -14,6 +14,7 @@ from factory import (
     SubFactory,
     django,
 )
+from faker import Faker
 
 from api.models import SuccessStory
 from core.models import Profile
@@ -90,13 +91,10 @@ class UserFactory(Factory):
     profile = RelatedFactory(ProfileFactory, "user")
     active_email = RelatedFactory(EmailAddressFactory, "user", email=email)
 
+
 class SuccessFactory(DjangoModelFactory):
     class Meta:
         model = SuccessStory
-
-    created_by = SubFactory("tests.factories.UserFactory", active_email=None)
-    created_on = datetime.datetime.now()
-    text = fake.random_text
+    created_at = datetime.datetime.now()
+    text = LazyFunction(fake.paragraph)
     is_approved = LazyFunction(fake.pybool)
-
-
