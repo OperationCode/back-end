@@ -661,7 +661,7 @@ description = "A python client for v3 of MailChimp API"
 name = "mailchimp3"
 optional = false
 python-versions = "*"
-version = "3.0.13"
+version = "3.0.14"
 
 [package.dependencies]
 requests = ">=2.7.0"
@@ -1510,8 +1510,8 @@ libhoney = [
     {file = "libhoney-1.9.0.tar.gz", hash = "sha256:b70010f9c37fed4e27708a1b16f1dc6de9486dd21c9a986b3764f84b3c944fee"},
 ]
 mailchimp3 = [
-    {file = "mailchimp3-3.0.13-py2.py3-none-any.whl", hash = "sha256:7ba8bc51cbce3c639e42a923efa7346cf1b1bfa2878fd23bd752a903b849e79e"},
-    {file = "mailchimp3-3.0.13.tar.gz", hash = "sha256:0647677b9d2f8b9c959562412d355a12eac3a4368ea10326584ab56669d8c066"},
+    {file = "mailchimp3-3.0.14-py2.py3-none-any.whl", hash = "sha256:f027871a6b39cd1ec667c4fa0388e6a45ccd93f2d34989515b5cd4030d53fd70"},
+    {file = "mailchimp3-3.0.14.tar.gz", hash = "sha256:17acf89fe23e2268bc0176857b71af7f9a89bbcad227888149ff8aeb83966907"},
 ]
 mandrill = [
     {file = "mandrill-1.0.59-py3-none-any.whl", hash = "sha256:97896a3920fd7787888059ab2a4e1de5ab14cc5abcbe2a37bd8e103f9ee78341"},
