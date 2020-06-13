@@ -57,6 +57,9 @@ REST_AUTH_REGISTER_SERIALIZERS = {
     "REGISTER_SERIALIZER": "core.serializers.RegisterSerializer"
 }
 
+jwt_secret_key = config("JWT_SECRET_KEY", default=open(".dev/dev-jwt-key").read())
+jwt_public_key = config("JWT_PUBLIC_KEY", default=open(".dev/dev-jwt-key.pub").read())
+
 # Django REST framework JWT
 # https://getblimp.github.io/django-rest-framework-jwt/
 JWT_AUTH = {
@@ -66,6 +69,9 @@ JWT_AUTH = {
     "JWT_EXPIRATION_DELTA": datetime.timedelta(hours=1),
     "JWT_ALLOW_REFRESH": False,
     "JWT_AUTH_COOKIE": None,
+    "JWT_SECRET_KEY": jwt_secret_key,
+    "JWT_PUBLIC_KEY": jwt_public_key,
+    "JWT_ALGORITHM": "RS256",
 }
 
 # Allauth social providers
