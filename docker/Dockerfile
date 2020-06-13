@@ -54,6 +54,7 @@ ENV DJANGO_ENV production
 ENV DB_ENGINE django.db.backends.postgresql
 RUN mkdir /static
 COPY src /src
+COPY .dev /src/.dev
 WORKDIR /src
 
 
