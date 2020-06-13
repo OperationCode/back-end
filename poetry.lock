@@ -361,8 +361,8 @@ category = "main"
 description = "Organize Django settings into multiple files and directories. Easily override and modify settings. Use wildcards and optional settings files."
 name = "django-split-settings"
 optional = false
-python-versions = "*"
-version = "0.3.0"
+python-versions = ">=3.6,<4.0"
+version = "1.0.1"
 
 [[package]]
 category = "main"
@@ -1235,7 +1235,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "e3b606f507d6723ce6fb0970dba21d65af7c74135a3c5c29f8747e6a8eca0c29"
+content-hash = "6474781237c2ad34a58840b58e587e6dfb23399e09b67cccd588581df01d1307"
 python-versions = "^3.7"
 
 [metadata.files]
@@ -1441,8 +1441,8 @@ django-rest-auth = [
     {file = "django-rest-auth-0.9.5.tar.gz", hash = "sha256:f11e12175dafeed772f50d740d22caeab27e99a3caca24ec65e66a8d6de16571"},
 ]
 django-split-settings = [
-    {file = "django-split-settings-0.3.0.tar.gz", hash = "sha256:04f6b551111fdbcb4f669ac9004ac2d4a27197a36ca88444cb896378807ed777"},
-    {file = "django_split_settings-0.3.0-py2.py3-none-any.whl", hash = "sha256:14b164dbd724e52aa9a0b0338eefa988a8a0f17f7cba34e0f983e5348682aeb7"},
+    {file = "django-split-settings-1.0.1.tar.gz", hash = "sha256:2da16cd967cd38315ec7ff0ae0c9db8488f8528bb2e5de26cd898328dc4bbeac"},
+    {file = "django_split_settings-1.0.1-py3-none-any.whl", hash = "sha256:8d636649023289d0ef0ba08b0a4f37761adc94a29ee0ebfe65922c3cb0594ede"},
 ]
 django-storages = [
     {file = "django-storages-1.9.1.tar.gz", hash = "sha256:a59e9923cbce7068792f75344ed7727021ee4ac20f227cf17297d0d03d141e91"},
