@@ -965,7 +965,7 @@ description = "Add .env support to your django/flask apps in development and dep
 name = "python-dotenv"
 optional = false
 python-versions = "*"
-version = "0.10.5"
+version = "0.13.0"
 
 [package.extras]
 cli = ["click (>=5.0)"]
@@ -1235,7 +1235,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "e3b606f507d6723ce6fb0970dba21d65af7c74135a3c5c29f8747e6a8eca0c29"
+content-hash = "fb4538591f3dea3f26baa8d4b2f70b17cd1a263ca2dde8906a97434a5675d23a"
 python-versions = "^3.7"
 
 [metadata.files]
@@ -1718,8 +1718,8 @@ python-decouple = [
     {file = "python-decouple-3.3.tar.gz", hash = "sha256:55c546b85b0c47a15a47a4312d451a437f7344a9be3e001660bccd93b637de95"},
 ]
 python-dotenv = [
-    {file = "python-dotenv-0.10.5.tar.gz", hash = "sha256:f254bfd0c970d64ccbb6c9ebef3667ab301a71473569c991253a481f1c98dddc"},
-    {file = "python_dotenv-0.10.5-py2.py3-none-any.whl", hash = "sha256:440c7c23d53b7d352f9c94d6f70860242c2f071cf5c029dd661ccb22d64ae42b"},
+    {file = "python-dotenv-0.13.0.tar.gz", hash = "sha256:3b9909bc96b0edc6b01586e1eed05e71174ef4e04c71da5786370cebea53ad74"},
+    {file = "python_dotenv-0.13.0-py2.py3-none-any.whl", hash = "sha256:25c0ff1a3e12f4bde8d592cc254ab075cfe734fc5dd989036716fd17ee7e5ec7"},
 ]
 python3-openid = [
     {file = "python3-openid-3.1.0.tar.gz", hash = "sha256:628d365d687e12da12d02c6691170f4451db28d6d68d050007e4a40065868502"},
