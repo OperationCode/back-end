@@ -261,7 +261,7 @@ description = "Django email integration for Amazon SES, Mailgun, Mailjet, Postma
 name = "django-anymail"
 optional = false
 python-versions = "*"
-version = "6.1.0"
+version = "7.2"
 
 [package.dependencies]
 django = ">=1.11"
@@ -1235,7 +1235,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "e3b606f507d6723ce6fb0970dba21d65af7c74135a3c5c29f8747e6a8eca0c29"
+content-hash = "75068bdae258e72b443c5fdcff5d60df16be4583f3530d6326e90b6fe4ba3a5a"
 python-versions = "^3.7"
 
 [metadata.files]
@@ -1412,8 +1412,8 @@ django-allow-cidr = [
     {file = "django_allow_cidr-0.3.1-py2.py3-none-any.whl", hash = "sha256:e8708c0511a78b80d9b74f718ee46685a1425e6d3520143bd00c773fdca56cc7"},
 ]
 django-anymail = [
-    {file = "django-anymail-6.1.0.tar.gz", hash = "sha256:947c9c5de009036771ff9c4295da1836c950fdee4d7c27441181ce1021c370a8"},
-    {file = "django_anymail-6.1.0-py2.py3-none-any.whl", hash = "sha256:72549db8823c144a334bf88c8e749becb1fc82911658129549f46bfb84de311c"},
+    {file = "django-anymail-7.2.tar.gz", hash = "sha256:2b71c10d7e735b23da92be2d35afa47eb05e7e16c9a377086426bc4e71c138e9"},
+    {file = "django_anymail-7.2-py2.py3-none-any.whl", hash = "sha256:3a58dc174f75b89b524adb1173391d8069b3bc77d87bfbba378e86158749eee0"},
 ]
 django-background-tasks = [
     {file = "django-background-tasks-1.2.5.tar.gz", hash = "sha256:e1b19e8d495a276c9d64c5a1ff8b41132f75d2f58e45be71b78650dad59af9de"},
@@ -1766,6 +1766,7 @@ regex = [
     {file = "regex-2020.4.4.tar.gz", hash = "sha256:295badf61a51add2d428a46b8580309c520d8b26e769868b922750cf3ce67142"},
 ]
 requests = [
+    {file = "requests-2.23.0-py2.7.egg", hash = "sha256:5d2d0ffbb515f39417009a46c14256291061ac01ba8f875b90cad137de83beb4"},
     {file = "requests-2.23.0-py2.py3-none-any.whl", hash = "sha256:43999036bfa82904b6af1d99e4882b560e5e2c68e5c4b0aa03b655f3d7d73fee"},
     {file = "requests-2.23.0.tar.gz", hash = "sha256:b3f43d496c6daba4493e7c431722aeb7dbc6288f52a6e04e7b6023b0247817e6"},
 ]
