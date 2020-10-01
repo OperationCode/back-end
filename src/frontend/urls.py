@@ -7,4 +7,5 @@ urlpatterns = [
     path(
         "forms/codeschool", views.CodeschoolFormView.as_view(), name="codeschool_form"
     ),
+    path("survey", views.SurveyView.as_view(), name="survey_view"),
 ]

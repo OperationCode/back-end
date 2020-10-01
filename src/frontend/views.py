@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 class IndexView(TemplateView):
     template_name = "frontend/index.html"
+    link = ""  # placeholder for unique link
 
 
 class CodeschoolFormView(FormView):
@@ -61,3 +62,7 @@ def handle_submission(form: dict) -> None:
     params = {"title": f"New Code School Request: {form['name']}", "body": body}
     res = requests.post(url, headers=headers, data=json.dumps(params))
     logger.info(f"response from github API call {res}")
+
+
+class SurveyView(TemplateView):
+    template_name = "frontend/survey.html"
