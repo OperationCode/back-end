@@ -155,9 +155,7 @@ def test_slack_invite_task_created(
     res = client.post(reverse("rest_verify_email"), {"key": groups["key"]})
 
     assert res.status_code == 200
-    tasks = BackgroundTask.objects.filter(
-        task_name="core.tasks.send_slack_invite_job"
-    )
+    tasks = BackgroundTask.objects.filter(task_name="core.tasks.send_slack_invite_job")
 
     assert len(tasks) == 1
     assert any(
