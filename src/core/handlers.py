@@ -51,10 +51,9 @@ def get_username_from_jwt(payload: dict) -> str:
 def registration_callback(user: User, **kwargs: dict) -> None:
     """
     Listens for the `user_signed_up` signal and adds a background tasks to
-    send the welcome email and slack invite
+    send the welcome email
     """
     logger.info(f"Received user_signed_up signal for {user}")
-    send_slack_invite_job(user.email)
     send_welcome_email(user.email)
 
 
@@ -62,7 +61,8 @@ def registration_callback(user: User, **kwargs: dict) -> None:
 def email_confirmed_callback(email_address: EmailConfirmation, **kwargs: dict) -> None:
     """
     Listens for the `email_confirmed` signal and adds a background task to
-    add the user to the mailing list
+    add the user to the mailing list and send the slack invite
     """
     logger.info(f"Received email_confirmed signal for {email_address.email}")
+    send_slack_invite_job(user.email)
     add_user_to_mailing_list(email_address.email)
