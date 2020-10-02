@@ -57,7 +57,7 @@ def test_user_profile_created(client: APIClient, register_form: Dict[str, str]):
 
 
 @pytest.mark.django_db
-def test_slack_invite_task_created(
+def test_slack_invite_task_not_created(
     client: APIClient,
     register_form: Dict[str, str],
     mailoutbox: List[EmailMultiAlternatives],
@@ -68,8 +68,7 @@ def test_slack_invite_task_created(
 
     tasks = BackgroundTask.objects.filter(task_name="core.tasks.send_slack_invite_job")
 
-    assert len(tasks) == 1
-    assert tasks[0].task_name.split(".")[-1] == "send_slack_invite_job"
+    assert len(tasks) == 0
 
 
 @pytest.mark.django_db
@@ -139,4 +138,28 @@ def test_mailing_list_task_created(
     assert len(tasks) == 1
     assert any(
         task.task_name.split(".")[-1] == "add_user_to_mailing_list" for task in tasks
+    )
+
+
+@pytest.mark.django_db
+def test_slack_invite_task_created(
+    client: APIClient,
+    register_form: Dict[str, str],
+    mailoutbox: List[EmailMultiAlternatives],
+):
+    client.post(reverse("rest_register"), register_form)
+
+    body = mailoutbox[0].body
+    groups = key_pattern.search(body).groupdict()
+
+    res = client.post(reverse("rest_verify_email"), {"key": groups["key"]})
+
+    assert res.status_code == 200
+    tasks = BackgroundTask.objects.filter(
+        task_name="core.tasks.send_slack_invite_job"
+    )
+
+    assert len(tasks) == 1
+    assert any(
+        task.task_name.split(".")[-1] == "send_slack_invite_job" for task in tasks
     )
