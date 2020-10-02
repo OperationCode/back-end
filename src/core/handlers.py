@@ -64,5 +64,5 @@ def email_confirmed_callback(email_address: EmailConfirmation, **kwargs: dict) -
     add the user to the mailing list and send the slack invite
     """
     logger.info(f"Received email_confirmed signal for {email_address.email}")
-    send_slack_invite_job(user.email)
+    send_slack_invite_job(email_address.email)
     add_user_to_mailing_list(email_address.email)
