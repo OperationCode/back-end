@@ -70,10 +70,6 @@ def test_slack_invite_task_created(
     res = client.post(reverse("rest_verify_email"), {"key": groups["key"]})
 
     assert res.status_code == 200
-    assert res.data["detail"] == "ok"
-
-    email = EmailAddress.objects.get(email=register_form["email"])
-    assert email.verified
 
     tasks = BackgroundTask.objects.filter(task_name="core.tasks.send_slack_invite_job")
 
