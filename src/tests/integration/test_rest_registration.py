@@ -58,13 +58,22 @@ def test_user_profile_created(client: APIClient, register_form: Dict[str, str]):
 
 @pytest.mark.django_db
 def test_slack_invite_task_created(
-    client: APIClient,
-    register_form: Dict[str, str],
-    mailoutbox: List[EmailMultiAlternatives],
+        client: APIClient,
+        register_form: Dict[str, str],
+        mailoutbox: List[EmailMultiAlternatives],
 ):
-    res = client.post(reverse("rest_register"), register_form)
+    client.post(reverse("rest_register"), register_form)
 
-    assert res.status_code == 201
+    body = mailoutbox[0].body
+    groups = key_pattern.search(body).groupdict()
+
+    res = client.post(reverse("rest_verify_email"), {"key": groups["key"]})
+
+    assert res.status_code == 200
+    assert res.data["detail"] == "ok"
+
+    email = EmailAddress.objects.get(email=register_form["email"])
+    assert email.verified
 
     tasks = BackgroundTask.objects.filter(task_name="core.tasks.send_slack_invite_job")
 
