@@ -58,9 +58,9 @@ def test_user_profile_created(client: APIClient, register_form: Dict[str, str]):
 
 @pytest.mark.django_db
 def test_slack_invite_task_created(
-        client: APIClient,
-        register_form: Dict[str, str],
-        mailoutbox: List[EmailMultiAlternatives],
+    client: APIClient,
+    register_form: Dict[str, str],
+    mailoutbox: List[EmailMultiAlternatives],
 ):
     client.post(reverse("rest_register"), register_form)
 
