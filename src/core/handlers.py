@@ -54,7 +54,6 @@ def registration_callback(user: User, **kwargs: dict) -> None:
     send the welcome email and slack invite
     """
     logger.info(f"Received user_signed_up signal for {user}")
-    send_slack_invite_job(user.email)
     send_welcome_email(user.email)
 
 
@@ -65,4 +64,5 @@ def email_confirmed_callback(email_address: EmailConfirmation, **kwargs: dict) -
     add the user to the mailing list
     """
     logger.info(f"Received email_confirmed signal for {email_address.email}")
+    send_slack_invite_job(email_address.email)
     add_user_to_mailing_list(email_address.email)
