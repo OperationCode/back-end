@@ -44,7 +44,7 @@ django-health-check = "^3.12.1"
 [tool.poetry.dev-dependencies]
 bandit = "^1.6"
 black = {version = "^19.3b0"}
-coverage = "^4.5"
+coverage = "^5.4"
 django-debug-toolbar = "^2.0"
 factory_boy = "^2.12"
 flake8 = "^3.7"
