@@ -34,12 +34,12 @@ category = "dev"
 description = "Security oriented static analyser for python code."
 name = "bandit"
 optional = false
-python-versions = ">=3.5"
-version = "1.7.0"
+python-versions = "*"
+version = "1.6.2"
 
 [package.dependencies]
 GitPython = ">=1.0.1"
-PyYAML = ">=5.3.1"
+PyYAML = ">=3.13"
 colorama = ">=0.3.9"
 six = ">=1.10.0"
 stevedore = ">=1.20.0"
@@ -1243,7 +1243,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["pytest (>=3.5,<3.7.3 || >3.7.3)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pytest-cov", "jaraco.test (>=3.2.0)", "jaraco.itertools", "func-timeout", "pytest-black (>=0.3.7)", "pytest-mypy"]
 
 [metadata]
-content-hash = "e3b606f507d6723ce6fb0970dba21d65af7c74135a3c5c29f8747e6a8eca0c29"
+content-hash = "f2a44f99be3ca8e9bf9072d6308f237ee0433befe66253826ea7471f8816def6"
 python-versions = "^3.7"
 
 [metadata.files]
@@ -1260,8 +1260,8 @@ attrs = [
     {file = "attrs-20.3.0.tar.gz", hash = "sha256:832aa3cde19744e49938b91fea06d69ecb9e649c93ba974535d08ad92164f700"},
 ]
 bandit = [
-    {file = "bandit-1.7.0-py3-none-any.whl", hash = "sha256:216be4d044209fa06cf2a3e51b319769a51be8318140659719aa7a115c35ed07"},
-    {file = "bandit-1.7.0.tar.gz", hash = "sha256:8a4c7415254d75df8ff3c3b15cfe9042ecee628a1e40b44c15a98890fbfc2608"},
+    {file = "bandit-1.6.2-py2.py3-none-any.whl", hash = "sha256:336620e220cf2d3115877685e264477ff9d9abaeb0afe3dc7264f55fa17a3952"},
+    {file = "bandit-1.6.2.tar.gz", hash = "sha256:41e75315853507aa145d62a78a2a6c5e3240fe14ee7c601459d0df9418196065"},
 ]
 bcrypt = [
     {file = "bcrypt-3.2.0-cp36-abi3-macosx_10_9_x86_64.whl", hash = "sha256:c95d4cbebffafcdd28bd28bb4e25b31c50f6da605c81ffd9ad8a3d1b2ab7b1b6"},
