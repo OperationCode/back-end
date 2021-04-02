@@ -61,6 +61,16 @@ class UpdateProfileForm(Enum):
         "years_of_service": 1,
         "pay_grade": "E1",
     }
+    
+        partial_military_details = {
+        "employment_status": "fulltime",
+        "company_name": "company",
+        "company_role": "role",
+        "military_status": "veteran",
+        "branch_of_service": None,
+        "years_of_service": None,
+        "pay_grade": "E1",
+    }
 
     interests_empty = {
         "employment_status": "fulltime",
