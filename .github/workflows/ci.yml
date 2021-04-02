@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build_test:
+    name: build_test
+    runs-on: ubuntu-latest
+    env:
+      PIPENV_VENV_IN_PROJECT: true
+      CC_TEST_REPORTER_ID: 91944b115a88fcc2040da46325f3606d096c281149ab4fcff022f06b09a700c0
+      DJANGO_ENV: testing
+    steps:
+        - uses: actions/checkout@v1
+        - name: setup Python
+        - uses: actions/setup-python@v1
+          with:
+              python-version: '3.7.x' # Version range or exact version of a Python version to use, using semvers version range syntax.
+              architecture: 'x64' # (x64 or x86)
+        - run: |
+            sudo pip install poetry
+            poetry install
+        - run: |
+            curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > /usr/local/bin/cc-test-reporter
+            chmod +x /usr/local/bin/cc-test-reporter
+            /usr/local/bin/cc-test-reporter before-build
+        - name: run Pytest
+          run: |
+              poetry run coverage run -m pytest --junitxml=test-results/pytest/results.xml
+        - name: run linting and coverage
+          run: |
+              poetry run flake8 .
+              poetry run black --check --diff src
+              poetry run coverage report
+              poetry run coverage xml
+              /usr/local/bin/cc-test-reporter after-build -t coverage.py
+        - name: Run Bandit security analysis
+          run: |
+              poetry run bandit -r .
+  docker_build_push:
+    needs: build_test
+    if: ${{ (github.ref == 'master') || (github.ref == 'staging') }}
+    - name: Docker build and push
+      env:
+           IMAGE_TAG: ${{ github.sha }}
+           IMAGE_ID: operationcode/back-end
+      run: |
+           docker build --file docker/Dockerfile --tag ${IMAGE_ID}
+           docker push ${IMAGE_ID}:${IMAGE_TAG}:latest ${IMAGE_ID}:${IMAGE_TAG}
+           echo "Successfully pushed ${IMAGE_ID}:${IMAGE_TAG}"
