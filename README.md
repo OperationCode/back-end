@@ -25,7 +25,7 @@ For information about the maintainers of the project, check out [MAINTAINERS.md]
 
 ## Quick Start
 Recommended versions of tools used within the repo:
-- `python@3.7` or greater (in some environments, you may need to specify version of python i.e. `python test.py` vs `python3 test.py`))
+- `python@3.7` or greater (in some environments, you may need to specify version of python i.e. `python test.py` vs `python3 test.py`)
 - `git@2.17.1` or greater
 - `poetry@0.12.11` or greater
     - [Poetry](https://poetry.eustace.io/) is a packaging and dependency manager, similar to pip or pipenv
