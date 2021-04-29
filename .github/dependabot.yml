@@ -1,0 +1,55 @@
+version: 2
+updates:
+- package-ecosystem: pip
+  directory: "/"
+  schedule:
+    interval: monthly
+    time: "07:00"
+    timezone: America/Los_Angeles
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: djangorestframework
+    versions:
+    - 3.11.2
+  - dependency-name: jinja2
+    versions:
+    - 2.11.3
+  - dependency-name: boto3
+    versions:
+    - 1.16.47
+    - 1.16.63
+    - 1.17.17
+  - dependency-name: coverage
+    versions:
+    - 5.3.1
+    - "5.4"
+    - "5.5"
+  - dependency-name: packaging
+    versions:
+    - "20.8"
+    - "20.9"
+  - dependency-name: django-anymail
+    versions:
+    - "8.1"
+    - "8.2"
+  - dependency-name: django-allauth
+    versions:
+    - 0.44.0
+  - dependency-name: python-dotenv
+    versions:
+    - 0.15.0
+  - dependency-name: cryptography
+    versions:
+    - "3.2"
+  - dependency-name: django
+    versions:
+    - 2.2.13
+  - dependency-name: django-split-settings
+    versions:
+    - 1.0.1
+  - dependency-name: six
+    versions:
+    - 1.15.0
+  - dependency-name: mailchimp3
+    versions:
+    - 3.0.14
