@@ -37,7 +37,7 @@ python-dotenv = "^0.10.3"
 requests = "^2.23.0"
 sentry-sdk = "^0.14.3"
 six = "^1.12"
-honeycomb-beeline = "^2.11.4"
+honeycomb-beeline = "^2.16.2"
 django-allow-cidr = "^0.3.1"
 django-health-check = "^3.12.1"
 
