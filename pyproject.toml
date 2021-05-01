@@ -43,7 +43,7 @@ django-health-check = "^3.12.1"
 
 [tool.poetry.dev-dependencies]
 bandit = "^1.6"
-black = {version = "^19.3b0"}
+black = {version = "^21.4b2"}
 coverage = "^4.5"
 django-debug-toolbar = "^2.0"
 factory_boy = "^2.12"
