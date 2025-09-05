@@ -14,6 +14,9 @@ docker buildx build \
   --provenance=false \
   --push .
 
+# Remove existing manifest list if it exists
+docker manifest rm 633607774026.dkr.ecr.us-east-2.amazonaws.com/back-end || true
+
 # Create manifest list
 docker manifest create \
   633607774026.dkr.ecr.us-east-2.amazonaws.com/back-end \
