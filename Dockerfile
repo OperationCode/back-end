@@ -2,6 +2,7 @@
 FROM python:3.9-alpine AS builder
 
 # Install system dependencies needed for building
+RUN apk update && apk upgrade
 RUN apk add --no-cache \
     gcc \
     musl-dev \
@@ -23,14 +24,15 @@ COPY pyproject.toml poetry.lock ./
 # Configure Poetry to use our virtual environment and install dependencies
 ENV POETRY_VENV_IN_PROJECT=false
 ENV VIRTUAL_ENV=/venv
-RUN /venv/bin/poetry install --only=main
+RUN /venv/bin/poetry install --only=main --compile --no-interaction --no-cache
 
 # Production stage
 FROM python:3.9-alpine AS production
+RUN apk update && apk upgrade
+RUN rm -rf /var/cache/apk/*
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
     PATH="/venv/bin:$PATH" \
     DJANGO_ENV=production \
     DB_ENGINE=django.db.backends.postgresql
@@ -49,6 +51,9 @@ WORKDIR /app
 # Copy application code
 COPY src ./src
 COPY .dev ./src/.dev
+
+# Pre-compile all Python bytecode for faster startup
+RUN python -m compileall -j 0 ./src/
 
 # Create static directory
 RUN mkdir -p /static
