@@ -88,4 +88,5 @@ WORKDIR /app/src
 EXPOSE 8000
 
 # Default command
-CMD ["sh", "-c", "python manage.py process_tasks & gunicorn operationcode_backend.wsgi -c /app/src/gunicorn_config.py"]
+# django-q2 uses 'qcluster' for background task processing (replaced django-background-tasks)
+CMD ["sh", "-c", "python manage.py qcluster & gunicorn operationcode_backend.wsgi -c /app/src/gunicorn_config.py"]

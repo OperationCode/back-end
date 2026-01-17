@@ -521,9 +521,18 @@ git push --tags
 
 ### Deploy to Staging
 
-1. Update docker-build.sh script to support custom tag in order to push a :staging tag without interfering with the existing images
-2. ensure AWS ECS health check will work, or we need to update it:
+**1. Update docker-build.sh** - COMPLETED
 
+The script now supports custom tags:
+```bash
+./docker-build.sh           # Uses 'latest' tag (default)
+./docker-build.sh staging   # Creates :staging manifest
+./docker-build.sh v1.2.3    # Creates :v1.2.3 manifest
+```
+
+**2. Health Check Analysis** - COMPLETED (No Changes Needed)
+
+Current ECS health check:
 ```terraform
       healthCheck = {
         command     = ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8000/healthz"]
@@ -533,6 +542,22 @@ git push --tags
         startPeriod = 60
       }
 ```
+
+**Why `/healthz` is correct (not `manage.py check`)**:
+
+| Check Type | Purpose | When to Use |
+|------------|---------|-------------|
+| `manage.py check` | Static validation (settings, migrations) | Startup/CI only |
+| `/healthz` (django-health-check) | Runtime health (DB connectivity) | Container orchestration |
+
+Current health checks enabled:
+- `health_check.db` - Verifies PostgreSQL connection (critical for auth)
+
+Optional additions (not required):
+- `health_check.storage` - S3 connectivity (but S3 issues shouldn't unhealthy the container)
+- `health_check.contrib.migrations` - Unapplied migrations (useful for deploys)
+
+**Recommendation**: Keep current setup. Database health is the critical path for this auth-focused service
 
 ### Integration Tests
 
@@ -1191,6 +1216,37 @@ supervisorctl restart backend-app
 - Updated all password reset tests to use email-based tokens
 - **Result**: All 82 tests passing, 14 functional tests passing
 - **PyBot compatibility**: VERIFIED - `data['token']` works unchanged
+
+### Phase 5 - Staging Deployment - Completed January 17, 2026
+
+**Infrastructure Updates**:
+- Updated `docker-build.sh` to accept custom tag parameter
+  - `./docker-build.sh staging` creates `:staging` manifest
+  - `./docker-build.sh v1.2.3` creates `:v1.2.3` manifest
+- Analyzed ECS health check - `/healthz` endpoint is correct for container orchestration
+- Created `scripts/db-tools.sh` for database backup/access via SSH tunnel
+  - Handles IPv6/IPv4 resolution issues on proxy host
+  - Backs up to `./backups/` directory
+
+**Bug Fixes During Staging**:
+- Fixed Dockerfile CMD: `process_tasks` → `qcluster` (django-q2 command)
+- Fixed `SITE_ID` setting: added `cast=int` for python-decouple
+- Updated to django-allauth v65+ settings format:
+  - `ACCOUNT_LOGIN_METHODS = {"email"}` (replaces `ACCOUNT_AUTHENTICATION_METHOD`)
+  - `ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]` (replaces `ACCOUNT_*_REQUIRED`)
+- Suppressed dj-rest-auth deprecation warnings (they haven't updated for allauth v65+)
+- Added `blessed` package for django-q2 monitoring commands (`qinfo`, `qmonitor`)
+- Ran `python manage.py migrate` to create django-q2 tables
+
+**Database Backup**:
+- Created staging backup: `backups/backend_staging_20260117_090650.sql`
+
+**PyBot Integration Testing** - ALL PASSED:
+- `POST /auth/login/` - Returns JWT with `token` field for backwards compat
+- `GET /auth/profile/admin/?email=` - Retrieves user profile
+- `PATCH /auth/profile/admin/?email=` - Updates `slackId` successfully
+
+**Result**: Staging deployment fully functional and PyBot-compatible
 
 ---
 

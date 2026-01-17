@@ -1,6 +1,16 @@
+import warnings
 from datetime import timedelta
 
 from settings.components import config
+
+# Suppress dj-rest-auth deprecation warnings (they haven't updated for allauth v65+ yet)
+# These are cosmetic - functionality still works
+warnings.filterwarnings(
+    "ignore",
+    message="app_settings.*is deprecated",
+    category=UserWarning,
+    module="dj_rest_auth.registration.serializers",
+)
 
 AUTHENTICATION_BACKENDS = (
     # Needed to login by username in Django admin, regardless of `allauth`
@@ -43,10 +53,18 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+# django-allauth settings (v65+)
+# https://docs.allauth.org/en/latest/account/configuration.html
+ACCOUNT_LOGIN_METHODS = {"email"}  # Replaces ACCOUNT_AUTHENTICATION_METHOD = "email"
+ACCOUNT_SIGNUP_FIELDS = [
+    "email*",      # Required (replaces ACCOUNT_EMAIL_REQUIRED = True)
+    "password1*",
+    "password2*",
+    # Note: username not included (replaces ACCOUNT_USERNAME_REQUIRED = False)
+]
+
 # dj-rest-auth settings
 # https://dj-rest-auth.readthedocs.io/
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_AUTHENTICATION_METHOD = "email"
 REST_USE_JWT = True
 
 REST_AUTH = {

@@ -78,3 +78,7 @@ coverage.xml
 ## Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
+
+## Database backups and tools with credentials
+backups/
+scripts/db-tools.sh

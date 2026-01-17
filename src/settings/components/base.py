@@ -133,10 +133,10 @@ MEDIA_URL = "/media/"
 STATIC_ROOT = BASE_DIR.joinpath("static")
 MEDIA_ROOT = BASE_DIR.joinpath("media")
 
-SITE_ID = config("SITE_ID", default=3)
+SITE_ID = config("SITE_ID", default=3, cast=int)
 
 ACCOUNT_ADAPTER = "core.adapters.AccountAdapter"
-ACCOUNT_USERNAME_REQUIRED = False
+# ACCOUNT_USERNAME_REQUIRED moved to authentication.py as ACCOUNT_SIGNUP_FIELDS
 
 # Django 3.2+ default auto field
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
