@@ -1,8 +1,11 @@
-# Build stage (production dependencies only)
+# syntax=docker/dockerfile:1
+
+# =============================================================================
+# Builder stage: compile dependencies
+# =============================================================================
 FROM python:3.12-alpine AS builder
 
-# Install system dependencies needed for building
-RUN apk update && apk upgrade
+# Install build dependencies for compiling Python packages
 RUN apk add --no-cache \
     gcc \
     musl-dev \
@@ -12,81 +15,81 @@ RUN apk add --no-cache \
     zlib-dev \
     jpeg-dev
 
-# Create virtual environment
-RUN python -m venv /venv
+# Install poetry system-wide (not in venv, so it won't be copied to production)
+RUN pip install --no-cache-dir poetry
 
-# Install Poetry in the virtual environment
-RUN /venv/bin/pip install poetry
+# Create clean venv with upgraded pip (--upgrade-deps handles CVE-2025-8869)
+RUN python -m venv /venv --upgrade-deps
 
-# Copy Poetry configuration
+WORKDIR /build
 COPY pyproject.toml poetry.lock ./
 
-# Configure Poetry to use our virtual environment and install dependencies
-ENV POETRY_VENV_IN_PROJECT=false
-ENV VIRTUAL_ENV=/venv
-RUN /venv/bin/poetry install --only=main --compile --no-interaction --no-cache
+# Tell poetry to use our venv instead of creating its own
+ENV VIRTUAL_ENV=/venv \
+    PATH="/venv/bin:$PATH"
 
-# Test builder stage (includes dev dependencies)
+# Install production dependencies only
+RUN poetry install --only=main --no-interaction --no-cache --compile
+
+# =============================================================================
+# Test builder: add dev dependencies
+# =============================================================================
 FROM builder AS test-builder
-RUN /venv/bin/poetry install --compile --no-interaction --no-cache
 
-# Test stage
-FROM python:3.12-alpine AS test
-RUN apk update && apk upgrade
-RUN apk add --no-cache libpq libjpeg-turbo
+RUN poetry install --no-interaction --no-cache --compile
+
+# =============================================================================
+# Runtime base: minimal image shared by test and production
+# =============================================================================
+FROM python:3.12-alpine AS runtime-base
+
+# Install only runtime dependencies (no build tools, no poetry)
+# Upgrade system pip to fix CVE-2025-8869 (even though app uses venv pip)
+RUN apk upgrade --no-cache && \
+    apk add --no-cache libpq libjpeg-turbo && \
+    pip install --no-cache-dir --upgrade pip
 
 ENV PYTHONUNBUFFERED=1 \
-    PATH="/venv/bin:$PATH" \
-    DJANGO_ENV=testing \
-    ENVIRONMENT=TEST
+    PYTHONDONTWRITEBYTECODE=1 \
+    PATH="/venv/bin:$PATH"
+
+WORKDIR /app
+
+# =============================================================================
+# Test stage
+# =============================================================================
+FROM runtime-base AS test
 
 COPY --from=test-builder /venv /venv
-WORKDIR /app
 COPY src ./src
 COPY .dev ./src/.dev
 COPY pytest.ini ./
+
 WORKDIR /app/src
+
+ENV DJANGO_ENV=testing \
+    ENVIRONMENT=TEST
 
 CMD ["pytest", "-v"]
 
+# =============================================================================
 # Production stage
-FROM python:3.12-alpine AS production
-RUN apk update && apk upgrade
-RUN rm -rf /var/cache/apk/*
+# =============================================================================
+FROM runtime-base AS production
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1 \
-    PATH="/venv/bin:$PATH" \
-    DJANGO_ENV=production \
-    DB_ENGINE=django.db.backends.postgresql
-
-# Install runtime dependencies
-RUN apk add --no-cache \
-    libpq \
-    libjpeg-turbo
-
-# Copy virtual environment from builder stage
 COPY --from=builder /venv /venv
-
-# Create application directory
-WORKDIR /app
-
-# Copy application code
 COPY src ./src
 COPY .dev ./src/.dev
 
-# Pre-compile all Python bytecode for faster startup
-RUN python -m compileall -j 0 ./src/
+# Pre-compile Python bytecode for faster cold starts
+RUN python -m compileall -q ./src/
 
-# Create static directory
-RUN mkdir -p /static
-
-# Set working directory to source
 WORKDIR /app/src
 
-# Expose port
+ENV DJANGO_ENV=production \
+    DB_ENGINE=django.db.backends.postgresql
+
 EXPOSE 8000
 
-# Default command
-# django-q2 uses 'qcluster' for background task processing (replaced django-background-tasks)
+# Run background task processor and gunicorn
 CMD ["sh", "-c", "python manage.py qcluster & gunicorn operationcode_backend.wsgi -c /app/src/gunicorn_config.py"]
