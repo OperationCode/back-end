@@ -434,7 +434,7 @@ python manage.py migrate
 ```bash
 pytest -v --cov
 # Coverage: _____%
-# All passing? _____
+# All passing? YES - 82/82
 ```
 
 ### 8. Manual Testing
@@ -446,7 +446,7 @@ curl -X POST http://localhost:8000/auth/login/ \
   -H "Content-Type: application/json" \
   -d '{"email": "test@example.com", "password": "testpass"}'
 
-# Should return: {"key": "TOKEN"} or {"token": "TOKEN"}
+# Should return: {"token": "...", "access": "...", "refresh": "...", "user": {...}}
 
 # Test profile admin endpoint
 curl -X PATCH "http://localhost:8000/auth/profile/admin/?email=test@example.com" \
@@ -456,36 +456,38 @@ curl -X PATCH "http://localhost:8000/auth/profile/admin/?email=test@example.com"
 ```
 
 **Full manual test**:
-- [ ] User registration
-- [ ] User login (email/password)
-- [ ] JWT token in API requests
-- [ ] Password reset flow
-- [ ] Google OAuth
-- [ ] Facebook OAuth
-- [ ] GitHub OAuth
-- [ ] Admin interface
-- [ ] All API endpoints
-- [ ] Background tasks
+- [x] User registration
+- [x] User login (email/password)
+- [x] JWT token in API requests
+- [x] Password reset flow
+- ~~[ ] Google OAuth~~ (removed in Phase 0)
+- ~~[ ] Facebook OAuth~~ (removed in Phase 0)
+- ~~[ ] GitHub OAuth~~ (removed in Phase 0)
+- [x] Admin interface
+- ~~[ ] All API endpoints~~ (removed in Phase 0)
+- [x] Background tasks (django-q2)
 - [ ] File uploads
 
 ---
 
 ## Phase 4: psycopg2 Upgrade (Day 15)
 
+**STATUS: COMPLETED** (merged into Phase 3)
+
 ### Update pyproject.toml
 ```toml
-psycopg2 = "^2.9"
+psycopg2 = "^2.9"  # ✅ Done - upgraded to 2.9.11
 ```
 
 ```bash
-poetry lock
-poetry install
+poetry lock  # ✅ Done
+poetry install  # ✅ Done
 ```
 
 ### Test with PostgreSQL 13
 ```bash
 pytest -v
-# All passing? _____
+# All passing? ✅ YES - 82/82
 ```
 
 ### Commit
@@ -494,17 +496,19 @@ git add .
 git commit -m "Upgrade to Django 4.2 + psycopg2 2.9
 
 - Upgraded Django 2.2 → 3.2 → 4.2
+- Upgraded Python 3.10 → 3.12
 - Replaced django-rest-auth with dj-rest-auth
-- Kept /auth/ URLs for PyBot compatibility
-- Updated psycopg2 to 2.9.10
-- [django-suit status: working/replaced with X]
+- Replaced djangorestframework-jwt with rest_framework_simplejwt
+- Replaced django-background-tasks with django-q2
+- Kept /auth/ URLs for PyBot compatibility (added 'token' field for backwards compat)
+- Updated psycopg2 to 2.9.11
+- Replaced django-suit with django-jazzmin
 
 Tested:
-- All authentication flows
-- PyBot integration endpoints
-- Social auth (Google/Facebook/GitHub)
-- Admin interface
-- API endpoints"
+- All authentication flows (82 pytest, 14 functional)
+- PyBot integration endpoints (backwards compatible)
+- Admin interface (jazzmin theme)
+- Background tasks (django-q2)"
 
 git tag v0.2.0-pre-pg14
 git push origin upgrade/django-4.2-pg14
@@ -516,25 +520,18 @@ git push --tags
 ## Phase 5: Staging Deployment (Days 16-20)
 
 ### Deploy to Staging
-```bash
-# SSH to staging server
-ssh staging-server
 
-# Pull changes
-git fetch
-git checkout upgrade/django-4.2-pg14
+1. Update docker-build.sh script to support custom tag in order to push a :staging tag without interfering with the existing images
+2. ensure AWS ECS health check will work, or we need to update it:
 
-# Update Python if needed
-pyenv install 3.10  # If upgrading Python
-
-# Install dependencies
-poetry install
-
-# Run migrations
-poetry run python src/manage.py migrate
-
-# Restart application
-sudo systemctl restart operationcode-backend
+```terraform
+      healthCheck = {
+        command     = ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8000/healthz"]
+        interval    = 30
+        timeout     = 5
+        retries     = 3
+        startPeriod = 60
+      }
 ```
 
 ### Integration Tests
@@ -940,38 +937,40 @@ curl https://api.operationcode.org/auth/login/ ...
 ## Testing Checklist
 
 ### Core Authentication (PyBot Dependency!)
-- [ ] POST `/auth/login/` returns JWT token
-- [ ] POST `/auth/logout/` works
-- [ ] POST `/auth/registration/` creates user
-- [ ] POST `/auth/password/reset/` sends email
-- [ ] PATCH `/auth/profile/admin/` updates profiles
-- [ ] **PyBot service account can authenticate**
-- [ ] **PyBot can update user slackId**
+- [x] POST `/auth/login/` returns JWT token (includes `token` for PyBot compat)
+- [x] POST `/auth/logout/` works
+- [x] POST `/auth/registration/` creates user
+- [x] POST `/auth/password/reset/` sends email
+- [x] PATCH `/auth/profile/admin/` updates profiles
+- [x] **PyBot service account can authenticate**
+- [x] **PyBot can update user slackId**
 
 ### Social Authentication
-- [ ] Google OAuth flow
-- [ ] Facebook OAuth flow
-- [ ] GitHub OAuth flow
+~~Removed in Phase 0 - not used by website~~
+- ~~[ ] Google OAuth flow~~
+- ~~[ ] Facebook OAuth flow~~
+- ~~[ ] GitHub OAuth flow~~
 
 ### API Functionality
-- [ ] GET `/api/v1/users/` with JWT
-- [ ] GET `/api/v1/scholarships/`
-- [ ] GET `/api/v1/code_schools/`
-- [ ] All CRUD operations
+~~Removed in Phase 0 - endpoints deprecated~~
+- ~~[ ] GET `/api/v1/users/` with JWT~~
+- ~~[ ] GET `/api/v1/scholarships/`~~
+- ~~[ ] GET `/api/v1/code_schools/`~~
+- ~~[ ] All CRUD operations~~
 
 ### Admin Interface
-- [ ] Admin login
-- [ ] User management
-- [ ] Profile management
-- [ ] Scholarship review
+- [x] Admin login
+- [x] User management
+- [x] Profile management
+- ~~[ ] Scholarship review~~ (removed)
 
 ### Infrastructure
-- [ ] Database migrations
-- [ ] Background tasks
-- [ ] Email sending
+- [x] Database migrations
+- [x] Background tasks (django-q2)
+- [x] Email sending (via templates)
 - [ ] File uploads to S3
-- [ ] Health check endpoints
-- [ ] Sentry error tracking
+- [x] Health check endpoints
+- [ ] Sentry error tracking (needs production test)
 
 ---
 
@@ -1169,6 +1168,29 @@ supervisorctl restart backend-app
 - Removed `DateRangeFilter` usage from admin.py
 - **Result**: All 82 tests passing, 14 functional tests passing
 - **Deprecation warnings**: Present in third-party packages (rest_auth, background_task, debug_toolbar) - will be addressed in Phase 3
+
+### Phase 3 + 4 Combined - Completed January 17, 2026
+- Upgraded Python 3.10 → 3.12
+- Upgraded Django 3.2 → 4.2.27
+- Upgraded psycopg2 2.8.6 → 2.9.11 (Phase 4 merged in)
+- Replaced django-rest-auth with dj-rest-auth ^7.0
+- Replaced djangorestframework-jwt with rest_framework_simplejwt ^5.3
+- Replaced django-background-tasks with django-q2 ^1.7
+- Upgraded django-jazzmin 2.6 → 3.0 (for Django 4.2 compat)
+- Upgraded django-allauth to ^65.0
+- Updated all auth imports from `rest_auth` to `dj_rest_auth`
+- Updated JWT settings to use SimpleJWT (RS256 algorithm preserved)
+- Added `BackwardsCompatibleJWTSerializer` for PyBot compatibility
+  - Login/registration response now includes both `"token"` (PyBot) and `"access"`/`"refresh"` (new format)
+- Updated URL patterns for password reset
+- Added `allauth.socialaccount` to INSTALLED_APPS (dj-rest-auth requirement)
+- Added `AccountMiddleware` for django-allauth
+- Updated `core/handlers.py` with `CustomTokenObtainPairSerializer` for custom JWT claims
+- Updated `core/handlers.py` to use `django_q.tasks.async_task` for background tasks
+- Fixed factory-boy import paths for v3+
+- Updated all password reset tests to use email-based tokens
+- **Result**: All 82 tests passing, 14 functional tests passing
+- **PyBot compatibility**: VERIFIED - `data['token']` works unchanged
 
 ---
 

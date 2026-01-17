@@ -1,4 +1,4 @@
-import datetime
+from datetime import timedelta
 
 from settings.components import config
 
@@ -18,6 +18,8 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # Required by django-allauth
+    "allauth.account.middleware.AccountMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -31,7 +33,7 @@ PASSWORD_HASHERS = [
 ]
 
 # Password validation
-# https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
+# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
@@ -41,37 +43,40 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# Django-Rest-Auth
-# https://django-rest-auth.readthedocs.io/en/latest/
+# dj-rest-auth settings
+# https://dj-rest-auth.readthedocs.io/
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 REST_USE_JWT = True
 
-REST_AUTH_SERIALIZERS = {
+REST_AUTH = {
     "LOGIN_SERIALIZER": "core.serializers.LoginSerializer",
     "USER_DETAILS_SERIALIZER": "core.serializers.UserDetailsSerializer",
     "PASSWORD_RESET_CONFIRM_SERIALIZER": "core.serializers.PasswordResetConfirmSerializer",
+    "REGISTER_SERIALIZER": "core.serializers.RegisterSerializer",
+    "USE_JWT": True,
+    "JWT_AUTH_HTTPONLY": False,
+    # Custom JWT serializer that adds 'token' for backwards compatibility with PyBot
+    "JWT_SERIALIZER": "core.handlers.BackwardsCompatibleJWTSerializer",
 }
 
-REST_AUTH_REGISTER_SERIALIZERS = {
-    "REGISTER_SERIALIZER": "core.serializers.RegisterSerializer"
-}
-
+# Load JWT keys
 jwt_secret_key = config("JWT_SECRET_KEY", default=open(".dev/dev-jwt-key").read())
 jwt_public_key = config("JWT_PUBLIC_KEY", default=open(".dev/dev-jwt-key.pub").read())
 
-# Django REST framework JWT
-# https://getblimp.github.io/django-rest-framework-jwt/
-JWT_AUTH = {
-    "JWT_PAYLOAD_HANDLER": "core.handlers.custom_jwt_payload_handler",
-    "JWT_PAYLOAD_GET_USERNAME_HANDLER": "core.handlers.get_username_from_jwt",
-    "JWT_AUTH_HEADER_PREFIX": "Bearer",
-    "JWT_EXPIRATION_DELTA": datetime.timedelta(hours=1),
-    "JWT_ALLOW_REFRESH": False,
-    "JWT_AUTH_COOKIE": None,
-    "JWT_SECRET_KEY": jwt_secret_key,
-    "JWT_PUBLIC_KEY": jwt_public_key,
-    "JWT_ALGORITHM": "RS256",
+# Simple JWT settings (replaces djangorestframework-jwt)
+# https://django-rest-framework-simplejwt.readthedocs.io/
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ROTATE_REFRESH_TOKENS": False,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "ALGORITHM": "RS256",
+    "SIGNING_KEY": jwt_secret_key,
+    "VERIFYING_KEY": jwt_public_key,
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+    "TOKEN_OBTAIN_SERIALIZER": "core.handlers.CustomTokenObtainPairSerializer",
 }
 
 CORS_ORIGIN_ALLOW_ALL = True

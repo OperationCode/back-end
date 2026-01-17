@@ -1,5 +1,5 @@
 # Build stage (production dependencies only)
-FROM python:3.10-alpine AS builder
+FROM python:3.12-alpine AS builder
 
 # Install system dependencies needed for building
 RUN apk update && apk upgrade
@@ -31,7 +31,7 @@ FROM builder AS test-builder
 RUN /venv/bin/poetry install --compile --no-interaction --no-cache
 
 # Test stage
-FROM python:3.10-alpine AS test
+FROM python:3.12-alpine AS test
 RUN apk update && apk upgrade
 RUN apk add --no-cache libpq libjpeg-turbo
 
@@ -50,7 +50,7 @@ WORKDIR /app/src
 CMD ["pytest", "-v"]
 
 # Production stage
-FROM python:3.10-alpine AS production
+FROM python:3.12-alpine AS production
 RUN apk update && apk upgrade
 RUN rm -rf /var/cache/apk/*
 

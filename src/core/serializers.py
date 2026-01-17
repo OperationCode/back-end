@@ -1,12 +1,12 @@
 from django.contrib.auth import get_user_model
-from rest_auth.registration.serializers import (
+from dj_rest_auth.registration.serializers import (
     RegisterSerializer as BaseRegisterSerializer,
 )
-from rest_auth.serializers import LoginSerializer as BaseLoginSerializer
-from rest_auth.serializers import (
+from dj_rest_auth.serializers import LoginSerializer as BaseLoginSerializer
+from dj_rest_auth.serializers import (
     PasswordResetConfirmSerializer as BasePasswordResetConfirmSerializer,
 )
-from rest_auth.serializers import UserDetailsSerializer as BaseUserDetailsSerializer
+from dj_rest_auth.serializers import UserDetailsSerializer as BaseUserDetailsSerializer
 from rest_framework import serializers
 
 from core.models import Profile
@@ -47,6 +47,8 @@ class PasswordResetConfirmSerializer(BasePasswordResetConfirmSerializer):
 
 # noinspection PyAbstractClass
 class RegisterSerializer(BaseRegisterSerializer):
+    # Override username to not be required (we use email as username)
+    username = serializers.CharField(required=False, allow_blank=True)
     email = serializers.EmailField(required=True)
     password = serializers.CharField(write_only=True)
     first_name = serializers.CharField(write_only=True)
@@ -71,6 +73,14 @@ class RegisterSerializer(BaseRegisterSerializer):
         }
 
     def validate(self, data):
+        # Set username to email if not provided
+        if not data.get("username"):
+            data["username"] = data.get("email", "")
+        # Check for duplicate email - this prevents hitting DB unique constraint
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        if User.objects.filter(email=data.get("email")).exists():
+            raise serializers.ValidationError({"email": ["A user with that email already exists."]})
         return data
 
 
@@ -97,6 +107,9 @@ class UserDetailsSerializer(BaseUserDetailsSerializer):
         profile = representation.pop("profile")
         representation["zipcode"] = profile["zipcode"]
         representation["is_mentor"] = profile["is_mentor"]
+        # Add camelCase aliases for backwards compatibility
+        representation["firstName"] = representation.get("first_name", "")
+        representation["lastName"] = representation.get("last_name", "")
         return representation
 
 

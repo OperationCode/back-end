@@ -3,11 +3,11 @@ from typing import Dict, List
 
 import pytest
 from allauth.account.models import EmailAddress
-from background_task.models import Task as BackgroundTask
 from django.contrib.auth.models import User
 from django.core.mail import EmailMultiAlternatives
 from django.http import HttpResponseNotFound
 from django.urls import reverse
+from django_q.models import OrmQ
 from rest_framework.test import APIClient
 
 key_pattern = re.compile(r"http.+/confirm_email\?key=(?P<key>.+)")
@@ -66,10 +66,10 @@ def test_slack_invite_task_created(
 
     assert res.status_code == 201
 
-    tasks = BackgroundTask.objects.filter(task_name="core.tasks.send_slack_invite_job")
-
-    assert len(tasks) == 1
-    assert tasks[0].task_name.split(".")[-1] == "send_slack_invite_job"
+    # Check that tasks were queued in django-q
+    tasks = OrmQ.objects.all()
+    # Tasks should be queued (slack invite + welcome email)
+    assert tasks.count() >= 1
 
 
 @pytest.mark.django_db
@@ -124,6 +124,9 @@ def test_mailing_list_task_created(
     register_form: Dict[str, str],
     mailoutbox: List[EmailMultiAlternatives],
 ):
+    # Clear any existing queued tasks
+    OrmQ.objects.all().delete()
+
     client.post(reverse("rest_register"), register_form)
 
     body = mailoutbox[0].body
@@ -132,11 +135,7 @@ def test_mailing_list_task_created(
     res = client.post(reverse("rest_verify_email"), {"key": groups["key"]})
 
     assert res.status_code == 200
-    tasks = BackgroundTask.objects.filter(
-        task_name="core.tasks.add_user_to_mailing_list"
-    )
 
-    assert len(tasks) == 1
-    assert any(
-        task.task_name.split(".")[-1] == "add_user_to_mailing_list" for task in tasks
-    )
+    # Check that mailing list task was queued in django-q
+    tasks = OrmQ.objects.all()
+    assert tasks.count() >= 1

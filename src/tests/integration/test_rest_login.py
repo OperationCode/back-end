@@ -12,13 +12,14 @@ def test_valid_rest_login(client: APIClient, user: User):
     )
 
     assert res.status_code == 200
+    # Response includes both 'token' (backwards compat) and 'access'/'refresh' (new)
     assert res.data["token"] is not None
 
     returned_user = res.data["user"]
     assert returned_user["username"] == user.email
     assert returned_user["email"] == user.email
-    assert returned_user["first_name"] == user.first_name
-    assert returned_user["last_name"] == user.last_name
+    assert returned_user["firstName"] == user.first_name
+    assert returned_user["lastName"] == user.last_name
     assert returned_user["zipcode"] == user.profile.zipcode
 
 

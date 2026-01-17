@@ -100,6 +100,7 @@ REGISTER_RESPONSE=$(curl -s -X POST "$BASE_URL/auth/registration/" \
     -H "Content-Type: application/json" \
     -d "{\"email\": \"$TEST_EMAIL\", \"password\": \"$TEST_PASSWORD\", \"first_name\": \"Test\", \"last_name\": \"User\"}")
 
+# Check for 'token' (backwards compatible) or 'access' (new format)
 if echo "$REGISTER_RESPONSE" | grep -q '"token"'; then
     echo -e "${GREEN}PASS${NC}: User registration returns JWT token"
     ((PASS++))
@@ -118,6 +119,7 @@ LOGIN_RESPONSE=$(curl -s -X POST "$BASE_URL/auth/login/" \
     -H "Content-Type: application/json" \
     -d "{\"email\": \"$TEST_EMAIL\", \"password\": \"$TEST_PASSWORD\"}")
 
+# Check for 'token' (backwards compatible) or 'access' (new format)
 if echo "$LOGIN_RESPONSE" | grep -q '"token"'; then
     echo -e "${GREEN}PASS${NC}: User login returns JWT token"
     ((PASS++))

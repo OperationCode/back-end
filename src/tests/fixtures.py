@@ -4,13 +4,16 @@ import factory
 import pytest
 from django.contrib.auth.models import Group, User
 from rest_framework.test import APIClient
-from rest_framework_jwt.settings import api_settings
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from tests import factories as f
 from tests import test_data as data
 
-jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
-jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+
+def get_tokens_for_user(user: User) -> str:
+    """Generate JWT access token for a user using SimpleJWT."""
+    refresh = RefreshToken.for_user(user)
+    return str(refresh.access_token)
 
 
 @pytest.fixture
@@ -40,25 +43,22 @@ def profile_admin(user: User, profile_admin_group: Group) -> User:
 
 @pytest.fixture
 def authed_client(client, user: User):
-    payload = jwt_payload_handler(user)
-    jwt = jwt_encode_handler(payload)
-    client.credentials(HTTP_AUTHORIZATION=f"Bearer {jwt}")
+    token = get_tokens_for_user(user)
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
     return client
 
 
 @pytest.fixture
 def authed_admin_client(client, admin_user: User):
-    payload = jwt_payload_handler(admin_user)
-    jwt = jwt_encode_handler(payload)
-    client.credentials(HTTP_AUTHORIZATION=f"Bearer {jwt}")
+    token = get_tokens_for_user(admin_user)
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
     return client
 
 
 @pytest.fixture
 def profile_admin_client(client, profile_admin: User):
-    payload = jwt_payload_handler(profile_admin)
-    jwt = jwt_encode_handler(payload)
-    client.credentials(HTTP_AUTHORIZATION=f"Bearer {jwt}")
+    token = get_tokens_for_user(profile_admin)
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
     return client
 
 

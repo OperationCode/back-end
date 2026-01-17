@@ -21,21 +21,23 @@ INSTALLED_APPS = [
     # Django anymail
     # https://anymail.readthedocs.io/en/stable/
     "anymail",
-    # django-background-tasks
-    # https://django-background-tasks.readthedocs.io/en/latest/
-    "background_task",
+    # django-q2 (background task queue)
+    # https://django-q2.readthedocs.io/
+    "django_q",
     # django-rest-framework
     # https://www.django-rest-framework.org/
     "rest_framework",
     "rest_framework.authtoken",
-    "rest_auth.registration",
-    # django-rest-auth
-    # https://django-rest-auth.readthedocs.io/en/latest/
-    "rest_auth",
+    "rest_framework_simplejwt",
+    # dj-rest-auth (maintained fork of django-rest-auth)
+    # https://dj-rest-auth.readthedocs.io/
+    "dj_rest_auth",
+    "dj_rest_auth.registration",
     # django-allauth
     # https://django-allauth.readthedocs.io/en/latest/installation.html
     "allauth",
     "allauth.account",
+    "allauth.socialaccount",  # Required by dj-rest-auth registration
     # django-storages
     # https://django-storages.readthedocs.io/en/latest/
     "storages",
@@ -95,16 +97,26 @@ JAZZMIN_SETTINGS = {
     "order_with_respect_to": [
         "auth",
         "core",
-        "background_task",
+        "django_q",
     ],
 }
 
+# Django-Q2 configuration (sync mode for testing, use redis/orm in production)
+Q_CLUSTER = {
+    "name": "operationcode",
+    "workers": 2,
+    "timeout": 60,
+    "retry": 120,
+    "queue_limit": 50,
+    "bulk": 10,
+    "orm": "default",  # Use database as broker
+}
+
 # Internationalization
-# https://docs.djangoproject.com/en/2.1/topics/i18n/
+# https://docs.djangoproject.com/en/4.2/topics/i18n/
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
-USE_L10N = True
 USE_TZ = True
 ATOMIC_REQUESTS = True
 
