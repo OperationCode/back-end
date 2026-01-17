@@ -6,6 +6,9 @@ from settings.components.base import DATABASES
 ALLOWED_HOSTS = ["api.operationcode.org"]
 DEBUG = False
 
+# Required for Django 4.0+ CSRF protection with HTTPS
+CSRF_TRUSTED_ORIGINS = ["https://api.operationcode.org"]
+
 if config("EXTRA_HOSTS", default=""):
     ALLOWED_HOSTS += [s.strip() for s in os.environ["EXTRA_HOSTS"].split(",")]
 

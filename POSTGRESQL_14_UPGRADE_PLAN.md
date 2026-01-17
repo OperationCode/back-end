@@ -716,29 +716,41 @@ git push --tags
 
 ### Deployment (Day 22 afternoon)
 
-**Maintenance mode**:
+**Pre-Deploy: Upload static files to S3** (from local machine with AWS creds):
 ```bash
-# Enable maintenance page
-touch /app/maintenance.flag
+# Set environment variables for AWS and staging/production settings
+# AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME, BUCKET_REGION_NAME
 
-# Stop workers
-supervisorctl stop backend-workers
+DJANGO_ENV=production poetry run python manage.py collectstatic --noinput
+# Should show: "XXX static files copied." (to S3, not local)
 ```
 
-**Deploy code**:
+**Deploy new container image** (via ECS/Terraform):
 ```bash
-git fetch
-git checkout v0.2.0-pre-pg14
+# Build and push production image
+./docker-build.sh production
 
-poetry install
-poetry run python src/manage.py migrate
+# Deploy via ECS (update service to use new image)
+# Wait for new task to be running and healthy
+```
 
-# Restart
-supervisorctl restart backend-app
-supervisorctl start backend-workers
+**Post-Deploy: Run migrations from ECS container**:
+```bash
+# CRITICAL: Run migrations from within the new ECS container
+aws ecs execute-command \
+  --cluster operationcode-production \
+  --task <TASK_ID> \
+  --container backend \
+  --interactive \
+  --command "python manage.py migrate"
 
-# Remove maintenance
-rm /app/maintenance.flag
+# Verify migrations applied
+aws ecs execute-command \
+  --cluster operationcode-production \
+  --task <TASK_ID> \
+  --container backend \
+  --interactive \
+  --command "python manage.py showmigrations"
 ```
 
 **Smoke tests** (first 10 minutes):
@@ -1327,6 +1339,11 @@ supervisorctl restart backend-app
 - Suppressed dj-rest-auth deprecation warnings (they haven't updated for allauth v65+)
 - Added `blessed` package for django-q2 monitoring commands (`qinfo`, `qmonitor`)
 - Ran `python manage.py migrate` to create django-q2 tables
+- **Fixed admin static files (jazzmin/AdminLTE)**: Static files weren't uploaded to S3 after switching from django-suit to django-jazzmin. Fix:
+  ```bash
+  DJANGO_ENV=staging poetry run python manage.py collectstatic --noinput
+  ```
+  This uploads jazzmin's AdminLTE theme files to S3. Must be run from a machine with AWS credentials.
 
 **Database Backup**:
 - Created staging backup: `backups/backend_staging_20260117_090650.sql`
