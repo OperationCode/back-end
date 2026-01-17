@@ -5,11 +5,11 @@ TESTING = False
 
 # Application definition
 INSTALLED_APPS = [
+    # django-jazzmin Admin Console (replaces django-suit)
+    # https://django-jazzmin.readthedocs.io/
+    "jazzmin",
     # Our apps
     "core.apps.CoreConfig",
-    # Django Suit Admin Console
-    # https://django-suit.readthedocs.io
-    "suit",
     # Default Django apps:
     "django.contrib.admin",
     "django.contrib.auth",
@@ -24,9 +24,6 @@ INSTALLED_APPS = [
     # django-background-tasks
     # https://django-background-tasks.readthedocs.io/en/latest/
     "background_task",
-    # django-suit-daterange-filter
-    # https://github.com/f213/django-suit-daterange-filter
-    "date_range_filter",
     # django-rest-framework
     # https://www.django-rest-framework.org/
     "rest_framework",
@@ -85,24 +82,21 @@ DATABASES = {
     }
 }
 
-# Django Suit (Admin Console)
-# https://django-suit.readthedocs.io
-SUIT_CONFIG = {
-    "MENU": (
-        {
-            "label": "Users",
-            "icon": "icon-user",
-            "models": (
-                "auth.user",
-                "core.profile",
-                "auth.group",
-                "account.emailaddress",
-            ),
-        },
-        "sites",
-        "-",
-        {"app": "background_task", "icon": "icon-tasks"},
-    )
+# Django Jazzmin (Admin Console)
+# https://django-jazzmin.readthedocs.io/
+JAZZMIN_SETTINGS = {
+    "site_title": "Operation Code Admin",
+    "site_header": "Operation Code",
+    "site_brand": "Operation Code",
+    "welcome_sign": "Welcome to Operation Code Admin",
+    "copyright": "Operation Code",
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "order_with_respect_to": [
+        "auth",
+        "core",
+        "background_task",
+    ],
 }
 
 # Internationalization
@@ -131,3 +125,6 @@ SITE_ID = config("SITE_ID", default=3)
 
 ACCOUNT_ADAPTER = "core.adapters.AccountAdapter"
 ACCOUNT_USERNAME_REQUIRED = False
+
+# Django 3.2+ default auto field
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"

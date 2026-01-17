@@ -1,4 +1,4 @@
-from pathlib import PurePath
+from pathlib import Path
 
 from decouple import AutoConfig
 
@@ -6,8 +6,8 @@ from decouple import AutoConfig
 # See docs: https://gitlab.com/mkleehammer/autoconfig
 config = AutoConfig()
 
-# Build paths inside the project like this: BASE_DIR.joinpath('some')
+# Build paths inside the project like this: BASE_DIR / 'some'
 # `pathlib` is better than writing: dirname(dirname(__file__))
-BASE_DIR = PurePath(__file__).parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 ENVIRONMENT = config("ENVIRONMENT", default="local")

@@ -276,8 +276,10 @@ from django.urls import re_path
 re_path(r'^pattern/$', view, name='name')
 ```
 
-### 3. Run Checks
+### 3. Run Checks (via docker)
 ```bash
+docker compose up -d
+# then inside of docker....
 python manage.py check
 python manage.py makemigrations
 python manage.py migrate --plan  # Dry run
@@ -292,7 +294,8 @@ pytest -v
 ```
 
 ### 5. Manual Testing
-- [ ] Start server: `python manage.py runserver`
+- [ ] Start server: `docker compose up -d`
+- [ ] Run the functional test script `functional_test.sh`
 - [ ] Login via admin: `/admin/`
 - [ ] Test user registration
 - [ ] Test password reset
@@ -307,7 +310,7 @@ pytest -v
 **Edit `pyproject.toml`**:
 ```toml
 [tool.poetry.dependencies]
-python = "^3.9"  # or "^3.10"
+python = "^3.12"  # or "^3.10"
 django = "^4.2"
 django-allauth = "^0.57"
 django-cors-headers = "^4.3"
@@ -1156,6 +1159,17 @@ supervisorctl restart backend-app
 - User endpoint: `GET /auth/user/` - Returns user with profile data
 - Created `scripts/functional_test.sh` - Automated functional test script (14 tests)
 
+### Phase 2 - Completed January 17, 2026
+- Upgraded Django 2.2 → 3.2.25
+- Upgraded djangorestframework 3.10 → 3.15.1
+- Upgraded drf-yasg 1.17 → 1.21.10
+- Replaced django-suit + django-suit-daterange-filter with django-jazzmin 2.6.2
+- Fixed `PurePath` → `Path` in settings (Django 3.2 requirement)
+- Added `DEFAULT_AUTO_FIELD = "django.db.models.AutoField"` to settings
+- Removed `DateRangeFilter` usage from admin.py
+- **Result**: All 82 tests passing, 14 functional tests passing
+- **Deprecation warnings**: Present in third-party packages (rest_auth, background_task, debug_toolbar) - will be addressed in Phase 3
+
 ---
 
-**Last Updated**: January 16, 2026
+**Last Updated**: January 17, 2026
