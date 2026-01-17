@@ -7,8 +7,6 @@ TESTING = False
 INSTALLED_APPS = [
     # Our apps
     "core.apps.CoreConfig",
-    "api.apps.ApiConfig",
-    "frontend.apps.FrontendConfig",
     # Django Suit Admin Console
     # https://django-suit.readthedocs.io
     "suit",
@@ -41,10 +39,6 @@ INSTALLED_APPS = [
     # https://django-allauth.readthedocs.io/en/latest/installation.html
     "allauth",
     "allauth.account",
-    "allauth.socialaccount",
-    "allauth.socialaccount.providers.google",
-    "allauth.socialaccount.providers.facebook",
-    "allauth.socialaccount.providers.github",
     # django-storages
     # https://django-storages.readthedocs.io/en/latest/
     "storages",
@@ -54,9 +48,6 @@ INSTALLED_APPS = [
     # drf-yasg : Yet another Swagger generator
     # https://drf-yasg.readthedocs.io/en/stable/readme.html
     "drf_yasg",
-    # temp frontend apps
-    "widget_tweaks",
-    "snowpenguin.django.recaptcha2",
     # django-health-check
     # https://django-health-check.readthedocs.io/en/latest/
     "health_check",  # required
@@ -108,10 +99,8 @@ SUIT_CONFIG = {
                 "account.emailaddress",
             ),
         },
-        {"app": "socialaccount", "icon": "icon-thumbs-up"},
         "sites",
         "-",
-        "api",
         {"app": "background_task", "icon": "icon-tasks"},
     )
 }

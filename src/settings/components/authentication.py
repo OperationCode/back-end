@@ -74,17 +74,4 @@ JWT_AUTH = {
     "JWT_ALGORITHM": "RS256",
 }
 
-# Allauth social providers
-# https://django-allauth.readthedocs.io/en/latest/providers.html
-SOCIALACCOUNT_PROVIDERS = {
-    "google": {"SCOPE": ["profile", "email"], "AUTH_PARAMS": {"access_type": "online"}}
-}
-
-GITHUB_AUTH_CALLBACK_URL = config(
-    "GITHUB_AUTH_CALLBACK_URL", default="http://localhost:3000/"
-)
-
-RECAPTCHA_PUBLIC_KEY = config("RECAPTCHA_PUBLIC_KEY", "MyRecaptchaKey123")
-RECAPTCHA_PRIVATE_KEY = config("RECAPTCHA_PRIVATE_KEY", "MyRecaptchaPrivateKey456")
-
 CORS_ORIGIN_ALLOW_ALL = True

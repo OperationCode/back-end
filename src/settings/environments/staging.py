@@ -40,6 +40,3 @@ MEDIAFILES_LOCATION = "media"
 STATICFILES_STORAGE = "custom_storages.StaticStorage"
 DEFAULT_FILE_STORAGE = "custom_storages.MediaStorage"
 
-# Temporary frontend configs
-GITHUB_REPO = config("GITHUB_REPO", "OperationCode/operationcode_backend")
-GITHUB_AUTH_CALLBACK_URL = "https://operation-code.now.sh/"

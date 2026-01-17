@@ -1,23 +1,16 @@
-from allauth.socialaccount.providers.facebook.views import FacebookOAuth2Adapter
-from allauth.socialaccount.providers.github.views import GitHubOAuth2Adapter
-from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
-from allauth.socialaccount.providers.oauth2.client import OAuth2Client
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.decorators import method_decorator
 from django.views.decorators.debug import sensitive_post_parameters
 from drf_yasg.openapi import IN_QUERY, TYPE_STRING, Parameter
 from drf_yasg.utils import swagger_auto_schema
 from rest_auth.registration.views import RegisterView as BaseRegisterView
-from rest_auth.registration.views import SocialConnectView, SocialLoginView
-from rest_framework.exceptions import NotFound, ValidationError, bad_request
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.generics import RetrieveUpdateAPIView
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 
 from core.models import Profile
 from core.permissions import HasGroupPermission
 from core.serializers import (
-    CustomSocialLoginSerializer,
     ProfileSerializer,
     UserSerializer,
 )
@@ -113,32 +106,3 @@ class UserView(RetrieveUpdateAPIView):
 @sensitive_param
 class RegisterView(BaseRegisterView):
     pass
-
-
-class GoogleLogin(SocialLoginView):
-    permission_classes = (AllowAny,)
-    adapter_class = GoogleOAuth2Adapter
-    serializer_class = CustomSocialLoginSerializer
-
-
-class GoogleConnect(SocialConnectView):
-    adapter_class = GoogleOAuth2Adapter
-
-
-class FacebookLogin(SocialLoginView):
-    adapter_class = FacebookOAuth2Adapter
-    serializer_class = CustomSocialLoginSerializer
-
-
-class FacebookConnect(SocialConnectView):
-    adapter_class = FacebookOAuth2Adapter
-
-
-class GithubLogin(SocialLoginView):
-    adapter_class = GitHubOAuth2Adapter
-    callback_url = settings.GITHUB_AUTH_CALLBACK_URL
-    client_class = OAuth2Client
-
-
-class GithubConnect(SocialConnectView):
-    adapter_class = GitHubOAuth2Adapter
