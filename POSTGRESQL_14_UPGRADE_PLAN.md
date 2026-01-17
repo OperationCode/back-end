@@ -1154,6 +1154,7 @@ supervisorctl restart backend-app
 - Admin profile update (PyBot): `PATCH /auth/profile/admin/?email=` - Successfully updates slackId
 - Password reset: `POST /auth/password/reset/` - Sends email
 - User endpoint: `GET /auth/user/` - Returns user with profile data
+- Created `scripts/functional_test.sh` - Automated functional test script (14 tests)
 
 ---
 
