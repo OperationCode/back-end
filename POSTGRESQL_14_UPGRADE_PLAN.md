@@ -1,9 +1,12 @@
-# PostgreSQL 14 Upgrade - Execution Plan
+# PostgreSQL 17 Upgrade - Execution Plan
 **Step-by-Step Implementation Guide**
 
-**Project**: Django 2.2 → 4.2 + PostgreSQL 13 → 14
+**Project**: Django 2.2 → 4.2 + PostgreSQL 13 → 17
 **Timeline**: 2-3 weeks (with aggressive cleanup)
-**Last Updated**: January 16, 2026
+**Last Updated**: January 17, 2026
+
+> **Note**: Originally planned for PG 14, upgraded to PG 17 since PG 14 EOL is November 2026.
+> PG 17 is the latest stable release (EOL November 2029).
 
 ---
 
@@ -510,8 +513,8 @@ Tested:
 - Admin interface (jazzmin theme)
 - Background tasks (django-q2)"
 
-git tag v0.2.0-pre-pg14
-git push origin upgrade/django-4.2-pg14
+git tag v0.2.0-pre-pg17
+git push origin upgrade/django-4.2-pg17
 git push --tags
 ```
 
@@ -601,39 +604,90 @@ curl -X PATCH "https://api.staging.operationcode.org/auth/profile/admin/?email=t
 
 ---
 
-## Phase 6: PostgreSQL 14 on Staging (Day 21)
+## Phase 6: PostgreSQL 17 on Local/Staging (Day 21)
 
-### Backup
+### Driver Compatibility
+- **psycopg2 2.9.11** (current) fully supports PostgreSQL 17
+- No driver upgrade required
+- Future consideration: psycopg3 migration (separate project)
+
+### Local Testing with Docker
+
+**Option A: Fresh start (recommended for local dev)**
 ```bash
-pg_dump operationcode_staging > backup_$(date +%Y%m%d_%H%M%S).sql
+# Stop and remove old containers/volumes
+docker compose down -v
+
+# Edit docker-compose.yml: postgres:13-alpine → postgres:17-alpine
+# Start fresh
+docker compose up -d
 ```
 
-### Upgrade
+**Option B: Dump and restore (preserves data)**
 ```bash
-# If Docker
-docker-compose stop db
-docker-compose rm db
-# Edit docker-compose.yml: postgres:13 → postgres:14
-docker-compose up -d db
+# Dump existing data
+docker compose exec db pg_dumpall -U operationcode > backup_pg13.sql
 
-# If managed service (RDS, etc)
-# Use cloud console upgrade tool
+# Stop and remove
+docker compose down -v
+
+# Edit docker-compose.yml: postgres:13-alpine → postgres:17-alpine
+# Start new database
+docker compose up -d db
+
+# Wait for db to be ready, then restore
+docker compose exec -T db psql -U operationcode -d operationcode < backup_pg13.sql
+
+# Start backend
+docker compose up -d backend
+```
+
+**Option C: pgautoupgrade (automatic in-place upgrade)**
+```yaml
+# In docker-compose.yml, use pgautoupgrade image:
+db:
+  image: pgautoupgrade/pgautoupgrade:17-alpine
+  # ... rest of config unchanged
+# Container auto-detects PG 13 data and runs pg_upgrade on startup
+```
+
+### Staging Upgrade (AWS RDS)
+
+```bash
+# 1. Create backup
+./scripts/db-tools.sh backup staging
+
+# 2. Upgrade via AWS Console or Terraform
+# RDS → Select instance → Modify → Engine version → 17.x
+# Choose "Apply immediately" or schedule maintenance window
+
+# 3. Verify after upgrade
+psql -h $RDS_HOST -U $RDS_USER -d $RDS_DB -c "SELECT version();"
+# Should show: PostgreSQL 17.x
 ```
 
 ### Verify
 ```bash
-psql -h localhost -U user -d database -c "SELECT version();"
-# Should show: PostgreSQL 14.x
+# Check version
+docker compose exec db psql -U operationcode -c "SELECT version();"
+# Should show: PostgreSQL 17.x
 
-python manage.py migrate
-pytest -v
+# Run migrations
+docker compose exec backend python manage.py migrate
+
+# Run tests
+docker compose exec backend pytest -v
+
+# Run functional tests
+./scripts/functional_test.sh
 ```
 
-### Test (24 hours)
-- [ ] All tests pass
-- [ ] No errors in logs
-- [ ] Performance acceptable
-- [ ] PyBot integration works
+### Test Checklist
+- [x] All 82 pytest tests pass
+- [x] All 12 functional tests pass (2 skipped - need admin user)
+- [x] No errors in logs
+- [x] Performance acceptable
+- [ ] PyBot integration endpoints work (staging test pending)
 
 ---
 
@@ -718,13 +772,13 @@ curl -X POST https://api.operationcode.org/auth/login/ \
 - [ ] Background tasks processing
 
 **Decision Point**:
-- [ ] **Proceed with PostgreSQL 14?** YES / NO
+- [ ] **Proceed with PostgreSQL 17?** YES / NO
 - [ ] If NO: Document issues, stay on Django 4.2 + PG 13
 - [ ] If YES: Continue to Phase 8
 
 ---
 
-## Phase 8: PostgreSQL 14 Upgrade (Day 25)
+## Phase 8: PostgreSQL 17 Production Upgrade (Day 25)
 
 ### Pre-Upgrade
 
@@ -742,7 +796,27 @@ ls -lh final_pg13_backup_*.sql.gz  # Document size: _____
 
 ### Upgrade Execution
 
-**If using Docker**:
+**For AWS RDS (Production)**:
+```bash
+# 1. Create manual snapshot first (for rollback)
+aws rds create-db-snapshot \
+  --db-instance-identifier operationcode-prod \
+  --db-snapshot-identifier pre-pg17-upgrade-$(date +%Y%m%d)
+
+# 2. Upgrade via AWS Console
+# RDS → Databases → Select instance → Modify
+# → DB engine version: 17.x
+# → Apply: "Apply during next maintenance window" or "Apply immediately"
+
+# 3. Monitor upgrade progress in RDS console
+# Typical duration: 10-30 minutes depending on database size
+
+# 4. Verify after upgrade
+psql -h $RDS_HOST -U $RDS_USER -d $RDS_DB -c "SELECT version();"
+# Should show: PostgreSQL 17.x
+```
+
+**For Docker-based deployments**:
 ```bash
 # Maintenance mode
 touch /app/maintenance.flag
@@ -750,21 +824,24 @@ touch /app/maintenance.flag
 # Stop app
 docker-compose stop backend
 
-# Backup data volume
-docker run --rm -v postgres_data:/data -v $(pwd):/backup \
-  ubuntu tar czf /backup/postgres_data_backup.tar.gz /data
+# Dump data
+docker-compose exec db pg_dumpall -U user > pre_upgrade_backup.sql
 
-# Stop database
+# Stop and remove database
 docker-compose stop db
+docker-compose rm -f db
 
-# Update docker-compose.yml
-sed -i 's/postgres:13/postgres:14/' docker/docker-compose.yml
+# Update docker-compose.yml: postgres:13 → postgres:17
+sed -i 's/postgres:13/postgres:17/' docker-compose.yml
+
+# Remove old volume
+docker volume rm $(docker volume ls -q | grep postgres_data)
 
 # Start new PostgreSQL
 docker-compose up -d db
 
-# Wait for ready
-docker-compose logs -f db  # Watch for "ready to accept connections"
+# Wait for ready, then restore
+docker-compose exec -T db psql -U user < pre_upgrade_backup.sql
 
 # Start app
 docker-compose up -d backend
@@ -773,17 +850,20 @@ docker-compose up -d backend
 rm /app/maintenance.flag
 ```
 
-**If using managed service (RDS, Cloud SQL, etc)**:
-- Use cloud provider's upgrade tool
-- Follow provider-specific procedures
-- Typically: Select instance → Modify → Change version → Apply
+**Alternative: pgautoupgrade (in-place upgrade)**:
+```yaml
+# Change docker-compose.yml to use:
+db:
+  image: pgautoupgrade/pgautoupgrade:17-alpine
+  # Automatically runs pg_upgrade on startup if old data detected
+```
 
 ### Post-Upgrade Verification
 
 ```bash
 # Verify PostgreSQL version
 docker-compose exec db psql -U user -c "SELECT version();"
-# Should show: PostgreSQL 14.x
+# Should show: PostgreSQL 17.x
 
 # Run migrations (should be no-op)
 docker-compose exec backend python manage.py migrate
@@ -927,8 +1007,20 @@ curl -X POST https://api.operationcode.org/auth/login/ ...
 
 ### Rollback: PostgreSQL (Phase 8)
 
-**If PostgreSQL 14 has issues**:
+**If PostgreSQL 17 has issues**:
 
+**For AWS RDS**:
+```bash
+# Restore from pre-upgrade snapshot
+aws rds restore-db-instance-from-db-snapshot \
+  --db-instance-identifier operationcode-prod-restored \
+  --db-snapshot-identifier pre-pg17-upgrade-YYYYMMDD
+
+# Update DNS/connection strings to point to restored instance
+# Or delete failed instance and rename restored one
+```
+
+**For Docker**:
 ```bash
 # Full rollback (1-2 hours)
 touch /app/maintenance.flag
@@ -938,16 +1030,14 @@ docker-compose stop backend db
 
 # Restore PostgreSQL 13
 docker-compose rm db
-sed -i 's/postgres:14/postgres:13/' docker/docker-compose.yml
+sed -i 's/postgres:17/postgres:13/' docker-compose.yml
 docker volume rm postgres_data
 
-# Restore data
-tar xzf postgres_data_backup.tar.gz
-# Or: pg_restore from SQL dump
-
-# Start
+# Restore data from pre-upgrade backup
 docker-compose up -d db
-# Wait for ready
+docker-compose exec -T db psql -U user < pre_upgrade_backup.sql
+
+# Start app
 docker-compose up -d backend
 
 rm /app/maintenance.flag
@@ -1247,6 +1337,25 @@ supervisorctl restart backend-app
 - `PATCH /auth/profile/admin/?email=` - Updates `slackId` successfully
 
 **Result**: Staging deployment fully functional and PyBot-compatible
+
+### Phase 6 - PostgreSQL 17 Local Testing - Completed January 17, 2026
+
+**Plan Updates**:
+- Changed target from PostgreSQL 14 to PostgreSQL 17 (PG 14 EOL November 2026)
+- PostgreSQL 17 is latest stable (EOL November 2029)
+- Confirmed psycopg2 2.9.11 fully supports PostgreSQL 17 - no driver change needed
+
+**Local Testing**:
+- Updated `docker-compose.yml`: `postgres:13-alpine` → `postgres:17-alpine`
+- Started fresh containers with `docker compose down -v && docker compose up -d`
+- Verified PostgreSQL version: `PostgreSQL 17.7 on aarch64-unknown-linux-musl`
+- All migrations applied successfully
+- **Result**: All 82 pytest tests passing, 12 functional tests passing
+
+**Next Steps**:
+- Deploy to staging with PostgreSQL 17 (AWS RDS upgrade)
+- Run PyBot integration tests on staging
+- 48-hour soak test before production
 
 ---
 
