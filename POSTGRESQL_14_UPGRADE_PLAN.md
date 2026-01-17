@@ -3,7 +3,7 @@
 
 **Project**: Django 2.2 → 4.2 + PostgreSQL 13 → 14
 **Timeline**: 2-3 weeks (with aggressive cleanup)
-**Last Updated**: January 4, 2026
+**Last Updated**: January 16, 2026
 
 ---
 
@@ -101,11 +101,11 @@
 ```
 
 **Checklist**:
-- [ ] Remove social connect endpoints
-- [ ] Remove frontend app from INSTALLED_APPS
-- [ ] Remove widget-tweaks and recaptcha2 from pyproject.toml
-- [ ] Remove duplicate /auth/me/ endpoint
-- [ ] Run tests to verify nothing breaks: `pytest -v`
+- [x] Remove social connect endpoints
+- [x] Remove frontend app from INSTALLED_APPS
+- [x] Remove widget-tweaks and recaptcha2 from pyproject.toml
+- [x] Remove duplicate /auth/me/ endpoint
+- [x] Run tests to verify nothing breaks: `pytest -v`
 - [ ] Commit: "Remove unused functionality before Django upgrade"
 
 **Conservative Cleanup Benefits**:
@@ -216,16 +216,16 @@ django-recaptcha2 = "^1.4"
 ## Phase 1: Local Development Setup (Days 1-2)
 
 ### Environment
-- [ ] Install Python 3.10 (or verify 3.9 works)
-- [ ] Create clean virtual environment
+- [x] Install Python 3.10 (or verify 3.9 works) - Dockerfile updated to Python 3.10
+- [x] Create clean virtual environment - Docker test stage with all deps
 - [ ] Checkout new branch
 
 ### Baseline
-- [ ] Run tests: `pytest -v --cov`
+- [x] Run tests: `pytest -v --cov` - 82 tests passing
 - [ ] Record coverage: _____%
-- [ ] Record passing/failing tests: _____/_____
-- [ ] Start dev server, test manually
-- [ ] Document current state
+- [x] Record passing/failing tests: 82/82
+- [x] Start dev server, test manually - docker-compose.yml created, all endpoints verified
+- [x] Document current state - pyproject.toml updated for Python 3.10
 
 ### Code Analysis
 ```bash
@@ -1075,13 +1075,14 @@ curl -X POST https://api.operationcode.org/auth/login/ \
 **Actual Completion**: __________
 
 **Effort Tracking**:
-- Cleanup (Phase 0): _____ / 4 hours
+- Cleanup (Phase 0): DONE / 4 hours
+- Phase 1 (Python 3.10): DONE / 2 hours
 - Development hours: _____ / 94 estimated (reduced by cleanup)
 - Testing hours: _____ / 20 estimated (reduced by cleanup)
 - Deployment hours: _____ / 10 estimated
 - **Total**: _____ / 128 hours
 
-**Status**: ☐ Not Started | ☐ In Progress | ☐ Complete | ☐ Blocked
+**Status**: ☐ Not Started | ☑ In Progress | ☐ Complete | ☐ Blocked
 
 **Blockers**: ___________
 
@@ -1123,4 +1124,37 @@ supervisorctl restart backend-app
 
 ---
 
-**Last Updated**: January 4, 2026
+## Completed Work Log
+
+### Phase 0 - Completed January 16, 2026
+- Removed all social auth endpoints (Google, Facebook, GitHub login/connect)
+- Removed `src/api/` directory (codeschools, scholarships, teamMembers endpoints)
+- Removed `src/frontend/` directory
+- Removed from INSTALLED_APPS: api, frontend, widget_tweaks, recaptcha2, social providers
+- Removed from pyproject.toml: django-widget-tweaks, django-recaptcha2
+- Removed RECAPTCHA and GITHUB_AUTH_CALLBACK settings
+- Deleted obsolete tests (test_code_school_api.py, test_codeschool_form.py)
+- **Result**: ~1,734 lines deleted across 46 files
+
+### Phase 1 - Completed January 16, 2026
+- Upgraded Dockerfile from Python 3.9 to Python 3.10
+- Added Docker `test` stage with dev dependencies
+- Updated pyproject.toml: Python ^3.10, pytest >=6.0, pytest-django >=4.0
+- Regenerated poetry.lock
+- Created docker-compose.yml for local development
+- **Result**: All 82 tests passing on Python 3.10
+
+### Manual Testing Verified (January 16, 2026)
+- Health check endpoint: `/healthz` - OK
+- Admin interface: `/admin/` - 302 redirect (login required)
+- API docs: `/docs/` - 200 OK
+- User registration: `POST /auth/registration/` - Returns JWT token
+- User login: `POST /auth/login/` - Returns JWT token
+- Get profile: `GET /auth/profile/` - Returns user profile
+- Admin profile update (PyBot): `PATCH /auth/profile/admin/?email=` - Successfully updates slackId
+- Password reset: `POST /auth/password/reset/` - Sends email
+- User endpoint: `GET /auth/user/` - Returns user with profile data
+
+---
+
+**Last Updated**: January 16, 2026
