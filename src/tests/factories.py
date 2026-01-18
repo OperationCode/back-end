@@ -3,16 +3,15 @@ import threading
 from allauth.account.models import EmailAddress
 from django.conf import settings
 from django.db.models.signals import post_save
+import factory
 from factory import (
-    CREATE_STRATEGY,
-    DjangoModelFactory,
     LazyAttribute,
     LazyFunction,
     PostGeneration,
     RelatedFactory,
     SubFactory,
-    django,
 )
+from factory.django import DjangoModelFactory, mute_signals
 
 from core.models import Profile
 from tests.test_data import (
@@ -26,7 +25,7 @@ from tests.test_data import (
 
 class Factory(DjangoModelFactory):
     class Meta:
-        strategy = CREATE_STRATEGY
+        strategy = factory.CREATE_STRATEGY
         model = None
         abstract = True
 
@@ -40,7 +39,7 @@ class Factory(DjangoModelFactory):
         return cls._SEQUENCE
 
 
-@django.mute_signals(post_save)
+@mute_signals(post_save)
 class ProfileFactory(Factory):
     class Meta:
         model = Profile
@@ -61,7 +60,7 @@ class ProfileFactory(Factory):
     user = SubFactory("tests.factories.UserFactory", profile=None)
 
 
-@django.mute_signals(post_save)
+@mute_signals(post_save)
 class EmailAddressFactory(Factory):
     class Meta:
         model = EmailAddress
@@ -71,11 +70,11 @@ class EmailAddressFactory(Factory):
     user = SubFactory("tests.factories.UserFactory", active_email=None)
 
 
-@django.mute_signals(post_save)
+@mute_signals(post_save)
 class UserFactory(Factory):
     class Meta:
         model = settings.AUTH_USER_MODEL
-        strategy = CREATE_STRATEGY
+        strategy = factory.CREATE_STRATEGY
 
     first_name = LazyFunction(fake.first_name)
     last_name = LazyFunction(fake.last_name)

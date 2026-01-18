@@ -1,17 +1,16 @@
 import logging
 
 import requests
-from background_task import background
 from django.conf import settings
 from django.contrib.auth.models import User as AuthUser
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from django_q.tasks import async_task
 from mailchimp3 import MailChimp
 
 logger = logging.getLogger(__name__)
 
 
-@background(schedule=0)
 def send_welcome_email(email: str) -> None:
     logger.info(f"Sending welcome email to: {email}")
 
@@ -32,7 +31,6 @@ def send_welcome_email(email: str) -> None:
         logger.exception("Exception trying to send welcome email to user", e)
 
 
-@background(schedule=0)
 def send_slack_invite_job(email: str) -> None:
     """
     Background task that sends pybot a request triggering an invite for
@@ -53,7 +51,6 @@ def send_slack_invite_job(email: str) -> None:
         )
 
 
-@background(schedule=0)
 def add_user_to_mailing_list(email: str) -> None:
     """
     Adds the new user's email to our mailchimp list (which should trigger a

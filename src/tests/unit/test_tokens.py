@@ -1,11 +1,13 @@
-from core.handlers import custom_jwt_payload_handler
+import pytest
+from core.handlers import CustomTokenObtainPairSerializer
 
 from .. import factories as f
 
 
+@pytest.mark.django_db
 def test_valid_token():
-    user = f.UserFactory.build(email="test@email.com")
-    token = custom_jwt_payload_handler(user)
+    user = f.UserFactory(email="test@email.com")
+    token = CustomTokenObtainPairSerializer.get_token(user)
 
     assert token["firstName"] == user.first_name
     assert token["lastName"] == user.last_name

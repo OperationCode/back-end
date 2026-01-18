@@ -2,7 +2,6 @@ from typing import List
 
 import pytest
 import requests
-from background_task.tasks import tasks
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.mail import EmailMultiAlternatives
@@ -17,21 +16,10 @@ from core.tasks import (
 TEST_EMAIL = "test@test.com"
 
 
-def mocked_run_next_task(queue=None):
-    """
-    We mock tasks.mocked_run_next_task to give other threads some time to update the database.
-    Otherwise we run into a locked database.
-    """
-    return tasks.run_next_task(queue)
-
-
-run_next_task = mocked_run_next_task
-
-
 @pytest.mark.django_db
 def test_send_welcome_email(mailoutbox: List[EmailMultiAlternatives]):
+    # Tasks are now synchronous functions, call directly
     send_welcome_email(TEST_EMAIL)
-    run_next_task()
 
     assert len(mailoutbox) == 1
     assert TEST_EMAIL in mailoutbox[0].to
@@ -41,9 +29,8 @@ def test_send_welcome_email(mailoutbox: List[EmailMultiAlternatives]):
 @pytest.mark.django_db
 def test_send_slack_invite_job(mocker: MockFixture):
     mock = mocker.patch.object(requests, "post")
+    # Tasks are now synchronous functions, call directly
     send_slack_invite_job(TEST_EMAIL)
-
-    run_next_task()
 
     assert mock.called
     assert mock.call_args[0] == (f"{settings.PYBOT_URL}/pybot/api/v1/slack/invite",)
@@ -54,8 +41,7 @@ def test_send_slack_invite_job(mocker: MockFixture):
 @pytest.mark.django_db
 def test_add_user_to_mailing_list(user: User, mocker: MockFixture):
     mock = mocker.patch("core.tasks.MailChimp")
+    # Tasks are now synchronous functions, call directly
     add_user_to_mailing_list(user.email)
-
-    run_next_task()
 
     assert mock.called

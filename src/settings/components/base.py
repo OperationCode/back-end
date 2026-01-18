@@ -5,13 +5,11 @@ TESTING = False
 
 # Application definition
 INSTALLED_APPS = [
+    # django-jazzmin Admin Console (replaces django-suit)
+    # https://django-jazzmin.readthedocs.io/
+    "jazzmin",
     # Our apps
     "core.apps.CoreConfig",
-    "api.apps.ApiConfig",
-    "frontend.apps.FrontendConfig",
-    # Django Suit Admin Console
-    # https://django-suit.readthedocs.io
-    "suit",
     # Default Django apps:
     "django.contrib.admin",
     "django.contrib.auth",
@@ -23,28 +21,23 @@ INSTALLED_APPS = [
     # Django anymail
     # https://anymail.readthedocs.io/en/stable/
     "anymail",
-    # django-background-tasks
-    # https://django-background-tasks.readthedocs.io/en/latest/
-    "background_task",
-    # django-suit-daterange-filter
-    # https://github.com/f213/django-suit-daterange-filter
-    "date_range_filter",
+    # django-q2 (background task queue)
+    # https://django-q2.readthedocs.io/
+    "django_q",
     # django-rest-framework
     # https://www.django-rest-framework.org/
     "rest_framework",
     "rest_framework.authtoken",
-    "rest_auth.registration",
-    # django-rest-auth
-    # https://django-rest-auth.readthedocs.io/en/latest/
-    "rest_auth",
+    "rest_framework_simplejwt",
+    # dj-rest-auth (maintained fork of django-rest-auth)
+    # https://dj-rest-auth.readthedocs.io/
+    "dj_rest_auth",
+    "dj_rest_auth.registration",
     # django-allauth
     # https://django-allauth.readthedocs.io/en/latest/installation.html
     "allauth",
     "allauth.account",
-    "allauth.socialaccount",
-    "allauth.socialaccount.providers.google",
-    "allauth.socialaccount.providers.facebook",
-    "allauth.socialaccount.providers.github",
+    "allauth.socialaccount",  # Required by dj-rest-auth registration
     # django-storages
     # https://django-storages.readthedocs.io/en/latest/
     "storages",
@@ -54,9 +47,6 @@ INSTALLED_APPS = [
     # drf-yasg : Yet another Swagger generator
     # https://drf-yasg.readthedocs.io/en/stable/readme.html
     "drf_yasg",
-    # temp frontend apps
-    "widget_tweaks",
-    "snowpenguin.django.recaptcha2",
     # django-health-check
     # https://django-health-check.readthedocs.io/en/latest/
     "health_check",  # required
@@ -94,34 +84,39 @@ DATABASES = {
     }
 }
 
-# Django Suit (Admin Console)
-# https://django-suit.readthedocs.io
-SUIT_CONFIG = {
-    "MENU": (
-        {
-            "label": "Users",
-            "icon": "icon-user",
-            "models": (
-                "auth.user",
-                "core.profile",
-                "auth.group",
-                "account.emailaddress",
-            ),
-        },
-        {"app": "socialaccount", "icon": "icon-thumbs-up"},
-        "sites",
-        "-",
-        "api",
-        {"app": "background_task", "icon": "icon-tasks"},
-    )
+# Django Jazzmin (Admin Console)
+# https://django-jazzmin.readthedocs.io/
+JAZZMIN_SETTINGS = {
+    "site_title": "Operation Code Admin",
+    "site_header": "Operation Code",
+    "site_brand": "Operation Code",
+    "welcome_sign": "Welcome to Operation Code Admin",
+    "copyright": "Operation Code",
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "order_with_respect_to": [
+        "auth",
+        "core",
+        "django_q",
+    ],
+}
+
+# Django-Q2 configuration (sync mode for testing, use redis/orm in production)
+Q_CLUSTER = {
+    "name": "operationcode",
+    "workers": 2,
+    "timeout": 60,
+    "retry": 120,
+    "queue_limit": 50,
+    "bulk": 10,
+    "orm": "default",  # Use database as broker
 }
 
 # Internationalization
-# https://docs.djangoproject.com/en/2.1/topics/i18n/
+# https://docs.djangoproject.com/en/4.2/topics/i18n/
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
-USE_L10N = True
 USE_TZ = True
 ATOMIC_REQUESTS = True
 
@@ -138,7 +133,10 @@ MEDIA_URL = "/media/"
 STATIC_ROOT = BASE_DIR.joinpath("static")
 MEDIA_ROOT = BASE_DIR.joinpath("media")
 
-SITE_ID = config("SITE_ID", default=3)
+SITE_ID = config("SITE_ID", default=3, cast=int)
 
 ACCOUNT_ADAPTER = "core.adapters.AccountAdapter"
-ACCOUNT_USERNAME_REQUIRED = False
+# ACCOUNT_USERNAME_REQUIRED moved to authentication.py as ACCOUNT_SIGNUP_FIELDS
+
+# Django 3.2+ default auto field
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"

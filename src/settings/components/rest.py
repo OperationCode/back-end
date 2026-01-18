@@ -13,7 +13,7 @@ REST_FRAMEWORK = {
         "djangorestframework_camel_case.parser.CamelCaseJSONParser",
     ),
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_jwt.authentication.JSONWebTokenAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
         # "rest_framework.authentication.SessionAuthentication",
     ),
     "JSON_UNDERSCOREIZE": {"no_underscore_before_number": True},

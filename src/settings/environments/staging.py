@@ -6,6 +6,9 @@ from settings.components.base import DATABASES
 ALLOWED_HOSTS = ["api.staging.operationcode.org"]
 DEBUG = False
 
+# Required for Django 4.0+ CSRF protection with HTTPS
+CSRF_TRUSTED_ORIGINS = ["https://api.staging.operationcode.org"]
+
 if config("EXTRA_HOSTS", default=""):
     ALLOWED_HOSTS += [s.strip() for s in os.environ["EXTRA_HOSTS"].split(",")]
 
@@ -40,6 +43,3 @@ MEDIAFILES_LOCATION = "media"
 STATICFILES_STORAGE = "custom_storages.StaticStorage"
 DEFAULT_FILE_STORAGE = "custom_storages.MediaStorage"
 
-# Temporary frontend configs
-GITHUB_REPO = config("GITHUB_REPO", "OperationCode/operationcode_backend")
-GITHUB_AUTH_CALLBACK_URL = "https://operation-code.now.sh/"
