@@ -29,14 +29,14 @@ ENV VIRTUAL_ENV=/venv \
     PATH="/venv/bin:$PATH"
 
 # Install production dependencies only
-RUN poetry install --only=main --no-interaction --no-cache --compile
+RUN poetry install --only=main --no-interaction --no-cache
 
 # =============================================================================
 # Test builder: add dev dependencies
 # =============================================================================
 FROM builder AS test-builder
 
-RUN poetry install --no-interaction --no-cache --compile
+RUN poetry install --no-interaction --no-cache
 
 # =============================================================================
 # Runtime base: minimal image shared by test and production
@@ -50,7 +50,6 @@ RUN apk upgrade --no-cache && \
     pip install --no-cache-dir --upgrade pip
 
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
     PATH="/venv/bin:$PATH"
 
 WORKDIR /app
@@ -79,7 +78,6 @@ FROM runtime-base AS production
 
 COPY --from=builder /venv /venv
 COPY src ./src
-COPY .dev ./src/.dev
 
 # Pre-compile Python bytecode for faster cold starts
 RUN python -m compileall -q ./src/
