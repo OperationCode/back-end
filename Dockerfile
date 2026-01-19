@@ -29,14 +29,14 @@ ENV VIRTUAL_ENV=/venv \
     PATH="/venv/bin:$PATH"
 
 # Install production dependencies only
-RUN poetry install --only=main --no-interaction --no-cache --compile
+RUN poetry install --only=main --no-interaction --no-cache
 
 # =============================================================================
 # Test builder: add dev dependencies
 # =============================================================================
-# FROM builder AS test-builder
+FROM builder AS test-builder
 
-# RUN poetry install --no-interaction --no-cache --compile
+RUN poetry install --no-interaction --no-cache
 
 # =============================================================================
 # Runtime base: minimal image shared by test and production
@@ -57,19 +57,19 @@ WORKDIR /app
 # =============================================================================
 # Test stage
 # =============================================================================
-# FROM runtime-base AS test
+FROM runtime-base AS test
 
-# COPY --from=test-builder /venv /venv
-# COPY src ./src
-# COPY .dev ./src/.dev
-# COPY pytest.ini ./
+COPY --from=test-builder /venv /venv
+COPY src ./src
+COPY .dev ./src/.dev
+COPY pytest.ini ./
 
-# WORKDIR /app/src
+WORKDIR /app/src
 
-# ENV DJANGO_ENV=testing \
-#     ENVIRONMENT=TEST
+ENV DJANGO_ENV=testing \
+    ENVIRONMENT=TEST
 
-# CMD ["pytest", "-v"]
+CMD ["pytest", "-v"]
 
 # =============================================================================
 # Production stage
@@ -78,7 +78,6 @@ FROM runtime-base AS production
 
 COPY --from=builder /venv /venv
 COPY src ./src
-COPY .dev ./src/.dev
 
 # Pre-compile Python bytecode for faster cold starts
 RUN python -m compileall -q ./src/

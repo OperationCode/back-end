@@ -8,6 +8,7 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.12"
+argon2-cffi = "^23.1"                       # Fast, secure password hashing (winner of PHC)
 bcrypt = "^4.3"                             # Stay on 4.x (5.0 has breaking changes)
 boto3 = "^1.42"                             # Was ^1.13 - ensures urllib3 >= 2.6.3
 cryptography = "^46.0"                      # Was ^43.0 - fixes CVE-2024-12797

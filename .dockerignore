@@ -12,3 +12,22 @@ dist
 html/*
 **/__pycache__
 **/*.pyc
+
+# Development files - should not be in production
+.dev/
+src/.dev/
+src/.dev
+**/.dev/
+**/.dev
+*.sqlite3
+*.db
+db.sqlite3
+src/db.sqlite3
+**/db.sqlite3
+
+# Test artifacts
+.pytest_cache/
+src/.pytest_cache/
+**/.pytest_cache/
+.coverage
+htmlcov/
