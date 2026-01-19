@@ -82,3 +82,7 @@ pip-delete-this-directory.txt
 ## Database backups and tools with credentials
 backups/
 scripts/db-tools.sh
+
+# Claude
+settings.local.json
+.mcp.json

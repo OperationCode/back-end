@@ -38,15 +38,15 @@ django-health-check = "^3.20"               # Was ^3.18
 
 [tool.poetry.group.dev.dependencies]
 bandit = "^1.9"                             # Was ^1.8
-black = "^24.0"                             # Keep on 24.x (25.x is major)
+black = ">=25.0"
 coverage = "^7.0"                           # Keep
 django-debug-toolbar = "^5.0"               # Was ^4.4 (6.x has API changes)
 factory_boy = "^3.3"                        # Keep
 flake8 = "^7.0"                             # Keep
-flake8-bugbear = "^24.0"                    # Keep on 24.x
-isort = "^5.13"                             # Keep on 5.x (7.x is major)
+flake8-bugbear = ">=25.0"
+isort = ">=7.0"
 pyhumps = "^3.8"                            # Keep
-pytest = "^8.0"                             # Keep on 8.x (9.x is major)
+pytest = ">=9.0"
 pytest-django = "^4.8"                      # Keep
 pytest-env = "^1.1"                         # Keep
 pytest-mock = "^3.14"                       # Keep
@@ -60,5 +60,5 @@ force_grid_wrap = 0
 use_parentheses = true
 
 [build-system]
-requires = ["poetry>=0.12"]
+requires = ["poetry>=2.3.0"]
 build-backend = "poetry.masonry.api"
