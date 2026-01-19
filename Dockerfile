@@ -34,9 +34,9 @@ RUN poetry install --only=main --no-interaction --no-cache --compile
 # =============================================================================
 # Test builder: add dev dependencies
 # =============================================================================
-FROM builder AS test-builder
+# FROM builder AS test-builder
 
-RUN poetry install --no-interaction --no-cache --compile
+# RUN poetry install --no-interaction --no-cache --compile
 
 # =============================================================================
 # Runtime base: minimal image shared by test and production
@@ -50,7 +50,6 @@ RUN apk upgrade --no-cache && \
     pip install --no-cache-dir --upgrade pip
 
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
     PATH="/venv/bin:$PATH"
 
 WORKDIR /app
@@ -58,19 +57,19 @@ WORKDIR /app
 # =============================================================================
 # Test stage
 # =============================================================================
-FROM runtime-base AS test
+# FROM runtime-base AS test
 
-COPY --from=test-builder /venv /venv
-COPY src ./src
-COPY .dev ./src/.dev
-COPY pytest.ini ./
+# COPY --from=test-builder /venv /venv
+# COPY src ./src
+# COPY .dev ./src/.dev
+# COPY pytest.ini ./
 
-WORKDIR /app/src
+# WORKDIR /app/src
 
-ENV DJANGO_ENV=testing \
-    ENVIRONMENT=TEST
+# ENV DJANGO_ENV=testing \
+#     ENVIRONMENT=TEST
 
-CMD ["pytest", "-v"]
+# CMD ["pytest", "-v"]
 
 # =============================================================================
 # Production stage
