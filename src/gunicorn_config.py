@@ -216,35 +216,3 @@ def worker_int(worker):
 
 def worker_abort(worker):
     worker.log.info("worker received SIGABRT signal")
-
-
-def sampler(fields):
-    request_path = fields.get("request.path")
-    response_code = fields.get("response.status_code")
-
-    # never sample errors
-    if response_code and response_code >= 500:
-        return True, 1
-    else:
-        # never capture healthy health checks
-        if request_path == "/healthz":
-            return False, 0
-        # catchall
-        return True, 1
-
-
-# Added for Honeycomb instrumentation
-def post_worker_init(worker):
-    worker.log.info("beeline initialization in process pid %s", worker.pid)
-    import os
-    import beeline
-
-    # only proceed if the environment variables have beens upplied
-    if "HONEYCOMB_WRITEKEY" in os.environ and "HONEYCOMB_DATASET" in os.environ:
-        beeline.init(
-            writekey=os.getenv("HONEYCOMB_WRITEKEY"),
-            dataset=os.getenv("HONEYCOMB_DATASET"),
-            service_name="backend",
-            sampler_hook=sampler,
-            debug=False,
-        )

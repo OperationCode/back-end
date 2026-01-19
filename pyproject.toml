@@ -32,7 +32,6 @@ mailchimp3 = "^3.0"                         # Keep
 requests = "^2.32"                          # Was ^2
 urllib3 = "^2.6.3"                          # CVE-2025-66471, CVE-2025-66418, CVE-2026-21441
 sentry-sdk = "^2.49"                        # Was ^2
-honeycomb-beeline = "^3"                    # Keep
 django-allow-cidr = "^0.8"                  # Was ^0.7
 django-health-check = "^3.20"               # Was ^3.18
 
