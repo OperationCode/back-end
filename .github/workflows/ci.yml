@@ -270,13 +270,11 @@ jobs:
             ${{ steps.docker-tag.outputs.image }}
           provenance: false
           cache-from: |
-            type=gha,scope=arm64-${{ github.head_ref || github.ref_name }}
-            type=gha,scope=arm64-main
-            type=registry,ref=633607774026.dkr.ecr.us-east-2.amazonaws.com/back-end-cache:${{ github.head_ref || github.ref_name }}
-            type=registry,ref=633607774026.dkr.ecr.us-east-2.amazonaws.com/back-end-cache:main
+            type=gha,scope=arm64
+            type=registry,ref=633607774026.dkr.ecr.us-east-2.amazonaws.com/back-end-cache:latest
           cache-to: |
-            type=gha,mode=max,scope=arm64-${{ github.head_ref || github.ref_name }}
-            type=registry,ref=633607774026.dkr.ecr.us-east-2.amazonaws.com/back-end-cache:${{ github.head_ref || github.ref_name }},mode=max
+            type=gha,mode=max,scope=arm64
+            type=registry,ref=633607774026.dkr.ecr.us-east-2.amazonaws.com/back-end-cache:latest,mode=max
 
       - name: Output image URI
         if: steps.can-push.outputs.push == 'true'
