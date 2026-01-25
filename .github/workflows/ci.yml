@@ -269,12 +269,8 @@ jobs:
           tags: |
             ${{ steps.docker-tag.outputs.image }}
           provenance: false
-          cache-from: |
-            type=gha,scope=arm64
-            type=registry,ref=633607774026.dkr.ecr.us-east-2.amazonaws.com/back-end-cache:latest
-          cache-to: |
-            type=gha,mode=max,scope=arm64
-            type=registry,ref=633607774026.dkr.ecr.us-east-2.amazonaws.com/back-end-cache:latest,mode=max
+          cache-from: type=gha,scope=arm64
+          cache-to: type=gha,mode=max,scope=arm64
 
       - name: Output image URI
         if: steps.can-push.outputs.push == 'true'
