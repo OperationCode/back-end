@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: ['**']  # Trigger on push to any branch for Docker builds
   pull_request:
     branches: [master]
 
@@ -14,6 +14,8 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    # Only run on master branch pushes and PRs to master
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -60,6 +62,8 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    # Only run on master branch pushes and PRs to master
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -121,6 +125,8 @@ jobs:
   security:
     name: Security Scan
     runs-on: ubuntu-latest
+    # Only run on master branch pushes and PRs to master
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -164,17 +170,88 @@ jobs:
       - name: Display Bandit results
         run: poetry run bandit -r src --skip B101 --severity-level high -f txt || true
 
+  docker-build-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    # Run on push events only (not pull_request)
+    if: github.event_name == 'push'
+    # For master branch, wait for CI checks to pass; for other branches, ci-success will pass immediately
+    needs: [ci-success]
+    permissions:
+      id-token: write  # Required for OIDC authentication
+      contents: read   # Required to checkout code
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Determine Docker tag
+        id: docker-tag
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+            echo "tag=prod" >> $GITHUB_OUTPUT
+            echo "environment=Production" >> $GITHUB_OUTPUT
+          else
+            echo "tag=staging" >> $GITHUB_OUTPUT
+            echo "environment=Staging" >> $GITHUB_OUTPUT
+          fi
+          echo "Building for ${{ steps.docker-tag.outputs.environment }} with tag: ${{ steps.docker-tag.outputs.tag }}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          platforms: linux/arm64
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: GitHubActions-DockerBuild-${{ steps.docker-tag.outputs.environment }}
+          aws-region: us-east-2
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: runtime
+          platforms: linux/arm64
+          push: true
+          tags: |
+            633607774026.dkr.ecr.us-east-2.amazonaws.com/back-end:${{ steps.docker-tag.outputs.tag }}
+          provenance: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Output image URI
+        run: |
+          echo "Successfully pushed ${{ steps.docker-tag.outputs.environment }} image:"
+          echo "633607774026.dkr.ecr.us-east-2.amazonaws.com/back-end:${{ steps.docker-tag.outputs.tag }}"
+
   # Final status check for branch protection
   ci-success:
     name: CI Success
     needs: [lint, test, security]
     runs-on: ubuntu-latest
+    # Always run to satisfy docker-build-push dependency
     if: always()
     steps:
-      - name: Check all jobs passed
+      - name: Check all jobs passed (master/PR only)
+        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
         run: |
+          # Check if jobs were skipped (non-master) or failed
+          if [[ "${{ needs.lint.result }}" == "skipped" ]]; then
+            echo "Lint job was skipped - this should not happen on master/PR"
+            exit 1
+          fi
           if [[ "${{ needs.lint.result }}" != "success" ]]; then
             echo "Lint job failed"
+            exit 1
+          fi
+          if [[ "${{ needs.test.result }}" == "skipped" ]]; then
+            echo "Test job was skipped - this should not happen on master/PR"
             exit 1
           fi
           if [[ "${{ needs.test.result }}" != "success" ]]; then
@@ -183,3 +260,7 @@ jobs:
           fi
           # Security is informational, doesn't fail CI
           echo "All required jobs passed!"
+      - name: Pass through for non-master branches
+        if: github.event_name != 'pull_request' && github.ref != 'refs/heads/master'
+        run: |
+          echo "Skipping CI checks for non-master branch (staging build will proceed)"
