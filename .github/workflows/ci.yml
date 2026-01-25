@@ -51,14 +51,11 @@ jobs:
         if: steps.cached-venv.outputs.cache-hit != 'true'
         run: poetry install --only dev --no-interaction
 
-      - name: Run Black formatter check
-        run: poetry run black --check .
+      - name: Run Ruff linter
+        run: poetry run ruff check .
 
-      - name: Run isort import check
-        run: poetry run isort --check-only .
-
-      - name: Run Flake8 linter
-        run: poetry run flake8 .
+      - name: Run Ruff formatter check
+        run: poetry run ruff format --check .
 
   test:
     name: Test
@@ -162,10 +159,10 @@ jobs:
         run: poetry install --no-interaction
 
       - name: Run Bandit security linter
-        run: poetry run bandit -r . --skip B101 -f json -o bandit-report.json || true
+        run: poetry run bandit -r src --skip B101 -f json -o bandit-report.json || true
 
       - name: Display Bandit results
-        run: poetry run bandit -r . --skip B101 -f txt || true
+        run: poetry run bandit -r src --skip B101 -f txt || true
 
   # Final status check for branch protection
   ci-success:

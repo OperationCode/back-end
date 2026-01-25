@@ -1,2 +1,2 @@
 [bandit]
-exclude: ./src/tests/*
+exclude=src/tests/*,.venv,__pycache__,*.pyc,migrations/*
