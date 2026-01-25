@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 from dj_rest_auth.registration.serializers import (
     RegisterSerializer as BaseRegisterSerializer,
 )
@@ -7,6 +6,7 @@ from dj_rest_auth.serializers import (
     PasswordResetConfirmSerializer as BasePasswordResetConfirmSerializer,
 )
 from dj_rest_auth.serializers import UserDetailsSerializer as BaseUserDetailsSerializer
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from core.models import Profile
@@ -78,9 +78,12 @@ class RegisterSerializer(BaseRegisterSerializer):
             data["username"] = data.get("email", "")
         # Check for duplicate email - this prevents hitting DB unique constraint
         from django.contrib.auth import get_user_model
+
         User = get_user_model()
         if User.objects.filter(email=data.get("email")).exists():
-            raise serializers.ValidationError({"email": ["A user with that email already exists."]})
+            raise serializers.ValidationError(
+                {"email": ["A user with that email already exists."]}
+            )
         return data
 
 

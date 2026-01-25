@@ -1,6 +1,7 @@
 """
 Custom password hashers with tuned parameters for web authentication.
 """
+
 from django.contrib.auth.hashers import Argon2PasswordHasher
 
 
@@ -21,6 +22,7 @@ class TunedArgon2PasswordHasher(Argon2PasswordHasher):
     - OWASP Password Storage Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
     - Django default uses 100 MB which is optimized for maximum security but too slow for web
     """
+
     time_cost = 2
     memory_cost = 19456  # 19 MB (OWASP minimum recommendation)
-    parallelism = 1      # Single-threaded for web servers
+    parallelism = 1  # Single-threaded for web servers

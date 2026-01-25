@@ -1,4 +1,3 @@
-from settings.components import BASE_DIR
 from settings.components.base import INSTALLED_APPS
 from settings.components.rest import REST_FRAMEWORK
 

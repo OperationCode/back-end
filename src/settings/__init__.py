@@ -5,6 +5,7 @@ https://github.com/sobolevn/django-split-settings
 To change settings file:
 `DJANGO_ENV=production python manage.py runserver`
 """
+
 from os import environ
 
 from split_settings.tools import include, optional

@@ -1,6 +1,7 @@
 """
 Configs for the temporary frontend app
 """
+
 from settings.components import config
 
 RECAPTCHA_PUBLIC_KEY = config("RECAPTCHA_PUBLIC_KEY", default="")

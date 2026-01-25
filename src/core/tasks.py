@@ -5,7 +5,6 @@ from django.conf import settings
 from django.contrib.auth.models import User as AuthUser
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
-from django_q.tasks import async_task
 from mailchimp3 import MailChimp
 
 logger = logging.getLogger(__name__)

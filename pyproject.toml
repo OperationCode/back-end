@@ -51,6 +51,8 @@ pytest-django = "^4.8"                      # Keep
 pytest-env = "^1.1"                         # Keep
 pytest-mock = "^3.14"                       # Keep
 responses = "^0.25"                         # Keep
+ruff = "^0.14.14"
+pytest-cov = "^7.0.0"
 
 [tool.isort]
 line_length = 88
@@ -58,6 +60,22 @@ multi_line_output = 3
 include_trailing_comma = true
 force_grid_wrap = 0
 use_parentheses = true
+
+[tool.ruff]
+line-length = 88
+exclude = [
+    "*/migrations/*",
+    ".venv",
+    "__pycache__",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]  # Line too long (handled by formatter)
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
 
 [build-system]
 requires = ["poetry>=2.3.0"]
