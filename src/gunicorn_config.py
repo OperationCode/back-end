@@ -69,6 +69,7 @@ worker_class = "gthread"
 worker_connections = 1000
 timeout = 30
 keepalive = 2
+worker_tmp_dir = "/dev/shm"
 
 #   preload_app - Load application code before forking worker processes.
 #       This conserves memory and speeds up server boot times by loading

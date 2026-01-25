@@ -1,93 +1,142 @@
 # syntax=docker/dockerfile:1
 
-# =============================================================================
-# Builder stage: compile dependencies
-# =============================================================================
-FROM python:3.12-alpine AS builder
+# ============================================================================
+# Build stage: Install dependencies using Poetry
+# ============================================================================
+FROM python:3.12-slim AS builder
 
-# Install build dependencies for compiling Python packages
-RUN apk add --no-cache \
-    gcc \
-    musl-dev \
-    libffi-dev \
-    postgresql-dev \
-    python3-dev \
-    zlib-dev \
-    jpeg-dev
+# Install build dependencies required for compiling Python packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install poetry system-wide (not in venv, so it won't be copied to production)
-RUN pip install --no-cache-dir poetry
+# Install Poetry
+ENV POETRY_VERSION=2.3.0 \
+    POETRY_HOME="/opt/poetry" \
+    POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_IN_PROJECT=1 \
+    POETRY_VIRTUALENVS_CREATE=1 \
+    POETRY_CACHE_DIR=/tmp/poetry_cache
 
-# Create clean venv with upgraded pip (--upgrade-deps handles CVE-2025-8869)
-RUN python -m venv /venv --upgrade-deps
-
-WORKDIR /build
-COPY pyproject.toml poetry.lock ./
-
-# Tell poetry to use our venv instead of creating its own
-ENV VIRTUAL_ENV=/venv \
-    PATH="/venv/bin:$PATH"
-
-# Install production dependencies only
-RUN poetry install --only=main --no-interaction --no-cache
-
-# =============================================================================
-# Test builder: add dev dependencies
-# =============================================================================
-FROM builder AS test-builder
-
-RUN poetry install --no-interaction --no-cache
-
-# =============================================================================
-# Runtime base: minimal image shared by test and production
-# =============================================================================
-FROM python:3.12-alpine AS runtime-base
-
-# Install only runtime dependencies (no build tools, no poetry)
-# Upgrade system pip to fix CVE-2025-8869 (even though app uses venv pip)
-RUN apk upgrade --no-cache && \
-    apk add --no-cache libpq libjpeg-turbo && \
-    pip install --no-cache-dir --upgrade pip
-
-ENV PYTHONUNBUFFERED=1 \
-    PATH="/venv/bin:$PATH"
+RUN curl -sSL https://install.python-poetry.org | python3 - && \
+    ln -s /opt/poetry/bin/poetry /usr/local/bin/poetry
 
 WORKDIR /app
 
-# =============================================================================
-# Test stage
-# =============================================================================
-FROM runtime-base AS test
+# Copy dependency files first for better layer caching
+COPY pyproject.toml poetry.lock ./
 
-COPY --from=test-builder /venv /venv
-COPY src ./src
-COPY .dev ./src/.dev
-COPY pytest.ini ./
+# Install dependencies into a virtual environment
+# Using --mount=type=cache speeds up rebuilds significantly
+RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
+    poetry install --only=main --no-interaction --no-ansi --no-root
 
+# ============================================================================
+# Development builder: Install all dependencies including dev tools
+# ============================================================================
+FROM builder AS builder-dev
+
+# Install all dependencies including dev (debug_toolbar, pytest, etc.)
+RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
+    poetry install --no-interaction --no-ansi --no-root
+
+# ============================================================================
+# Development stage: Full development environment with dev tools
+# ============================================================================
+FROM python:3.12-slim AS development
+
+LABEL org.opencontainers.image.source="https://github.com/operationcode/back-end"
+LABEL org.opencontainers.image.description="Operation Code Backend - Development"
+LABEL org.opencontainers.image.licenses="MIT"
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create non-root user for security
+RUN groupadd -r appuser && \
+    useradd -r -g appuser -u 1000 -m -d /app appuser
+
+# Set environment variables for Python optimization
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app/src \
+    PATH="/app/.venv/bin:$PATH" \
+    VIRTUAL_ENV=/app/.venv
+
+WORKDIR /app
+
+# Copy virtual environment with dev dependencies from builder-dev stage
+COPY --from=builder-dev --chown=appuser:appuser /app/.venv /app/.venv
+
+# Copy application code
+COPY --chown=appuser:appuser ./src ./src
+
+# Set working directory to src for running the application
 WORKDIR /app/src
 
-ENV DJANGO_ENV=testing \
-    ENVIRONMENT=TEST
+# Switch to non-root user
+USER appuser
 
-CMD ["pytest", "-v"]
-
-# =============================================================================
-# Production stage
-# =============================================================================
-FROM runtime-base AS production
-
-COPY --from=builder /venv /venv
-COPY src ./src
-
-# Pre-compile Python bytecode for faster cold starts
-RUN python -m compileall -q ./src/
-
-WORKDIR /app/src
-
-ENV DJANGO_ENV=production \
-    DB_ENGINE=django.db.backends.postgresql
-
+# Expose port for Django dev server
 EXPOSE 8000
 
+# Run Django development server (will be overridden by docker-compose)
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+# ============================================================================
+# Production/Runtime stage: Minimal production image (DEFAULT)
+# ============================================================================
+FROM python:3.12-slim AS runtime
+
+LABEL org.opencontainers.image.source="https://github.com/operationcode/back-end"
+LABEL org.opencontainers.image.description="Operation Code Backend - Django API"
+LABEL org.opencontainers.image.licenses="MIT"
+
+# Install only runtime dependencies (no build tools)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create non-root user for security
+RUN groupadd -r appuser && \
+    useradd -r -g appuser -u 1000 -m -d /app appuser
+
+# Set environment variables for Python optimization
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app/src \
+    PATH="/app/.venv/bin:$PATH" \
+    VIRTUAL_ENV=/app/.venv
+
+WORKDIR /app
+
+# Copy virtual environment from builder stage (production deps only)
+COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
+
+# Copy application code
+COPY --chown=appuser:appuser ./src ./src
+
+# Pre-compile Python bytecode for faster startup
+RUN python -m compileall -q ./src/
+
+# Set working directory to src for running the application
+WORKDIR /app/src
+
+# Switch to non-root user
+USER appuser
+
+# Expose port for Gunicorn
+EXPOSE 8000
+
+# Health check endpoint
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/healthz || exit 1
+
 # Run background task processor and gunicorn
-CMD ["sh", "-c", "python manage.py qcluster & gunicorn operationcode_backend.wsgi -c /app/src/gunicorn_config.py"]
+CMD ["sh", "-c", "python manage.py qcluster & gunicorn operationcode_backend.wsgi -c gunicorn_config.py"]
