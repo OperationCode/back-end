@@ -203,7 +203,11 @@ jobs:
           echo "event=${{ github.event_name }}"
           echo "head=${{ github.event.pull_request.head.repo.full_name }}"
           token_json=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com")
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" || true)
+          if [ -z "$token_json" ]; then
+            echo "OIDC token missing"
+            exit 0
+          fi
           python - <<'PY'
           import base64,json,sys
           token_json = sys.stdin.read()
