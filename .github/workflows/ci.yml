@@ -195,6 +195,30 @@ jobs:
             echo "push=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Debug OIDC claims
+        if: steps.can-push.outputs.push == 'true'
+        run: |
+          echo "repo=${{ github.repository }}"
+          echo "ref=${{ github.ref }}"
+          echo "event=${{ github.event_name }}"
+          echo "head=${{ github.event.pull_request.head.repo.full_name }}"
+          token_json=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com")
+          python - <<'PY'
+import base64,json,sys
+token_json = sys.stdin.read()
+token = json.loads(token_json).get("value","")
+if not token:
+    print("OIDC token missing")
+    sys.exit(0)
+payload = token.split(".")[1]
+payload += "=" * ((4 - len(payload) % 4) % 4)
+data = json.loads(base64.urlsafe_b64decode(payload))
+print(f"oidc.aud={data.get('aud')}")
+print(f"oidc.sub={data.get('sub')}")
+PY
+          <<<"$token_json"
+
       - name: Determine Docker tag
         id: docker-tag
         run: |
