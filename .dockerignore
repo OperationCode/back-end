@@ -1,33 +1,56 @@
-*.env
-git/
+# Git
+.git
+.github
+.gitignore
 
-build
-dist
+# Python
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
 *.egg-info
-*.egg/
-*.swp
-
+dist
+build
+.pytest_cache
+.coverage
+htmlcov
 .tox
-.coverage
-html/*
-**/__pycache__
-**/*.pyc
+.mypy_cache
+.ruff_cache
 
-# Development files - should not be in production
-.dev/
-src/.dev/
-src/.dev
-**/.dev/
-**/.dev
-*.sqlite3
-*.db
-db.sqlite3
-src/db.sqlite3
-**/db.sqlite3
+# Environment files
+.env
+.env.*
+!.env.example
 
-# Test artifacts
-.pytest_cache/
-src/.pytest_cache/
-**/.pytest_cache/
-.coverage
-htmlcov/
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# Testing
+tests/
+*.test
+
+# macOS
+.DS_Store
+
+# Temporary files
+tmp/
+temp/
+*.tmp

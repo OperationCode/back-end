@@ -6,11 +6,13 @@
 FROM python:3.12-slim AS builder
 
 # Install build dependencies required for compiling Python packages
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    rm -f /etc/apt/apt.conf.d/docker-clean && \
+    apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+    curl
 
 # Install Poetry
 ENV POETRY_VERSION=2.3.0 \
@@ -20,7 +22,8 @@ ENV POETRY_VERSION=2.3.0 \
     POETRY_VIRTUALENVS_CREATE=1 \
     POETRY_CACHE_DIR=/tmp/poetry_cache
 
-RUN curl -sSL https://install.python-poetry.org | python3 - && \
+RUN --mount=type=cache,target=/root/.cache \
+    curl -sSL https://install.python-poetry.org | python3 - && \
     ln -s /opt/poetry/bin/poetry /usr/local/bin/poetry
 
 WORKDIR /app
@@ -52,13 +55,14 @@ LABEL org.opencontainers.image.description="Operation Code Backend - Development
 LABEL org.opencontainers.image.licenses="MIT"
 
 # Install runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    rm -f /etc/apt/apt.conf.d/docker-clean && \
+    apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     curl \
     wget \
-    && apt-get upgrade -y \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+    && apt-get upgrade -y
 
 # Create non-root user for security
 RUN groupadd -r appuser && \
@@ -100,13 +104,14 @@ LABEL org.opencontainers.image.description="Operation Code Backend - Django API"
 LABEL org.opencontainers.image.licenses="MIT"
 
 # Install only runtime dependencies (no build tools)
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    rm -f /etc/apt/apt.conf.d/docker-clean && \
+    apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     curl \
     wget \
-    && apt-get upgrade -y \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+    && apt-get upgrade -y
 
 # Create non-root user for security
 RUN groupadd -r appuser && \

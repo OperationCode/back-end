@@ -39,18 +39,18 @@ After adding the secret, the workflow will automatically:
 - Authenticate to AWS using OIDC (no credentials stored)
 - Build Docker images for ARM64 platform
 - Push to ECR with appropriate tags:
-  - `:staging` for non-master branches
-  - `:prod` for master branch (after CI passes)
+  - `:staging` for non-main branches
+  - `:prod` for main branch (after CI passes)
 
 ## Testing
 
 To test the setup:
 
-1. **Test staging build**: Push to any branch except `master`
+1. **Test staging build**: Push to any branch except `main`
    - Should trigger Docker build and push to `:staging` tag
    - Check ECR repository to verify image was pushed
 
-2. **Test production build**: Merge to `master` branch
+2. **Test production build**: Merge to `main` branch
    - Should run lint, test, security checks first
    - If all pass, should build and push to `:prod` tag
    - Check ECR repository to verify image was pushed
