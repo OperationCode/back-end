@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: ['**']  # Trigger on push to any branch for Docker builds
+    branches: [master]
   pull_request:
     branches: [master]
 
@@ -173,9 +173,9 @@ jobs:
   docker-build-push:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
-    # Run on push events only (not pull_request)
-    if: github.event_name == 'push'
-    # For master branch, wait for CI checks to pass; for other branches, ci-success will pass immediately
+    # Run on push to master (build+push) and on PRs (build only)
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    # For master/PR, wait for CI checks to pass
     needs: [ci-success]
     permissions:
       id-token: write  # Required for OIDC authentication
@@ -184,17 +184,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Determine push eligibility
+        id: can-push
+        run: |
+          if [ "${{ github.event_name }}" == "push" ]; then
+            echo "push=true" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event.pull_request.head.repo.full_name }}" == "${{ github.repository }}" ]; then
+            echo "push=true" >> $GITHUB_OUTPUT
+          else
+            echo "push=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Determine Docker tag
         id: docker-tag
         run: |
           if [ "${{ github.ref }}" == "refs/heads/master" ]; then
-            echo "tag=prod" >> $GITHUB_OUTPUT
+            echo "image=633607774026.dkr.ecr.us-east-2.amazonaws.com/back-end:prod" >> $GITHUB_OUTPUT
             echo "environment=Production" >> $GITHUB_OUTPUT
           else
-            echo "tag=staging" >> $GITHUB_OUTPUT
+            echo "image=633607774026.dkr.ecr.us-east-2.amazonaws.com/back-end:staging" >> $GITHUB_OUTPUT
             echo "environment=Staging" >> $GITHUB_OUTPUT
           fi
-          echo "Building for ${{ steps.docker-tag.outputs.environment }} with tag: ${{ steps.docker-tag.outputs.tag }}"
+          echo "Building for ${{ steps.docker-tag.outputs.environment }} with image: ${{ steps.docker-tag.outputs.image }}"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -202,6 +213,7 @@ jobs:
           platforms: linux/arm64
 
       - name: Configure AWS credentials
+        if: steps.can-push.outputs.push == 'true'
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
@@ -210,6 +222,7 @@ jobs:
 
       - name: Login to Amazon ECR
         id: login-ecr
+        if: steps.can-push.outputs.push == 'true'
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build and push Docker image
@@ -218,17 +231,18 @@ jobs:
           context: .
           target: runtime
           platforms: linux/arm64
-          push: true
+          push: ${{ steps.can-push.outputs.push == 'true' }}
           tags: |
-            633607774026.dkr.ecr.us-east-2.amazonaws.com/back-end:${{ steps.docker-tag.outputs.tag }}
+            ${{ steps.docker-tag.outputs.image }}
           provenance: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Output image URI
+        if: steps.can-push.outputs.push == 'true'
         run: |
           echo "Successfully pushed ${{ steps.docker-tag.outputs.environment }} image:"
-          echo "633607774026.dkr.ecr.us-east-2.amazonaws.com/back-end:${{ steps.docker-tag.outputs.tag }}"
+          echo "${{ steps.docker-tag.outputs.image }}"
 
   # Final status check for branch protection
   ci-success:
