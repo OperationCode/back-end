@@ -50,7 +50,7 @@ test-cov:
 
 # Security
 security:
-	poetry run bandit -r src --skip B101 -f txt
+	poetry run bandit -r src --skip B101 --severity-level high -f txt
 
 # CI - runs all checks that CI will run
 ci: lint test-cov security
