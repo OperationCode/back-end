@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main]
 
 env:
   POETRY_VERSION: "2.3.0"
@@ -14,8 +14,8 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
-    # Only run on master branch pushes and PRs to master
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
+    # Only run on main branch pushes and PRs to main
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -62,8 +62,8 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    # Only run on master branch pushes and PRs to master
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
+    # Only run on main branch pushes and PRs to main
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -125,8 +125,8 @@ jobs:
   security:
     name: Security Scan
     runs-on: ubuntu-latest
-    # Only run on master branch pushes and PRs to master
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
+    # Only run on main branch pushes and PRs to main
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -173,9 +173,9 @@ jobs:
   docker-build-push:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
-    # Run on push to master (build+push) and on PRs (build only)
+    # Run on push to main (build+push) and on PRs (build only)
     if: github.event_name == 'push' || github.event_name == 'pull_request'
-    # For master/PR, wait for CI checks to pass
+    # For main/PR, wait for CI checks to pass
     needs: [ci-success]
     permissions:
       id-token: write  # Required for OIDC authentication
@@ -232,7 +232,7 @@ jobs:
       - name: Determine Docker tag
         id: docker-tag
         run: |
-          if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
             echo "image=633607774026.dkr.ecr.us-east-2.amazonaws.com/back-end:prod" >> $GITHUB_OUTPUT
             echo "environment=Production" >> $GITHUB_OUTPUT
           else
@@ -286,12 +286,12 @@ jobs:
     # Always run to satisfy docker-build-push dependency
     if: always()
     steps:
-      - name: Check all jobs passed (master/PR only)
-        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
+      - name: Check all jobs passed (main/PR only)
+        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
         run: |
-          # Check if jobs were skipped (non-master) or failed
+          # Check if jobs were skipped (non-main) or failed
           if [[ "${{ needs.lint.result }}" == "skipped" ]]; then
-            echo "Lint job was skipped - this should not happen on master/PR"
+            echo "Lint job was skipped - this should not happen on main/PR"
             exit 1
           fi
           if [[ "${{ needs.lint.result }}" != "success" ]]; then
@@ -299,7 +299,7 @@ jobs:
             exit 1
           fi
           if [[ "${{ needs.test.result }}" == "skipped" ]]; then
-            echo "Test job was skipped - this should not happen on master/PR"
+            echo "Test job was skipped - this should not happen on main/PR"
             exit 1
           fi
           if [[ "${{ needs.test.result }}" != "success" ]]; then
@@ -308,7 +308,7 @@ jobs:
           fi
           # Security is informational, doesn't fail CI
           echo "All required jobs passed!"
-      - name: Pass through for non-master branches
-        if: github.event_name != 'pull_request' && github.ref != 'refs/heads/master'
+      - name: Pass through for non-main branches
+        if: github.event_name != 'pull_request' && github.ref != 'refs/heads/main'
         run: |
-          echo "Skipping CI checks for non-master branch (staging build will proceed)"
+          echo "Skipping CI checks for non-main branch (staging build will proceed)"

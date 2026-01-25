@@ -8,8 +8,8 @@ The backend is deployed to AWS ECS (Elastic Container Service) with separate sta
 
 Docker images are automatically built and pushed to AWS ECR via GitHub Actions:
 
-- **PR branches** (any branch except `master`): Automatically builds and pushes to `:staging` tag
-- **Master branch**: Automatically builds and pushes to `:prod` tag after CI checks pass
+- **PR branches** (any branch except `main`): Automatically builds and pushes to `:staging` tag
+- **main branch**: Automatically builds and pushes to `:prod` tag after CI checks pass
 
 The automated builds use AWS OIDC for secure authentication (no long-lived credentials).
 
@@ -208,8 +208,8 @@ After setup, the GitHub Actions workflow will automatically:
 - Push images to ECR with appropriate tags (`:staging` or `:prod`)
 
 You can verify by:
-1. Pushing a commit to a non-master branch (should push `:staging`)
-2. Merging to master (should push `:prod` after tests pass)
+1. Pushing a commit to a non-main branch (should push `:staging`)
+2. Merging to main (should push `:prod` after tests pass)
 3. Checking ECR repository for new images
 
 ## Security Best Practices

@@ -172,7 +172,7 @@ High level overview of upcoming Operation Code goals.  This is the source of upc
 
 ## Working On Your Issue
 
-* Please first **read** Operation Code's [guidelines for working an issue](https://github.com/OperationCode/operationcode/blob/master/CONTRIBUTING.md#guidelines-for-working-an-issue)
+* Please first **read** Operation Code's [guidelines for working an issue](https://github.com/OperationCode/operationcode/blob/main/CONTRIBUTING.md#guidelines-for-working-an-issue)
 
 * From the forked and cloned repository on your environment, you can now create a [feature branch](http://nvie.com/posts/a-successful-git-branching-model/). It is a good idea to name your branch after the issue it is attached to.
 
@@ -188,10 +188,10 @@ git branch
 
 * Once you have finished your work, head over to **Operation Code**'s main GitHub page, and make a pull request. More information about pull requests can be found in the next section.
 
-* To return to your main `master` branch, type the following in the terminal:
+* To return to your main `main` branch, type the following in the terminal:
 
 ```bash
-git checkout master
+git checkout main
 ```
 
 </details>
@@ -202,10 +202,10 @@ git checkout master
   <summary>Click to Expand</summary>
 Some issues take awhile to code a solution for. It is very normal to take a large amount of time to turn in 
 well-written work that resolves an issue! In the meantime, there could be many other people contributing to the 
-code base. Since we use Git, you'll want to keep you project up-to-date with the `master` branch so there are no 
+code base. Since we use Git, you'll want to keep you project up-to-date with the `main` branch so there are no 
 [merge conflicts](https://help.github.com/articles/about-merge-conflicts/) to resolve when you make your pull request.
 <ol>
-  <li> <a href="https://help.github.com/articles/syncing-a-fork/">Keep your fork in sync with Operation Code's master branch.</a></li>
+  <li> <a href="https://help.github.com/articles/syncing-a-fork/">Keep your fork in sync with Operation Code's main branch.</a></li>
 </ol>
 </details>
 
@@ -291,7 +291,7 @@ Download and install Git for Windows from https://git-scm.com/download/win
 
 Download the latest version of python at https://www.python.org/downloads/, (3.7.3 at time of writing)
 
-Follow the steps found in the [Quick Start Guide](https://github.com/OperationCode/back-end/blob/master/README.md#quick-start)
+Follow the steps found in the [Quick Start Guide](https://github.com/OperationCode/back-end/blob/main/README.md#quick-start)
 
 Occasionally you will deal with path issues this is fixed within windows by adding the appropriate key value pair to the path.
 
