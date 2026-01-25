@@ -1,7 +1,7 @@
-from django.urls import include, path
-from django.views.generic import TemplateView
 from dj_rest_auth.registration.views import VerifyEmailView
 from dj_rest_auth.views import PasswordChangeView, PasswordResetConfirmView
+from django.urls import include, path
+from django.views.generic import TemplateView
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 
 from . import views
@@ -13,6 +13,7 @@ class DummyPasswordResetConfirmView(TemplateView):
     is handled by the PasswordResetConfirmView via POST.
     This pattern exists to satisfy Django's reverse() call in password reset emails.
     """
+
     template_name = ""
 
 

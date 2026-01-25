@@ -61,7 +61,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.allauth.org/en/latest/account/configuration.html
 ACCOUNT_LOGIN_METHODS = {"email"}  # Replaces ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_SIGNUP_FIELDS = [
-    "email*",      # Required (replaces ACCOUNT_EMAIL_REQUIRED = True)
+    "email*",  # Required (replaces ACCOUNT_EMAIL_REQUIRED = True)
     "password1*",
     "password2*",
     # Note: username not included (replaces ACCOUNT_USERNAME_REQUIRED = False)
@@ -88,7 +88,7 @@ REST_AUTH = {
 # Development default: Use a simple string since HS256 needs symmetric key
 jwt_secret_key = config(
     "JWT_SECRET_KEY",
-    default="dev-secret-key-change-in-production-to-something-secure-and-random"
+    default="dev-secret-key-change-in-production-to-something-secure-and-random",
 )
 
 # Simple JWT settings (replaces djangorestframework-jwt)

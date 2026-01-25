@@ -38,4 +38,3 @@ STATICFILES_LOCATION = "static"
 MEDIAFILES_LOCATION = "media"
 STATICFILES_STORAGE = "custom_storages.StaticStorage"
 DEFAULT_FILE_STORAGE = "custom_storages.MediaStorage"
-

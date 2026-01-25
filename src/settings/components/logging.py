@@ -42,7 +42,10 @@ def traces_sampler(sampling_context):
     # Sample health check endpoints at 1% (to catch errors but reduce noise)
     if request_path in ["/healthz", "/health", "/readiness", "/liveness"]:
         return 0.01
-    if any(health in transaction_name for health in ["/healthz", "/health", "/readiness", "/liveness"]):
+    if any(
+        health in transaction_name
+        for health in ["/healthz", "/health", "/readiness", "/liveness"]
+    ):
         return 0.01
 
     # Use the configured sample rate for everything else
@@ -63,6 +66,7 @@ def before_send_transaction(event, hint):  # noqa: ARG001
         return None
 
     return event
+
 
 # Sentry.io error tracking
 # https://docs.sentry.io/platforms/python/django/
@@ -87,7 +91,11 @@ if SENTRY_DSN:  # pragma: no cover
         before_send_transaction=before_send_transaction,
         # Set profiles_sample_rate to 1.0 to profile 100% of sampled transactions.
         # We recommend adjusting this value in production.
-        profiles_sample_rate=config("SENTRY_PROFILES_SAMPLE_RATE", default=1.0, cast=float),
+        profiles_sample_rate=config(
+            "SENTRY_PROFILES_SAMPLE_RATE", default=1.0, cast=float
+        ),
         # Send default PII like user IP and user ID to Sentry
-        send_default_pii=config("SENTRY_SEND_DEFAULT_PII", default=True, cast=strtobool),
+        send_default_pii=config(
+            "SENTRY_SEND_DEFAULT_PII", default=True, cast=strtobool
+        ),
     )

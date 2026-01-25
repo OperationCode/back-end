@@ -1,0 +1,314 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  POETRY_VERSION: "2.3.0"
+  POETRY_VIRTUALENVS_IN_PROJECT: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    # Only run on master branch pushes and PRs to master
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Load cached Poetry installation
+        id: cached-poetry
+        uses: actions/cache@v4
+        with:
+          path: ~/.local
+          key: poetry-${{ env.POETRY_VERSION }}-${{ runner.os }}
+
+      - name: Install Poetry
+        if: steps.cached-poetry.outputs.cache-hit != 'true'
+        uses: snok/install-poetry@v1
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-venv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-lint-${{ runner.os }}-py3.12-${{ hashFiles('poetry.lock') }}
+          restore-keys: |
+            venv-lint-${{ runner.os }}-py3.12-
+
+      - name: Install dependencies
+        if: steps.cached-venv.outputs.cache-hit != 'true'
+        run: poetry install --only dev --no-interaction
+
+      - name: Run Ruff linter
+        run: poetry run ruff check .
+
+      - name: Run Ruff formatter check
+        run: poetry run ruff format --check .
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    # Only run on master branch pushes and PRs to master
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Load cached Poetry installation
+        id: cached-poetry
+        uses: actions/cache@v4
+        with:
+          path: ~/.local
+          key: poetry-${{ env.POETRY_VERSION }}-${{ runner.os }}
+
+      - name: Install Poetry
+        if: steps.cached-poetry.outputs.cache-hit != 'true'
+        uses: snok/install-poetry@v1
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-venv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-test-${{ runner.os }}-py3.12-${{ hashFiles('poetry.lock') }}
+          restore-keys: |
+            venv-test-${{ runner.os }}-py3.12-
+
+      - name: Install dependencies
+        if: steps.cached-venv.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction
+
+      - name: Run tests with coverage
+        working-directory: src
+        run: |
+          poetry run pytest \
+            --cov=. \
+            --cov-report=xml \
+            --cov-report=term-missing \
+            -v \
+            --tb=short
+        env:
+          DJANGO_ENV: testing
+          ENVIRONMENT: TEST
+          SECRET_KEY: test-secret-key-for-ci
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./src/coverage.xml
+          fail_ci_if_error: false
+          verbose: true
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    # Only run on master branch pushes and PRs to master
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Load cached Poetry installation
+        id: cached-poetry
+        uses: actions/cache@v4
+        with:
+          path: ~/.local
+          key: poetry-${{ env.POETRY_VERSION }}-${{ runner.os }}
+
+      - name: Install Poetry
+        if: steps.cached-poetry.outputs.cache-hit != 'true'
+        uses: snok/install-poetry@v1
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-venv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-security-${{ runner.os }}-py3.12-${{ hashFiles('poetry.lock') }}
+          restore-keys: |
+            venv-security-${{ runner.os }}-py3.12-
+
+      - name: Install dependencies
+        if: steps.cached-venv.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction
+
+      - name: Run Bandit security linter
+        run: poetry run bandit -r src --skip B101 --severity-level high -f json -o bandit-report.json || true
+
+      - name: Display Bandit results
+        run: poetry run bandit -r src --skip B101 --severity-level high -f txt || true
+
+  docker-build-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    # Run on push to master (build+push) and on PRs (build only)
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    # For master/PR, wait for CI checks to pass
+    needs: [ci-success]
+    permissions:
+      id-token: write  # Required for OIDC authentication
+      contents: read   # Required to checkout code
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Determine push eligibility
+        id: can-push
+        run: |
+          if [ "${{ github.event_name }}" == "push" ]; then
+            echo "push=true" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event.pull_request.head.repo.full_name }}" == "${{ github.repository }}" ]; then
+            echo "push=true" >> $GITHUB_OUTPUT
+          else
+            echo "push=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Debug OIDC claims
+        if: steps.can-push.outputs.push == 'true'
+        run: |
+          echo "repo=${{ github.repository }}"
+          echo "ref=${{ github.ref }}"
+          echo "event=${{ github.event_name }}"
+          echo "head=${{ github.event.pull_request.head.repo.full_name }}"
+          if [ -z "$ACTIONS_ID_TOKEN_REQUEST_URL" ] || [ -z "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ]; then
+            echo "OIDC env missing"
+            exit 0
+          fi
+          token_json=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" || true)
+          if [ -z "$token_json" ] || [ "$token_json" = "null" ]; then
+            echo "OIDC token missing"
+            exit 0
+          fi
+          OIDC_TOKEN_JSON="$token_json" python - <<'PY'
+          import base64,json,os,sys
+          token_json = os.environ.get("OIDC_TOKEN_JSON","")
+          if not token_json:
+              print("OIDC token missing")
+              sys.exit(0)
+          token = json.loads(token_json).get("value","")
+          if not token:
+              print("OIDC token missing")
+              sys.exit(0)
+          payload = token.split(".")[1]
+          payload += "=" * ((4 - len(payload) % 4) % 4)
+          data = json.loads(base64.urlsafe_b64decode(payload))
+          print(f"oidc.aud={data.get('aud')}")
+          print(f"oidc.sub={data.get('sub')}")
+          PY
+
+      - name: Determine Docker tag
+        id: docker-tag
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+            echo "image=633607774026.dkr.ecr.us-east-2.amazonaws.com/back-end:prod" >> $GITHUB_OUTPUT
+            echo "environment=Production" >> $GITHUB_OUTPUT
+          else
+            echo "image=633607774026.dkr.ecr.us-east-2.amazonaws.com/back-end:staging" >> $GITHUB_OUTPUT
+            echo "environment=Staging" >> $GITHUB_OUTPUT
+          fi
+          echo "Building for ${{ steps.docker-tag.outputs.environment }} with image: ${{ steps.docker-tag.outputs.image }}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          platforms: linux/arm64
+
+      - name: Configure AWS credentials
+        if: steps.can-push.outputs.push == 'true'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: GitHubActions-DockerBuild-${{ steps.docker-tag.outputs.environment }}
+          aws-region: us-east-2
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        if: steps.can-push.outputs.push == 'true'
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: runtime
+          platforms: linux/arm64
+          push: ${{ steps.can-push.outputs.push == 'true' }}
+          tags: |
+            ${{ steps.docker-tag.outputs.image }}
+          provenance: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Output image URI
+        if: steps.can-push.outputs.push == 'true'
+        run: |
+          echo "Successfully pushed ${{ steps.docker-tag.outputs.environment }} image:"
+          echo "${{ steps.docker-tag.outputs.image }}"
+
+  # Final status check for branch protection
+  ci-success:
+    name: CI Success
+    needs: [lint, test, security]
+    runs-on: ubuntu-latest
+    # Always run to satisfy docker-build-push dependency
+    if: always()
+    steps:
+      - name: Check all jobs passed (master/PR only)
+        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
+        run: |
+          # Check if jobs were skipped (non-master) or failed
+          if [[ "${{ needs.lint.result }}" == "skipped" ]]; then
+            echo "Lint job was skipped - this should not happen on master/PR"
+            exit 1
+          fi
+          if [[ "${{ needs.lint.result }}" != "success" ]]; then
+            echo "Lint job failed"
+            exit 1
+          fi
+          if [[ "${{ needs.test.result }}" == "skipped" ]]; then
+            echo "Test job was skipped - this should not happen on master/PR"
+            exit 1
+          fi
+          if [[ "${{ needs.test.result }}" != "success" ]]; then
+            echo "Test job failed"
+            exit 1
+          fi
+          # Security is informational, doesn't fail CI
+          echo "All required jobs passed!"
+      - name: Pass through for non-master branches
+        if: github.event_name != 'pull_request' && github.ref != 'refs/heads/master'
+        run: |
+          echo "Skipping CI checks for non-master branch (staging build will proceed)"

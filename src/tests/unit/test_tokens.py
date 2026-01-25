@@ -1,4 +1,5 @@
 import pytest
+
 from core.handlers import CustomTokenObtainPairSerializer
 
 from .. import factories as f

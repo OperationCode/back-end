@@ -1,9 +1,9 @@
 import threading
 
+import factory
 from allauth.account.models import EmailAddress
 from django.conf import settings
 from django.db.models.signals import post_save
-import factory
 from factory import (
     LazyAttribute,
     LazyFunction,

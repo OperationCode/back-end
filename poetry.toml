@@ -1,0 +1,22 @@
+# Poetry configuration for consistent development environment across team
+# https://python-poetry.org/docs/configuration/
+
+[virtualenvs]
+# Create .venv in project directory for easier IDE integration and visibility
+in-project = true
+
+# Use Python version from pyproject.toml, not active shell Python
+# Ensures consistency across team members
+prefer-active-python = false
+
+[installer]
+# Enable parallel installation for faster dependency resolution (default in 2.x)
+parallel = true
+
+# Limit concurrent workers to prevent resource exhaustion
+max-workers = 10
+
+[experimental]
+# Use system git client instead of dulwich for better performance
+# Helpful if you have git dependencies
+system-git-client = true

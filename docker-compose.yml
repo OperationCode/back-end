@@ -18,11 +18,11 @@ services:
   backend:
     build:
       context: .
-      target: test
+      target: development
+    env_file:
+      - .env
     environment:
-      - SECRET_KEY=dev-secret-key-not-for-production
-      - DJANGO_ENV=development
-      - DEBUG=True
+      # Override .env database settings to use PostgreSQL container
       - DB_ENGINE=django.db.backends.postgresql
       - DB_NAME=operationcode
       - DB_USER=operationcode
@@ -33,10 +33,10 @@ services:
       - "8000:8000"
     volumes:
       - ./src:/app/src
-      - ./.dev:/app/src/.dev
     depends_on:
       db:
         condition: service_healthy
+    working_dir: /app/src
     command: >
       sh -c "python manage.py migrate &&
              python manage.py runserver 0.0.0.0:8000"

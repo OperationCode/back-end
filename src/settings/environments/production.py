@@ -40,4 +40,3 @@ STATICFILES_STORAGE = "custom_storages.StaticStorage"
 DEFAULT_FILE_STORAGE = "custom_storages.MediaStorage"
 
 EMAIL_BACKEND = "anymail.backends.mandrill.EmailBackend"
-

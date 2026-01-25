@@ -3,7 +3,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Twitter Follow](https://img.shields.io/twitter/follow/operation_code.svg?style=social&label=Follow&style=social)](https://twitter.com/operation_code)
-[![Code-style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
 
 [![CircleCI](https://circleci.com/gh/OperationCode/back-end.svg?style=svg)](https://circleci.com/gh/OperationCode/back-end)
@@ -36,33 +36,77 @@ Recommended versions of tools used within the repo:
 
 ```bash
 # Install dependencies (ensure poetry is already installed)
-# if you are encountering an error with psycopg2 during poetry installation, ensure postgreqsql is installed (macOS: brew install postgresql)
-poetry install
+# If you are encountering an error with psycopg2 during poetry installation,
+# ensure PostgreSQL is installed (macOS: brew install postgresql)
+make install
 
 # Create database
 # By default this creates a local sqlite database and adds tables for each of the defined models
-# see example.env for database configurations
-poetry run python src/manage.py migrate
+# See example.env for database configurations
+make migrate
 
 # Create a superuser to add to the new database
-poetry run python src/manage.py createsuperuser 
+make createsuperuser
 
-# Run local development
-poetry run python src/manage.py runserver
-
-# Run testing suite
-poetry run pytest
-
-# Run formatting and linting
-poetry run black .
-# the next line shouldn't output anything to the terminal if it passes
-poetry run flake8
-poetry run isort .
+# Run local development server
+make runserver
 ```
 
-## Running [Bandit](https://github.com/PyCQA/bandit)
-Bandit is a tool designed to find common security issues in Python code. 
+## Development Workflow
 
-From within the `back-end/` directory you can run the following Bandit command: 
+### Running Tests
+```bash
+# Run all tests
+make test
 
-- `bandit -r .` runs all bandit tests recursively with only filters defined in the `.bandit` file.
+# Run only unit tests
+make test-unit
+
+# Run only integration tests
+make test-integration
+
+# Run tests with coverage report
+make test-cov
+```
+
+### Linting and Formatting
+We use [Ruff](https://github.com/astral-sh/ruff) for both linting and code formatting.
+
+```bash
+# Check linting and formatting (doesn't modify files)
+make lint
+
+# Auto-fix linting issues and format code
+make lint-fix
+
+# Format code only
+make format
+```
+
+### Security Scanning
+[Bandit](https://github.com/PyCQA/bandit) is a tool designed to find common security issues in Python code.
+
+```bash
+# Run security scanner
+make security
+```
+
+### CI Checks
+Run all the same checks that CI will run:
+
+```bash
+# Run all CI checks (linting, tests with coverage, security)
+make ci
+```
+
+### Other Commands
+```bash
+# Open Django shell
+make shell
+
+# Clean up Python cache files and test artifacts
+make clean
+
+# See all available commands
+make help
+```
