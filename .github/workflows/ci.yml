@@ -172,7 +172,7 @@ jobs:
 
   docker-build-push:
     name: Build and Push Docker Image
-    runs-on: ubuntu-24.04-arm64
+    runs-on: ubuntu-24.04-arm
     # Run on push to main (build+push) and on PRs (build only)
     if: github.event_name == 'push' || github.event_name == 'pull_request'
     # For main/PR, wait for CI checks to pass
