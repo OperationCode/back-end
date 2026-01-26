@@ -5,9 +5,10 @@ TESTING = False
 
 # Application definition
 INSTALLED_APPS = [
-    # django-jazzmin Admin Console (replaces django-suit)
-    # https://django-jazzmin.readthedocs.io/
-    "jazzmin",
+    # django-unfold Admin Console
+    # https://docs.unfoldadmin.com/
+    "unfold",
+    "unfold.contrib.filters",
     # Our apps
     "core.apps.CoreConfig",
     # Default Django apps:
@@ -82,23 +83,6 @@ DATABASES = {
         "HOST": config("DB_HOST", default=""),
         "PORT": config("DB_PORT", default=""),
     }
-}
-
-# Django Jazzmin (Admin Console)
-# https://django-jazzmin.readthedocs.io/
-JAZZMIN_SETTINGS = {
-    "site_title": "Operation Code Admin",
-    "site_header": "Operation Code",
-    "site_brand": "Operation Code",
-    "welcome_sign": "Welcome to Operation Code Admin",
-    "copyright": "Operation Code",
-    "show_sidebar": True,
-    "navigation_expanded": True,
-    "order_with_respect_to": [
-        "auth",
-        "core",
-        "django_q",
-    ],
 }
 
 # Django-Q2 configuration (sync mode for testing, use redis/orm in production)

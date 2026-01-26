@@ -25,7 +25,7 @@ For information about the maintainers of the project, check out [MAINTAINERS.md]
 
 ## Quick Start
 Recommended versions of tools used within the repo:
-- `python@3.12` or greater
+- `python@3.14` or greater
 - `git@2.17.1` or greater
 - `poetry@2.3.0` or greater
     - [Poetry](https://python-poetry.org/) is a packaging and dependency manager

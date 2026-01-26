@@ -36,7 +36,15 @@ STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/"
 MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
 STATICFILES_LOCATION = "static"
 MEDIAFILES_LOCATION = "media"
-STATICFILES_STORAGE = "custom_storages.StaticStorage"
-DEFAULT_FILE_STORAGE = "custom_storages.MediaStorage"
+
+# Django 5.1+ STORAGES setting (replaces STATICFILES_STORAGE and DEFAULT_FILE_STORAGE)
+STORAGES = {
+    "default": {
+        "BACKEND": "custom_storages.MediaStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "custom_storages.StaticStorage",
+    },
+}
 
 EMAIL_BACKEND = "anymail.backends.mandrill.EmailBackend"
