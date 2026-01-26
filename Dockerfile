@@ -61,7 +61,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     curl \
-    wget \
     && apt-get upgrade -y
 
 # Create non-root user for security
@@ -110,7 +109,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     curl \
-    wget \
     && apt-get upgrade -y
 
 # Create non-root user for security
@@ -121,7 +119,8 @@ RUN groupadd -r appuser && \
 ENV PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app/src \
     PATH="/app/.venv/bin:$PATH" \
-    VIRTUAL_ENV=/app/.venv
+    VIRTUAL_ENV=/app/.venv \
+    DJANGO_Q_WORKERS=1
 
 WORKDIR /app
 

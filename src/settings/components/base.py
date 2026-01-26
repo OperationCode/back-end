@@ -104,7 +104,7 @@ JAZZMIN_SETTINGS = {
 # Django-Q2 configuration (sync mode for testing, use redis/orm in production)
 Q_CLUSTER = {
     "name": "operationcode",
-    "workers": 2,
+    "workers": config("DJANGO_Q_WORKERS", default=1, cast=int),
     "timeout": 60,
     "retry": 120,
     "queue_limit": 50,
