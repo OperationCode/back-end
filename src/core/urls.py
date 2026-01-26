@@ -14,7 +14,7 @@ class DummyPasswordResetConfirmView(TemplateView):
     This pattern exists to satisfy Django's reverse() call in password reset emails.
     """
 
-    template_name = ""
+    template_name = "registration/password_reset_confirm.html"
 
 
 urlpatterns = [
