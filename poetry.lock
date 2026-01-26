@@ -15,24 +15,18 @@ files = [
 
 [[package]]
 name = "argon2-cffi"
-version = "23.1.0"
+version = "25.1.0"
 description = "Argon2 for Python"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "argon2_cffi-23.1.0-py3-none-any.whl", hash = "sha256:c670642b78ba29641818ab2e68bd4e6a78ba53b7eff7b4c3815ae16abf91c7ea"},
-    {file = "argon2_cffi-23.1.0.tar.gz", hash = "sha256:879c3e79a2729ce768ebb7d36d4609e3a78a4ca2ec3a9f12286ca057e3d0db08"},
+    {file = "argon2_cffi-25.1.0-py3-none-any.whl", hash = "sha256:fdc8b074db390fccb6eb4a3604ae7231f219aa669a2652e0f20e16ba513d5741"},
+    {file = "argon2_cffi-25.1.0.tar.gz", hash = "sha256:694ae5cc8a42f4c4e2bf2ca0e64e51e23a040c6a517a85074683d3959e1346c1"},
 ]
 
 [package.dependencies]
 argon2-cffi-bindings = "*"
-
-[package.extras]
-dev = ["argon2-cffi[tests,typing]", "tox (>4)"]
-docs = ["furo", "myst-parser", "sphinx", "sphinx-copybutton", "sphinx-notfound-page"]
-tests = ["hypothesis", "pytest"]
-typing = ["mypy"]
 
 [[package]]
 name = "argon2-cffi-bindings"
@@ -199,18 +193,18 @@ docs = ["Pillow", "Sphinx (>3)", "sphinx-paramlinks", "sphinx_rtd_theme", "sphin
 
 [[package]]
 name = "boto3"
-version = "1.42.34"
+version = "1.42.35"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "boto3-1.42.34-py3-none-any.whl", hash = "sha256:db3fb539e3f806b911ec4ca991f2f8bff333c5f0b87132a82e28b521fc5ec164"},
-    {file = "boto3-1.42.34.tar.gz", hash = "sha256:75d7443c81a029283442fad138629be1eefaa3e6d430c28118a0f4cdbd57855d"},
+    {file = "boto3-1.42.35-py3-none-any.whl", hash = "sha256:4251bbac90e4a190680439973d9e9ed851e50292c10cd063c8bf0c365410ffe1"},
+    {file = "boto3-1.42.35.tar.gz", hash = "sha256:edbfbfbadd419e65888166dd044786d4b731cf60abeb2301b73e775e154d7c5e"},
 ]
 
 [package.dependencies]
-botocore = ">=1.42.34,<1.43.0"
+botocore = ">=1.42.35,<1.43.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.16.0,<0.17.0"
 
@@ -219,14 +213,14 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.42.34"
+version = "1.42.35"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "botocore-1.42.34-py3-none-any.whl", hash = "sha256:94099b5d09d0c4bfa6414fb3cffd54275ce6e51d7ba016f17a0e79f9274f68f7"},
-    {file = "botocore-1.42.34.tar.gz", hash = "sha256:92e44747da7890270d8dcc494ecc61fc315438440c55e00dc37a57d402b1bb66"},
+    {file = "botocore-1.42.35-py3-none-any.whl", hash = "sha256:b89f527987691abbd1374c4116cc2711471ce48e6da502db17e92b17b2af8d47"},
+    {file = "botocore-1.42.35.tar.gz", hash = "sha256:40a6e0f16afe9e5d42e956f0b6d909869793fadb21780e409063601fc3d094b8"},
 ]
 
 [package.dependencies]
@@ -893,18 +887,18 @@ sftp = ["paramiko (>=1.15)"]
 
 [[package]]
 name = "django-unfold"
-version = "0.49.1"
-description = "Modern Django admin theme for seamless interface development"
+version = "0.77.1"
+description = "Modern Django admin theme"
 optional = false
-python-versions = ">=3.9"
+python-versions = "<4.0,>=3.10"
 groups = ["main"]
 files = [
-    {file = "django_unfold-0.49.1-py3-none-any.whl", hash = "sha256:b555854a7f7838c81947aca4a946370f30659d67cbef5d2c104b5a4623cfb3c9"},
-    {file = "django_unfold-0.49.1.tar.gz", hash = "sha256:1f039f3bb7183d14daa193fab2556061a9818bc7dbd62ecfac59c0a381e07951"},
+    {file = "django_unfold-0.77.1-py3-none-any.whl", hash = "sha256:9a4305d4c65eff4de37800f60c176e242f6cb4fa2c5e96b69a5d300390c86d11"},
+    {file = "django_unfold-0.77.1.tar.gz", hash = "sha256:c8611a74cc1a944787c89e950bfbe29a8b8351078a79269f80fd974dc578dbd5"},
 ]
 
 [package.dependencies]
-django = ">=3.2"
+django = ">=4.2"
 
 [[package]]
 name = "djangorestframework"
@@ -1021,25 +1015,25 @@ tzdata = ["tzdata"]
 
 [[package]]
 name = "gunicorn"
-version = "23.0.0"
+version = "24.1.1"
 description = "WSGI HTTP Server for UNIX"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "gunicorn-23.0.0-py3-none-any.whl", hash = "sha256:ec400d38950de4dfd418cff8328b2c8faed0edb0d517d3394e457c317908ca4d"},
-    {file = "gunicorn-23.0.0.tar.gz", hash = "sha256:f014447a0101dc57e294f6c18ca6b40227a4c90e9bdb586042628030cba004ec"},
+    {file = "gunicorn-24.1.1-py3-none-any.whl", hash = "sha256:757f6b621fc4f7581a90600b2cd9df593461f06a41d7259cb9b94499dc4095a8"},
+    {file = "gunicorn-24.1.1.tar.gz", hash = "sha256:f006d110e5cb3102859b4f5cd48335dbd9cc28d0d27cd24ddbdafa6c60929408"},
 ]
 
 [package.dependencies]
 packaging = "*"
 
 [package.extras]
-eventlet = ["eventlet (>=0.24.1,!=0.36.0)"]
-gevent = ["gevent (>=1.4.0)"]
+eventlet = ["eventlet (>=0.40.3)"]
+gevent = ["gevent (>=24.10.1)"]
 setproctitle = ["setproctitle"]
-testing = ["coverage", "eventlet", "gevent", "pytest", "pytest-cov"]
-tornado = ["tornado (>=0.2)"]
+testing = ["coverage", "eventlet (>=0.40.3)", "gevent (>=24.10.1)", "pytest", "pytest-asyncio", "pytest-cov"]
+tornado = ["tornado (>=6.5.0)"]
 
 [[package]]
 name = "idna"
@@ -1750,4 +1744,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.14"
-content-hash = "5f1ac9841acf89ff1e47b22bd32bd7905f4f8e07085ac27a51b4e43957ff1fb5"
+content-hash = "51284d2a5073150b01f8a01f85c6d501ac4b6c98181eb377d03b2c50f794bda6"
