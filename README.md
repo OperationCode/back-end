@@ -110,3 +110,20 @@ make clean
 # See all available commands
 make help
 ```
+
+## Background Tasks (Django Q)
+
+This project uses Django Q2 for background task processing. The following tasks are defined but **currently disabled**:
+
+- Welcome email on user registration
+- Slack invite via PyBot API
+- Mailchimp mailing list sync on email confirmation
+
+**Status:** The `qcluster` worker is intentionally disabled in production (see Dockerfile:150). Tasks will queue in the database but won't be processed.
+
+**To re-enable:**
+1. Uncomment the qcluster command in `Dockerfile` CMD line
+2. Ensure environment variables are configured: `PYBOT_URL`, `PYBOT_AUTH_TOKEN`, `MAILCHIMP_API_KEY`, `MAILCHIMP_LIST_ID`
+3. Run worker locally: `python manage.py qcluster`
+
+Task code is preserved in `src/core/tasks.py` and triggered via signals in `src/core/handlers.py`.

@@ -86,6 +86,9 @@ DATABASES = {
 }
 
 # Django-Q2 configuration (sync mode for testing, use redis/orm in production)
+# NOTE: qcluster worker is currently DISABLED in Dockerfile (not needed for current operations)
+# Background tasks (welcome emails, Slack invites, Mailchimp sync) will queue but not process
+# To re-enable: uncomment qcluster in Dockerfile CMD line
 Q_CLUSTER = {
     "name": "operationcode",
     "workers": config("DJANGO_Q_WORKERS", default=1, cast=int),
