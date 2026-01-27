@@ -18,14 +18,6 @@ class AccountAdapter(DefaultAccountAdapter):
         site = Site.objects.get(pk=settings.SITE_ID)
         return f"https://{site.domain}/confirm_email?key={emailconfirmation.key}"
 
-    def get_reset_password_from_key_url(self, key: str) -> str:
-        """
-        Constructs the password reset url for the frontend.
-        The key parameter is in the format 'uidb36-token'.
-        """
-        site = Site.objects.get(pk=settings.SITE_ID)
-        return f"https://{site.domain}/password_reset/confirm?key={key}"
-
     def save_user(
         self,
         request: Request,

@@ -1,5 +1,11 @@
+from allauth.account import app_settings as allauth_settings
+from allauth.account.utils import url_str_to_user_pk
 from dj_rest_auth.registration.views import RegisterView as BaseRegisterView
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
+from django.contrib.auth.views import (
+    PasswordResetConfirmView as DjangoPasswordResetConfirmView,
+)
 from django.utils.decorators import method_decorator
 from django.views.decorators.debug import sensitive_post_parameters
 from drf_yasg.openapi import IN_QUERY, TYPE_STRING, Parameter
@@ -106,3 +112,31 @@ class UserView(RetrieveUpdateAPIView):
 @sensitive_param
 class RegisterView(BaseRegisterView):
     pass
+
+
+class PasswordResetConfirmView(DjangoPasswordResetConfirmView):
+    """
+    Custom password reset confirm view that handles allauth's UID encoding format.
+
+    Allauth uses url_str_to_user_pk/user_pk_to_url_str which creates shorter UIDs
+    (e.g., 'd') compared to Django's standard base64 encoding (e.g., 'MTM').
+    This view decodes the allauth UID format and uses allauth's token generator
+    to work with Django's password reset form.
+    """
+
+    template_name = "registration/password_reset_confirm.html"
+    success_url = "/auth/password/reset/complete/"
+    # Use allauth's token generator (EmailAwarePasswordResetTokenGenerator)
+    token_generator = allauth_settings.PASSWORD_RESET_TOKEN_GENERATOR()
+
+    def get_user(self, uidb64):
+        """
+        Override to use allauth's UID decoding instead of Django's base64 decoding.
+        """
+        try:
+            # Use allauth's URL string to user PK conversion
+            uid = url_str_to_user_pk(uidb64)
+            user = get_user_model()._default_manager.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, get_user_model().DoesNotExist):
+            user = None
+        return user
