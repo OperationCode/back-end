@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 env:
-  POETRY_VERSION: "2.3.0"
+  POETRY_VERSION: "2.3.1"
   POETRY_VIRTUALENVS_IN_PROJECT: true
 
 jobs:
@@ -23,7 +23,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14"
 
       - name: Load cached Poetry installation
         id: cached-poetry
@@ -45,9 +45,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .venv
-          key: venv-lint-${{ runner.os }}-py3.12-${{ hashFiles('poetry.lock') }}
+          key: venv-lint-${{ runner.os }}-py3.14-${{ hashFiles('poetry.lock') }}
           restore-keys: |
-            venv-lint-${{ runner.os }}-py3.12-
+            venv-lint-${{ runner.os }}-py3.14-
 
       - name: Install dependencies
         if: steps.cached-venv.outputs.cache-hit != 'true'
@@ -68,10 +68,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.12
+      - name: Set up Python 3.14
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14"
 
       - name: Load cached Poetry installation
         id: cached-poetry
@@ -93,9 +93,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .venv
-          key: venv-test-${{ runner.os }}-py3.12-${{ hashFiles('poetry.lock') }}
+          key: venv-test-${{ runner.os }}-py3.14-${{ hashFiles('poetry.lock') }}
           restore-keys: |
-            venv-test-${{ runner.os }}-py3.12-
+            venv-test-${{ runner.os }}-py3.14-
 
       - name: Install dependencies
         if: steps.cached-venv.outputs.cache-hit != 'true'
@@ -131,10 +131,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.12
+      - name: Set up Python 3.14
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14"
 
       - name: Load cached Poetry installation
         id: cached-poetry
@@ -156,9 +156,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .venv
-          key: venv-security-${{ runner.os }}-py3.12-${{ hashFiles('poetry.lock') }}
+          key: venv-security-${{ runner.os }}-py3.14-${{ hashFiles('poetry.lock') }}
           restore-keys: |
-            venv-security-${{ runner.os }}-py3.12-
+            venv-security-${{ runner.os }}-py3.14-
 
       - name: Install dependencies
         if: steps.cached-venv.outputs.cache-hit != 'true'

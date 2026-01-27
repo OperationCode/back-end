@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile:1
 
 # ============================================================================
-# Build stage: Install dependencies using Poetry
+# Build stage: Install depend using Poetry
 # ============================================================================
-FROM python:3.12-slim AS builder
+FROM python:3.14-slim AS builder
 
 # Install build dependencies required for compiling Python packages
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -15,7 +15,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     curl
 
 # Install Poetry
-ENV POETRY_VERSION=2.3.0 \
+ENV POETRY_VERSION=2.3.1 \
     POETRY_HOME="/opt/poetry" \
     POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=1 \
@@ -48,7 +48,7 @@ RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
 # ============================================================================
 # Development stage: Full development environment with dev tools
 # ============================================================================
-FROM python:3.12-slim AS development
+FROM python:3.14-slim AS development
 
 LABEL org.opencontainers.image.source="https://github.com/operationcode/back-end"
 LABEL org.opencontainers.image.description="Operation Code Backend - Development"
@@ -96,7 +96,7 @@ CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 # ============================================================================
 # Production/Runtime stage: Minimal production image (DEFAULT)
 # ============================================================================
-FROM python:3.12-slim AS runtime
+FROM python:3.14-slim AS runtime
 
 LABEL org.opencontainers.image.source="https://github.com/operationcode/back-end"
 LABEL org.opencontainers.image.description="Operation Code Backend - Django API"
@@ -146,5 +146,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8000/healthz || exit 1
 
-# Run background task processor and gunicorn
-CMD ["sh", "-c", "python manage.py qcluster & gunicorn operationcode_backend.wsgi -c gunicorn_config.py"]
+# Run gunicorn (qcluster disabled - not currently needed)
+CMD ["gunicorn", "operationcode_backend.wsgi", "-c", "gunicorn_config.py"]

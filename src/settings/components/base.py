@@ -5,9 +5,10 @@ TESTING = False
 
 # Application definition
 INSTALLED_APPS = [
-    # django-jazzmin Admin Console (replaces django-suit)
-    # https://django-jazzmin.readthedocs.io/
-    "jazzmin",
+    # django-unfold Admin Console
+    # https://docs.unfoldadmin.com/
+    "unfold",
+    "unfold.contrib.filters",
     # Our apps
     "core.apps.CoreConfig",
     # Default Django apps:
@@ -84,24 +85,10 @@ DATABASES = {
     }
 }
 
-# Django Jazzmin (Admin Console)
-# https://django-jazzmin.readthedocs.io/
-JAZZMIN_SETTINGS = {
-    "site_title": "Operation Code Admin",
-    "site_header": "Operation Code",
-    "site_brand": "Operation Code",
-    "welcome_sign": "Welcome to Operation Code Admin",
-    "copyright": "Operation Code",
-    "show_sidebar": True,
-    "navigation_expanded": True,
-    "order_with_respect_to": [
-        "auth",
-        "core",
-        "django_q",
-    ],
-}
-
 # Django-Q2 configuration (sync mode for testing, use redis/orm in production)
+# NOTE: qcluster worker is currently DISABLED in Dockerfile (not needed for current operations)
+# Background tasks (welcome emails, Slack invites, Mailchimp sync) will queue but not process
+# To re-enable: uncomment qcluster in Dockerfile CMD line
 Q_CLUSTER = {
     "name": "operationcode",
     "workers": config("DJANGO_Q_WORKERS", default=1, cast=int),

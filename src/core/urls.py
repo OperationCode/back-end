@@ -1,33 +1,29 @@
 from dj_rest_auth.registration.views import VerifyEmailView
-from dj_rest_auth.views import PasswordChangeView, PasswordResetConfirmView
+from dj_rest_auth.views import PasswordChangeView
+from dj_rest_auth.views import PasswordResetConfirmView as RestPasswordResetConfirmView
 from django.urls import include, path
 from django.views.generic import TemplateView
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 
 from . import views
 
-
-class DummyPasswordResetConfirmView(TemplateView):
-    """
-    Dummy view for URL generation only. The actual password reset confirm
-    is handled by the PasswordResetConfirmView via POST.
-    This pattern exists to satisfy Django's reverse() call in password reset emails.
-    """
-
-    template_name = ""
-
-
 urlpatterns = [
-    # URL pattern for email generation (reverse() compatibility)
+    # Custom password reset confirm view that handles allauth's UID encoding
     path(
-        "auth/password/reset/confirm/<str:uidb64>/<str:token>/",
-        DummyPasswordResetConfirmView.as_view(),
+        "auth/password/reset/confirm/<uidb64>/<token>/",
+        views.PasswordResetConfirmView.as_view(),
         name="password_reset_confirm",
     ),
-    # Actual API endpoint for password reset confirmation
+    # Success page after password reset
+    path(
+        "auth/password/reset/complete/",
+        TemplateView.as_view(template_name="registration/password_reset_complete.html"),
+        name="password_reset_complete",
+    ),
+    # REST API endpoint for programmatic password reset (mobile apps, etc.)
     path(
         "auth/password/reset/confirm/",
-        PasswordResetConfirmView.as_view(),
+        RestPasswordResetConfirmView.as_view(),
         name="rest_password_reset_confirm",
     ),
     path(
