@@ -15,7 +15,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     curl
 
 # Install Poetry
-ENV POETRY_VERSION=2.3.0 \
+ENV POETRY_VERSION=2.3.1 \
     POETRY_HOME="/opt/poetry" \
     POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=1 \
