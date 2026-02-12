@@ -65,15 +65,13 @@ backlog = 2048
 #
 
 workers = 1
-threads = 2
-worker_class = "gthread"
-worker_connections = 1000
-timeout = 30
+worker_class = "sync"
+timeout = 60
 keepalive = 2
 worker_tmp_dir = "/dev/shm"
 
 # Memory leak mitigation - restart workers after handling N requests
-max_requests = 1000
+max_requests = 500
 max_requests_jitter = 50
 
 #   preload_app - Load application code before forking worker processes.
