@@ -138,8 +138,12 @@ COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
 # Copy application code
 COPY --chown=appuser:appuser ./src ./src
 
-# Pre-compile Python bytecode for faster startup
-RUN python -m compileall -q ./src/
+# Pre-compile Python bytecode for faster startup.
+# Remove pip from the venv and the system Python: it is not needed at runtime
+# and its vendored urllib3/msgpack/setuptools carry CVEs.
+RUN python -m compileall -q ./src/ && \
+    python -m pip uninstall -y -q pip && \
+    /usr/local/bin/python -m pip uninstall -y -q pip
 
 # Set working directory to src for running the application
 WORKDIR /app/src
