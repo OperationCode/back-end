@@ -1,9 +1,13 @@
 # syntax=docker/dockerfile:1
 
+# Pin the exact patch release so a rebuild picks up new Python and Debian
+# security fixes (the floating 3.14-slim tag can be served from a stale cache)
+ARG PYTHON_IMAGE=python:3.14.9-slim-trixie
+
 # ============================================================================
 # Build stage: Install depend using Poetry
 # ============================================================================
-FROM python:3.14-slim AS builder
+FROM ${PYTHON_IMAGE} AS builder
 
 # Install build dependencies required for compiling Python packages
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -11,11 +15,13 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     rm -f /etc/apt/apt.conf.d/docker-clean && \
     apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    ca-certificates \
     libpq-dev \
-    curl
+    curl \
+    && apt-get upgrade -y
 
 # Install Poetry
-ENV POETRY_VERSION=2.4.0 \
+ENV POETRY_VERSION=2.5.1 \
     POETRY_HOME="/opt/poetry" \
     POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=1 \
@@ -48,7 +54,7 @@ RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
 # ============================================================================
 # Development stage: Full development environment with dev tools
 # ============================================================================
-FROM python:3.14-slim AS development
+FROM ${PYTHON_IMAGE} AS development
 
 LABEL org.opencontainers.image.source="https://github.com/operationcode/back-end"
 LABEL org.opencontainers.image.description="Operation Code Backend - Development"
@@ -59,6 +65,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     rm -f /etc/apt/apt.conf.d/docker-clean && \
     apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
     libpq5 \
     curl \
     && apt-get upgrade -y
@@ -96,7 +103,7 @@ CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 # ============================================================================
 # Production/Runtime stage: Minimal production image (DEFAULT)
 # ============================================================================
-FROM python:3.14-slim AS runtime
+FROM ${PYTHON_IMAGE} AS runtime
 
 LABEL org.opencontainers.image.source="https://github.com/operationcode/back-end"
 LABEL org.opencontainers.image.description="Operation Code Backend - Django API"
@@ -107,6 +114,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     rm -f /etc/apt/apt.conf.d/docker-clean && \
     apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
     libpq5 \
     curl \
     && apt-get upgrade -y
@@ -130,8 +138,12 @@ COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
 # Copy application code
 COPY --chown=appuser:appuser ./src ./src
 
-# Pre-compile Python bytecode for faster startup
-RUN python -m compileall -q ./src/
+# Pre-compile Python bytecode for faster startup.
+# Remove pip from the venv and the system Python: it is not needed at runtime
+# and its vendored urllib3/msgpack/setuptools carry CVEs.
+RUN python -m compileall -q ./src/ && \
+    python -m pip uninstall -y -q pip && \
+    /usr/local/bin/python -m pip uninstall -y -q pip
 
 # Set working directory to src for running the application
 WORKDIR /app/src
