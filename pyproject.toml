@@ -11,7 +11,7 @@ python = "^3.14"
 argon2-cffi = "^25"
 bcrypt = "^4.3"
 boto3 = "^1.42"                             # Was ^1.13 - ensures urllib3 >= 2.6.3
-cryptography = "^48.0"
+cryptography = "^50.0"                      # 48.x has PYSEC-2026-3552/3553/3554
 django = "^5.2"                             # Keep at 5.x for now
 djangorestframework = "^3.16"               # Was ^3.14 - fixes CVE-2024-21520
 djangorestframework-camel-case = "^1.4"     # Was ^1.0
