@@ -5,6 +5,13 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # Manual rebuild, e.g. to pick up Debian security updates when nothing in the repo changed
+  workflow_dispatch:
+    inputs:
+      no_cache:
+        description: "Build without layer cache (re-runs apt-get upgrade)"
+        type: boolean
+        default: true
 
 env:
   POETRY_VERSION: "2.5.1"
@@ -173,8 +180,8 @@ jobs:
   docker-build-push:
     name: Build and Push Docker Image
     runs-on: ubuntu-24.04-arm
-    # Run on push to main (build+push) and on PRs (build only)
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    # Run on push to main (build+push), manual dispatch (build+push) and on PRs (build only)
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     # For main/PR, wait for CI checks to pass
     needs: [ci-success]
     permissions:
@@ -187,7 +194,7 @@ jobs:
       - name: Determine push eligibility
         id: can-push
         run: |
-          if [ "${{ github.event_name }}" == "push" ]; then
+          if [ "${{ github.event_name }}" == "push" ] || [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             echo "push=true" >> $GITHUB_OUTPUT
           elif [ "${{ github.event.pull_request.head.repo.full_name }}" == "${{ github.repository }}" ]; then
             echo "push=true" >> $GITHUB_OUTPUT
@@ -269,6 +276,8 @@ jobs:
           tags: |
             ${{ steps.docker-tag.outputs.image }}
           provenance: false
+          no-cache: ${{ inputs.no_cache == true }}
+          pull: ${{ inputs.no_cache == true }}
           cache-from: type=gha,scope=arm64
           cache-to: type=gha,mode=max,scope=arm64
 
