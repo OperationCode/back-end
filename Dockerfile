@@ -2,7 +2,7 @@
 
 # Pin the exact patch release so a rebuild picks up new Python and Debian
 # security fixes (the floating 3.14-slim tag can be served from a stale cache)
-ARG PYTHON_IMAGE=python:3.14.9-slim-trixie
+ARG PYTHON_IMAGE=python:3.14.10-slim-trixie
 
 # ============================================================================
 # Build stage: Install depend using Poetry

@@ -47,7 +47,7 @@ pytest-django = "^4.8"
 pytest-env = "^1.1"
 pytest-mock = "^3.14"
 responses = "^0.26"
-ruff = "^0.15"
+ruff = "^0.17"
 pytest-cov = "^7.0.0"
 
 [tool.ruff]
@@ -56,6 +56,7 @@ exclude = [
     "*/migrations/*",
     ".venv",
     "__pycache__",
+    "*.md",  # docs hold illustrative snippet fragments, not runnable code
 ]
 
 [tool.ruff.lint]
