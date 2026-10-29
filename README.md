@@ -127,3 +127,4 @@ This project uses Django Q2 for background task processing. The following tasks 
 3. Run worker locally: `python manage.py qcluster`
 
 Task code is preserved in `src/core/tasks.py` and triggered via signals in `src/core/handlers.py`.
+<!-- Claude PR reviewer pilot test. -->
