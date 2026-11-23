@@ -1,0 +1,38 @@
+version: 2
+updates:
+  # Poetry projects use the "pip" ecosystem; Dependabot reads pyproject.toml and poetry.lock
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    cooldown:
+      default-days: 7
+    groups:
+      # One PR for routine bumps; majors stay separate so they get a real review
+      python-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    ignore:
+      # Stay on Python 3.14 until we decide to move; patch bumps only
+      - dependency-name: "python"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
