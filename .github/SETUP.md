@@ -137,17 +137,21 @@ aws iam list-attached-role-policies --role-name GitHubActions-ECR-Push-back-end 
 
 ## The Old Shared Role
 
-Before this change, back-end used `arn:aws:iam::633607774026:role/GitHubActions-ECR-Push`. That role is shared with `OperationCode/operationcode-pybot`:
+Before this change, back-end used `arn:aws:iam::633607774026:role/GitHubActions-ECR-Push`. Back-end and `OperationCode/operationcode-pybot` both use it today:
 - Its trust uses `StringLike` with `repo:...:*` subjects for back-end and pybot. Any branch or pull request of either repository can assume it.
 - Its policy allows push to `repository/back-end` and to `repository/pybot`. Thus a session of either repository can overwrite the images of the other.
 
-The old role stays as it is until pybot moves to its own role, so that pybot CI does not break. The move of pybot is a separate change. This change depends on it.
+Each repository moves to its own role on its own: back-end with [Safe Change to the New Role](#safe-change-to-the-new-role) below, pybot with its own `.github/SETUP.md`.
 
-**Open gap until the old role is deleted:** the back-end subjects stay on the old role. Thus a writer can edit a workflow on a branch, put the old role ARN in it, and get credentials without an approval. These credentials can push `back-end:prod`, and also pybot images. The environments do not stop this. The gap closes only when the old role is deleted, after pybot uses its own role. Until then, a push through this gap is detected (see step 7 below), not prevented.
+**During either move, nobody changes the old role.** No trust edits, no permission edits, and no "Revoke active sessions".
+
+**The old role is not gated.** It stays open to branch workflows of both repositories until it is deleted. A writer of either repository can edit a workflow on a branch, put the old role ARN in it, and get credentials without an approval. These credentials can push `back-end` and `pybot` images, `:prod` included. The environments do not stop this. The gap closes only when the old role is deleted. The old role is deleted once, after both repositories have completed step 6 of their move (see [Delete the Old Role](#delete-the-old-role)). Until then, a push through this gap is detected, not prevented.
 
 ## Safe Change to the New Role
 
-Use this procedure to move back-end from the old shared role to its own role. Do not change the old role during this procedure: pybot uses it. Do not use "Revoke active sessions" on the old role: it stops pybot runs, and the back-end subjects can get a new session immediately.
+Use this procedure to move back-end from the old shared role to its own role. Do not change the old role (see [The Old Shared Role](#the-old-shared-role)).
+
+If back-end is the first of the two repositories to start its move, write down the time of step 1 (S). The CloudTrail check in [Delete the Old Role](#delete-the-old-role) starts at S - 12 h. If pybot started first, use the time of its step 1.
 
 1. Create the two environments, as given in [Required Environments](#required-environments).
 2. Create the new role, as given in [Create the role](#create-the-role). Get the pull request that adds the environments to `ci.yml` approved and green. Do not merge it yet.
@@ -163,42 +167,95 @@ Use this procedure to move back-end from the old shared role to its own role. Do
    To cancel one run: `gh run cancel <id> --repo OperationCode/back-end`. Run the list again until it is empty.
 5. Immediately merge the pull request. The push to `main` that the merge causes uses `ecr-main` and the new role, and pushes `:prod`.
    - If the first push fails, correct the new role (see the rules above). Then re-run the job. The re-run uses `ecr-approval`, so a maintainer must approve it.
-   - When the push run is complete, write down the image digest of `:prod`. You compare with it in step 7:
+   - When the push run is complete, write down the image digest of `:prod`. You compare with it in the CloudTrail check:
      `aws ecr describe-images --region us-east-2 --repository-name back-end --image-ids imageTag=prod --query 'imageDetails[0].imageDigest' --output text`
-6. After pybot uses its own role, delete the old role. First make sure that nothing uses it: `aws iam get-role --role-name GitHubActions-ECR-Push --query Role.RoleLastUsed`. Then:
+6. Confirm one successful push to `main` through the new role. Use the CloudTrail `AssumeRoleWithWebIdentity` event for the new role ARN:
    ```bash
-   aws iam detach-role-policy --role-name GitHubActions-ECR-Push \
-     --policy-arn arn:aws:iam::633607774026:policy/GitHubActions-ECR-Push-Policy
-   aws iam delete-role --role-name GitHubActions-ECR-Push
+   aws cloudtrail lookup-events --region us-east-2 \
+     --lookup-attributes AttributeKey=EventName,AttributeValue=AssumeRoleWithWebIdentity \
+     --start-time <T> --output json |
+     jq -r '.Events[] | (.CloudTrailEvent | fromjson) as $c
+       | select($c.requestParameters.roleArn == "arn:aws:iam::633607774026:role/GitHubActions-ECR-Push-back-end")
+       | [.EventTime, ($c.userIdentity.userName // "-"), ($c.sourceIPAddress // "-")] | @tsv'
+   ```
+   Expect an event at the time of the push run, with the subject `repo:OperationCode@10479364/back-end@182584277:environment:ecr-main`. Or use the run log: the `main` push run is green, its job ran in `ecr-main`, and "Build and push Docker image" pushed `back-end:prod`. The back-end move is complete after this step.
+
+## Delete the Old Role
+
+Delete the old role once, after both repositories have completed step 6 of their move: back-end above, and pybot in its own `.github/SETUP.md`. This section is the only deletion procedure. The pybot guide points to it.
+
+1. Delete every inline policy:
+   ```bash
+   OLD=GitHubActions-ECR-Push
+   aws iam list-role-policies --role-name $OLD
+   for p in $(aws iam list-role-policies --role-name $OLD --query 'PolicyNames[]' --output text); do
+     aws iam delete-role-policy --role-name $OLD --policy-name "$p"
+   done
+   ```
+2. Detach every managed policy:
+   ```bash
+   aws iam list-attached-role-policies --role-name $OLD
+   for a in $(aws iam list-attached-role-policies --role-name $OLD --query 'AttachedPolicies[].PolicyArn' --output text); do
+     aws iam detach-role-policy --role-name $OLD --policy-arn "$a"
+   done
+   ```
+3. Remove the role from each instance profile, if there are any:
+   ```bash
+   aws iam list-instance-profiles-for-role --role-name $OLD
+   for ip in $(aws iam list-instance-profiles-for-role --role-name $OLD --query 'InstanceProfiles[].InstanceProfileName' --output text); do
+     aws iam remove-role-from-instance-profile --instance-profile-name "$ip" --role-name $OLD
+   done
+   ```
+4. Delete the role:
+   `aws iam delete-role --role-name $OLD`
+5. Confirm. This command must fail with `NoSuchEntity`. Write down the time of this confirmation (D).
+   ```bash
+   aws iam get-role --role-name $OLD
+   date -u +%Y-%m-%dT%H:%M:%SZ   # D
+   ```
+6. Delete the old managed policy only if nothing else uses it. The attachment count must be `0`:
+   ```bash
+   aws iam get-policy --policy-arn arn:aws:iam::633607774026:policy/GitHubActions-ECR-Push-Policy \
+     --query Policy.AttachmentCount
    aws iam delete-policy --policy-arn arn:aws:iam::633607774026:policy/GitHubActions-ECR-Push-Policy
    ```
-   Write down the time of the `detach-role-policy` (D). After D, no session of the old role can get a new ECR login token. If `delete-policy` fails with `DeleteConflict`, delete the non-default versions first (`aws iam list-policy-versions`, `aws iam delete-policy-version`).
-7. Check the ECR write events of both roles. An ECR login token stays valid for 12 hours, and a session of the old role can get one until D. Thus a token of the old role can push until D + 12 h. An unapproved push through the gap is detected, not prevented. When you follow these steps, you accept this risk.
-   - At D + 12 h plus approximately 30 minutes (CloudTrail can deliver events late), list the ECR write events from T - 12 h to D + 12 h:
-     ```bash
-     for e in InitiateLayerUpload PutImage BatchDeleteImage; do
-       aws cloudtrail lookup-events --region us-east-2 \
-         --lookup-attributes AttributeKey=EventName,AttributeValue=$e \
-         --start-time <T-12h> --end-time <D+12h> --output json |
-         jq -r '.Events[] | (.CloudTrailEvent | fromjson) as $c
-           | [.EventTime, .EventName, .Username,
-              ($c.userIdentity.sessionContext.sessionIssuer.arn // "-"),
-              ($c.requestParameters.repositoryName // "-"),
-              ($c.sourceIPAddress // "-")] | @tsv'
-     done
-     ```
-     The columns are: time, event, `Username`, session issuer ARN, ECR repository, source IP address. Use the session issuer ARN to find the role (`role/GitHubActions-ECR-Push` or `role/GitHubActions-ECR-Push-back-end`). Do not use `Username` for this: for a role session it is the session name, and the caller chooses it. Each event must match a CI run that you know about (time and run). After step 4, no back-end run uses the old role: an event of the old role on `back-end` after that time is unexpected.
-   - `lookup-events` returns only the last 90 days. If D is more than 80 days after T, also run this check every 80 days, so that no part of the window is lost.
-   - The `PutImage` events are the real control. The tag check below shows only the current state of each tag.
-   - At the same time, make sure that the `:prod` and `:staging` digests are the digests that known CI runs pushed. For `:prod`, this is the digest from step 5, unless a later known run pushed `:prod`:
-     ```bash
-     for t in prod staging; do
-       aws ecr describe-images --region us-east-2 --repository-name back-end \
-         --image-ids imageTag=$t --query 'imageDetails[].[imageTags,imageDigest,imagePushedAt]'
-     done
-     ```
-     An `ImageNotFoundException` for a tag means that the tag does not exist. This is not a failure of the check.
-   - If an event or a digest does not match, push a known-good image again (re-run the main build with an `ecr-approval` approval) and investigate.
+   If `delete-policy` fails with `DeleteConflict`, delete the non-default versions first (`aws iam list-policy-versions`, `aws iam delete-policy-version`).
+
+### CloudTrail check of the old role
+
+An IAM change can take time to propagate, so the old role can still issue a session for up to approximately 1 h after D. An ECR login token from such a session stays valid for 12 hours. Thus a token of the old role can push until D + 13 h. An unapproved push in this window is detected, not prevented. When you follow these steps, you accept this risk.
+
+- At D + 13 h plus approximately 30 minutes (CloudTrail can deliver events late), list every ECR write event of the old role, on both ECR repositories, from S - 12 h to D + 13 h:
+  ```bash
+  for e in InitiateLayerUpload PutImage BatchDeleteImage; do
+    aws cloudtrail lookup-events --region us-east-2 \
+      --lookup-attributes AttributeKey=EventName,AttributeValue=$e \
+      --start-time <S-12h> --end-time <D+13h> --output json |
+      jq -r '.Events[] | (.CloudTrailEvent | fromjson) as $c
+        | ($c.userIdentity.sessionContext.sessionIssuer.arn // "-") as $role
+        | select($role == "arn:aws:iam::633607774026:role/GitHubActions-ECR-Push")
+        | [.EventTime, .EventName, .Username, $role,
+           ($c.requestParameters.repositoryName // "-"),
+           ($c.sourceIPAddress // "-")] | @tsv'
+  done
+  ```
+  The columns are: time, event, `Username`, session issuer ARN, ECR repository, source IP address. The command selects the old role by the session issuer ARN. Do not use `Username` for this: for a role session it is the session name, and the caller chooses it.
+- Each event must match a CI run that you know about (time and run) of the repository in the event: `back-end` or `pybot`. After step 4 of a repository's move, no run of that repository uses the old role. Thus an event of the old role on that repository after that time is unexpected.
+- `lookup-events` returns only the last 90 days. If D + 13 h is more than 80 days after S, also run this check every 80 days, so that no part of the window is lost.
+- The `PutImage` events are the real control. The tag check below shows only the current state of each tag.
+- At the same time, make sure that each tag digest is a digest that a known CI run pushed. For back-end `:prod`, this is the digest from step 5, unless a later known run pushed `:prod`. Query each tag on its own:
+  ```bash
+  for t in prod staging; do
+    aws ecr describe-images --region us-east-2 --repository-name back-end \
+      --image-ids imageTag=$t --query 'imageDetails[].[imageTags,imageDigest,imagePushedAt]'
+  done
+  for t in prod latest staging; do
+    aws ecr describe-images --region us-east-2 --repository-name pybot \
+      --image-ids imageTag=$t --query 'imageDetails[].[imageTags,imageDigest,imagePushedAt]'
+  done
+  ```
+  An `ImageNotFoundException` for a tag means that the tag does not exist. This is not a failure of the check.
+- If an event or a digest does not match, push a known-good image again (re-run the default-branch build of that repository with an `ecr-approval` approval) and investigate.
 
 ## Push a Staging Image (maintainers)
 
