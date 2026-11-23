@@ -195,7 +195,7 @@ jobs:
       - name: Debug OIDC claims
         run: |
           echo "repo=${{ github.repository }}"
-          echo "ref=${{ github.ref }}"
+          echo "ref=$GITHUB_REF"
           echo "event=${{ github.event_name }}"
           echo "head=${{ github.event.pull_request.head.repo.full_name }}"
           if [ -z "$ACTIONS_ID_TOKEN_REQUEST_URL" ] || [ -z "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ]; then
@@ -228,7 +228,7 @@ jobs:
       - name: Determine Docker tag
         id: docker-tag
         run: |
-          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+          if [ "$GITHUB_REF" == "refs/heads/main" ]; then
             echo "image=633607774026.dkr.ecr.us-east-2.amazonaws.com/back-end:prod" >> $GITHUB_OUTPUT
             echo "environment=Production" >> $GITHUB_OUTPUT
           else

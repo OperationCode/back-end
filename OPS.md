@@ -124,10 +124,11 @@ cat > github-actions-trust-policy.json <<EOF
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
-        },
-        "StringLike": {
-          "token.actions.githubusercontent.com:sub": "repo:operationcode/back-end:*"
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+          "token.actions.githubusercontent.com:sub": [
+            "repo:OperationCode@10479364/back-end@182584277:environment:ecr-main",
+            "repo:OperationCode@10479364/back-end@182584277:environment:ecr-approval"
+          ]
         }
       }
     }
