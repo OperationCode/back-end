@@ -1,13 +1,14 @@
 # syntax=docker/dockerfile:1
 
 # Pin the exact patch release so a rebuild picks up new Python and Debian
-# security fixes (the floating 3.14-slim tag can be served from a stale cache)
-ARG PYTHON_IMAGE=python:3.14.10-slim-trixie
+# security fixes (the floating 3.14-slim tag can be served from a stale cache).
+# Literal tag in FROM so Dependabot can see it; later stages use FROM base.
+FROM python:3.14.10-slim-trixie AS base
 
 # ============================================================================
 # Build stage: Install depend using Poetry
 # ============================================================================
-FROM ${PYTHON_IMAGE} AS builder
+FROM base AS builder
 
 # Install build dependencies required for compiling Python packages
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -54,7 +55,7 @@ RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
 # ============================================================================
 # Development stage: Full development environment with dev tools
 # ============================================================================
-FROM ${PYTHON_IMAGE} AS development
+FROM base AS development
 
 LABEL org.opencontainers.image.source="https://github.com/operationcode/back-end"
 LABEL org.opencontainers.image.description="Operation Code Backend - Development"
@@ -103,7 +104,7 @@ CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 # ============================================================================
 # Production/Runtime stage: Minimal production image (DEFAULT)
 # ============================================================================
-FROM ${PYTHON_IMAGE} AS runtime
+FROM base AS runtime
 
 LABEL org.opencontainers.image.source="https://github.com/operationcode/back-end"
 LABEL org.opencontainers.image.description="Operation Code Backend - Django API"

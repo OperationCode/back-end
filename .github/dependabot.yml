@@ -1,0 +1,11 @@
+version: 2
+updates:
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    ignore:
+      # Stay on Python 3.14 until we decide to move; patch bumps only
+      - dependency-name: "python"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
