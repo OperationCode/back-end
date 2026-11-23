@@ -73,24 +73,43 @@ Use this procedure when you change from an older trust policy. It makes sure tha
 1. Create the two environments, as given in [Required Environments](#required-environments).
 2. Get the pull request that adds the environments to `ci.yml` approved and green. Do not merge it yet.
 3. Replace the trust policy with the environment-only policy above, in one `aws iam update-assume-role-policy` call. Examine all statements again. Write down the time of this change (T). After T, the old trust cannot issue a new session.
-4. Cancel every CI run that is in progress or queued:
-   `gh run list --repo OperationCode/back-end --status in_progress` and `--status queued`. These runs can hold credentials from before T.
-5. Revoke the sessions that the old trust issued: IAM > Roles > the role > "Revoke active sessions". Do this before the merge, so that the revocation does not stop the first `ecr-main` build. An STS session stays valid until this revoke, for up to the role's maximum session duration (`aws iam get-role --role-name GitHubActions-ECR-Push --query Role.MaxSessionDuration`; the default is 3600 seconds).
+4. Cancel every CI run that is in progress or queued. These runs can hold credentials from before T.
+   ```bash
+   # List the runs, then cancel each one.
+   for s in in_progress queued; do
+     gh run list --repo OperationCode/back-end --status $s --limit 100 --json databaseId --jq '.[].databaseId'
+   done | xargs -n 1 gh run cancel --repo OperationCode/back-end
+   ```
+   To cancel one run: `gh run cancel <id> --repo OperationCode/back-end`. Run the list again until it is empty.
+5. Revoke the sessions that the old trust issued: IAM > Roles > the role > "Revoke active sessions". Write down the time of this revoke (R). Do this before the merge, so that the revocation does not stop the first `ecr-main` build. An STS session stays valid until this revoke, for up to the role's maximum session duration (`aws iam get-role --role-name GitHubActions-ECR-Push --query Role.MaxSessionDuration`; the default is 3600 seconds).
 6. Immediately merge the pull request. The push to `main` that the merge causes uses `ecr-main` and pushes `:prod`.
    - Between step 3 and step 6, every push run of the old workflow fails at "Configure AWS credentials". Nobody must push to `main` during this time.
    - If the first push fails, correct the trust subject (see the rules above). Then re-run the job. The re-run uses `ecr-approval`, so a maintainer must approve it.
-7. Check for ECR login tokens from before T. An ECR login token stays valid for 12 hours, and AWS does not document that "Revoke active sessions" stops it. Thus a token issued before T can push until T + 12 h:
-   - At T + 12 h, list the ECR write events of the role from T - 12 h to T + 12 h. Each event must match a CI run that you know about (time and run):
+   - When the push run is complete, write down the image digest of `:prod`. You compare with it in step 7:
+     `aws ecr describe-images --region us-east-2 --repository-name back-end --image-ids imageTag=prod --query 'imageDetails[0].imageDigest' --output text`
+7. Check for ECR login tokens from before R. A session issued before T can call ECR `GetAuthorizationToken` until the revoke at R. An ECR login token stays valid for 12 hours, and AWS does not document that "Revoke active sessions" stops it. Thus such a token can push until R + 12 h. An unapproved push during this window is detected, not prevented. When you follow these steps, you accept this risk.
+   - At R + 12 h plus approximately 30 minutes (CloudTrail can deliver events late), list the ECR write events from T - 12 h to R + 12 h:
      ```bash
      for e in InitiateLayerUpload PutImage BatchDeleteImage; do
        aws cloudtrail lookup-events --region us-east-2 \
          --lookup-attributes AttributeKey=EventName,AttributeValue=$e \
-         --start-time <T-12h> --end-time <T+12h> \
-         --query 'Events[].[EventTime,Username,EventName]' --output text
+         --start-time <T-12h> --end-time <R+12h> --output json |
+         jq -r '.Events[] | (.CloudTrailEvent | fromjson) as $c
+           | [.EventTime, .EventName, .Username,
+              ($c.userIdentity.sessionContext.sessionIssuer.arn // "-"),
+              ($c.sourceIPAddress // "-")] | @tsv'
      done
      ```
-   - At T + 12 h, make sure that the `:prod` and `:staging` digests are the digests that known CI runs pushed (the first `ecr-main` run for `:prod`):
-     `aws ecr describe-images --region us-east-2 --repository-name back-end --image-ids imageTag=prod imageTag=staging --query 'imageDetails[].[imageTags,imageDigest,imagePushedAt]'`
+     The columns are: time, event, `Username`, session issuer ARN, source IP address. Use the session issuer ARN to find the events of the CI role (`role/GitHubActions-ECR-Push`). Do not use `Username` for this: for a role session it is the session name, and the caller chooses it. Each event of the CI role must match a CI run that you know about (time and run).
+   - The `PutImage` events are the real control. The tag check below shows only the current state of each tag.
+   - At the same time, make sure that the `:prod` and `:staging` digests are the digests that known CI runs pushed. For `:prod`, this is the digest from step 6, unless a later known run pushed `:prod`:
+     ```bash
+     for t in prod staging; do
+       aws ecr describe-images --region us-east-2 --repository-name back-end \
+         --image-ids imageTag=$t --query 'imageDetails[].[imageTags,imageDigest,imagePushedAt]'
+     done
+     ```
+     An `ImageNotFoundException` for a tag means that the tag does not exist. This is not a failure of the check.
    - If an event or a digest does not match, push a known-good image again (re-run the main build with an `ecr-approval` approval) and investigate.
 
 ## Push a Staging Image (maintainers)
