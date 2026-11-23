@@ -146,7 +146,7 @@ COPY --chown=appuser:appuser ./src ./src
 RUN python -m compileall -q ./src/ && \
     python -m pip uninstall -y -q pip && \
     /usr/local/bin/python -m pip uninstall -y -q pip && \
-    rm -f /usr/local/lib/python3.14/ensurepip/_bundled/*.whl
+    rm -f /usr/local/lib/python3.*/ensurepip/_bundled/*.whl
 
 # Set working directory to src for running the application
 WORKDIR /app/src
