@@ -176,9 +176,10 @@ If back-end is the first of the two repositories to start its move, write down t
      --start-time <T> --output json |
      jq -r '.Events[] | (.CloudTrailEvent | fromjson) as $c
        | select($c.requestParameters.roleArn == "arn:aws:iam::633607774026:role/GitHubActions-ECR-Push-back-end")
-       | [.EventTime, ($c.userIdentity.userName // "-"), ($c.sourceIPAddress // "-")] | @tsv'
+       | [.EventTime, $c.requestParameters.roleArn, ($c.userIdentity.userName // "-"),
+          ($c.sourceIPAddress // "-"), ($c.errorCode // "ok")] | @tsv'
    ```
-   Expect an event at the time of the push run, with the subject `repo:OperationCode@10479364/back-end@182584277:environment:ecr-main`. Or use the run log: the `main` push run is green, its job ran in `ecr-main`, and "Build and push Docker image" pushed `back-end:prod`. The back-end move is complete after this step.
+   Expect a line with `ok` at the time of the push run, with the subject `repo:OperationCode@10479364/back-end@182584277:environment:ecr-main`. Or use the run log: the `main` push run is green, its job ran in `ecr-main`, and "Build and push Docker image" pushed `back-end:prod`. The back-end move is complete after this step.
 
 ## Delete the Old Role
 
@@ -194,6 +195,7 @@ Delete the old role once, after both repositories have completed step 6 of their
    ```
 2. Detach every managed policy:
    ```bash
+   OLD=GitHubActions-ECR-Push
    aws iam list-attached-role-policies --role-name $OLD
    for a in $(aws iam list-attached-role-policies --role-name $OLD --query 'AttachedPolicies[].PolicyArn' --output text); do
      aws iam detach-role-policy --role-name $OLD --policy-arn "$a"
@@ -201,25 +203,38 @@ Delete the old role once, after both repositories have completed step 6 of their
    ```
 3. Remove the role from each instance profile, if there are any:
    ```bash
+   OLD=GitHubActions-ECR-Push
    aws iam list-instance-profiles-for-role --role-name $OLD
    for ip in $(aws iam list-instance-profiles-for-role --role-name $OLD --query 'InstanceProfiles[].InstanceProfileName' --output text); do
      aws iam remove-role-from-instance-profile --instance-profile-name "$ip" --role-name $OLD
    done
    ```
 4. Delete the role:
-   `aws iam delete-role --role-name $OLD`
+   ```bash
+   OLD=GitHubActions-ECR-Push
+   aws iam delete-role --role-name $OLD
+   ```
 5. Confirm. This command must fail with `NoSuchEntity`. Write down the time of this confirmation (D).
    ```bash
+   OLD=GitHubActions-ECR-Push
    aws iam get-role --role-name $OLD
    date -u +%Y-%m-%dT%H:%M:%SZ   # D
    ```
-6. Delete the old managed policy only if nothing else uses it. The attachment count must be `0`:
+6. Delete the old managed policy only if nothing else uses it. The policy has non-default versions (for example `v1`), and `delete-policy` fails with `DeleteConflict` until they are deleted. The block stops if the attachment count is not `0`:
    ```bash
-   aws iam get-policy --policy-arn arn:aws:iam::633607774026:policy/GitHubActions-ECR-Push-Policy \
-     --query Policy.AttachmentCount
-   aws iam delete-policy --policy-arn arn:aws:iam::633607774026:policy/GitHubActions-ECR-Push-Policy
+   POLICY=arn:aws:iam::633607774026:policy/GitHubActions-ECR-Push-Policy
+   COUNT=$(aws iam get-policy --policy-arn $POLICY --query Policy.AttachmentCount --output text)
+   if [ "$COUNT" = "0" ]; then
+     aws iam list-policy-versions --policy-arn $POLICY
+     for v in $(aws iam list-policy-versions --policy-arn $POLICY \
+         --query 'Versions[?IsDefaultVersion==`false`].VersionId' --output text); do
+       aws iam delete-policy-version --policy-arn $POLICY --version-id "$v"
+     done
+     aws iam delete-policy --policy-arn $POLICY
+   else
+     echo "AttachmentCount is $COUNT: something else uses the policy. Do not delete it."
+   fi
    ```
-   If `delete-policy` fails with `DeleteConflict`, delete the non-default versions first (`aws iam list-policy-versions`, `aws iam delete-policy-version`).
 
 ### CloudTrail check of the old role
 
