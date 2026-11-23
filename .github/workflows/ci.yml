@@ -147,13 +147,44 @@ jobs:
       - name: Display Bandit results
         run: poetry run bandit -r src --skip B101 --severity-level high -f txt || true
 
+  # Every PR (same-repo, fork, Dependabot): build only, no AWS credentials
+  docker-build:
+    name: Build Docker Image
+    runs-on: ubuntu-24.04-arm
+    if: github.event_name == 'pull_request'
+    needs: [ci-success]
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+        with:
+          platforms: linux/arm64
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: runtime
+          platforms: linux/arm64
+          push: false
+          provenance: false
+          cache-from: type=gha,scope=arm64
+          cache-to: type=gha,mode=max,scope=arm64
+
+  # Push to main and manual dispatch only. The environment's protection rules,
+  # not this file, are the gate: the AWS role must trust only these environments.
   docker-build-push:
     name: Build and Push Docker Image
     runs-on: ubuntu-24.04-arm
-    # Run on push to main (build+push), manual dispatch (build+push) and on PRs (build only)
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
-    # For main/PR, wait for CI checks to pass
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     needs: [ci-success]
+    # First attempt of a push to main: reviewed by a code owner before merge, so no wait.
+    # Dispatch and re-runs (any ref, any writer): a maintainer must approve.
+    environment: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main' && github.run_attempt == '1') && 'ecr-main' || 'ecr-approval' }}
     permissions:
       id-token: write  # Required for OIDC authentication
       contents: read   # Required to checkout code
@@ -161,22 +192,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
-      - name: Determine push eligibility
-        id: can-push
-        run: |
-          if [ "${{ github.event_name }}" == "push" ] || [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "push=true" >> $GITHUB_OUTPUT
-          # Dependabot runs get no secrets or OIDC, so AWS login would fail
-          elif [ "${{ github.event.pull_request.user.login }}" == "dependabot[bot]" ]; then
-            echo "push=false" >> $GITHUB_OUTPUT
-          elif [ "${{ github.event.pull_request.head.repo.full_name }}" == "${{ github.repository }}" ]; then
-            echo "push=true" >> $GITHUB_OUTPUT
-          else
-            echo "push=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Debug OIDC claims
-        if: steps.can-push.outputs.push == 'true'
         run: |
           echo "repo=${{ github.repository }}"
           echo "ref=${{ github.ref }}"
@@ -227,7 +243,6 @@ jobs:
           platforms: linux/arm64
 
       - name: Configure AWS credentials
-        if: steps.can-push.outputs.push == 'true'
         uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
@@ -236,7 +251,6 @@ jobs:
 
       - name: Login to Amazon ECR
         id: login-ecr
-        if: steps.can-push.outputs.push == 'true'
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build and push Docker image
@@ -245,7 +259,7 @@ jobs:
           context: .
           target: runtime
           platforms: linux/arm64
-          push: ${{ steps.can-push.outputs.push == 'true' }}
+          push: true
           tags: |
             ${{ steps.docker-tag.outputs.image }}
           provenance: false
@@ -255,7 +269,6 @@ jobs:
           cache-to: type=gha,mode=max,scope=arm64
 
       - name: Output image URI
-        if: steps.can-push.outputs.push == 'true'
         run: |
           echo "Successfully pushed ${{ steps.docker-tag.outputs.environment }} image:"
           echo "${{ steps.docker-tag.outputs.image }}"
