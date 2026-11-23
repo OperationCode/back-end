@@ -51,7 +51,6 @@ INSTALLED_APPS = [
     # django-health-check
     # https://django-health-check.readthedocs.io/en/latest/
     "health_check",  # required
-    "health_check.db",  # stock Django health checkers
 ]
 
 ROOT_URLCONF = "operationcode_backend.urls"

@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.urls import include, path, re_path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
+from health_check.views import HealthCheckView
 from rest_framework import permissions
 
 schema_view = get_schema_view(
@@ -33,7 +34,10 @@ urlpatterns = [
         name="schema-swagger-ui",
     ),
     path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
-    path("healthz", include("health_check.urls")),
+    path(
+        "healthz",
+        HealthCheckView.as_view(checks=["health_check.checks.Database"]),
+    ),
 ]
 
 ##############################################
