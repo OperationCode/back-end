@@ -8,7 +8,8 @@ The backend is deployed to AWS ECS (Elastic Container Service) with separate sta
 
 Docker images are automatically built and pushed to AWS ECR via GitHub Actions:
 
-- **PR branches** (any branch except `main`): Automatically builds and pushes to `:staging` tag
+- **Pull requests**: build only, no push
+- **Manual dispatch** on any branch: pushes to `:staging` (`:prod` on `main`) after a maintainer approves the `ecr-approval` environment. See [`.github/SETUP.md`](.github/SETUP.md)
 - **main branch**: Automatically builds and pushes to `:prod` tag after CI checks pass
 
 The automated builds use AWS OIDC for secure authentication (no long-lived credentials).
@@ -108,11 +109,13 @@ aws iam create-open-id-connect-provider \
 
 ### 2. Create IAM Role for GitHub Actions
 
-Create an IAM role that GitHub Actions can assume:
+Back-end has its own role, `GitHubActions-ECR-Push-back-end`. Do not share it with another repository. The old role `GitHubActions-ECR-Push` is shared with `operationcode-pybot` and is deleted after both repositories move to their own roles. For the change procedure and the open gap until then, see [`.github/SETUP.md`](.github/SETUP.md#the-old-shared-role).
 
-```bash
-# Create trust policy file
-cat > github-actions-trust-policy.json <<EOF
+The role is defined in [operationcode_infra](https://github.com/OperationCode/operationcode_infra), file `terraform/github_actions_ecr.tf`. Apply it with Terraform. Do not create the role by hand, and do not edit it by hand. The Terraform file is the source of truth. The JSON below is a reference only.
+
+The trust policy accepts only the `ecr-main` and `ecr-approval` environments of `OperationCode/back-end`, with `StringEquals`:
+
+```json
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -124,45 +127,36 @@ cat > github-actions-trust-policy.json <<EOF
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
-        },
-        "StringLike": {
-          "token.actions.githubusercontent.com:sub": "repo:operationcode/back-end:*"
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+          "token.actions.githubusercontent.com:sub": [
+            "repo:OperationCode@10479364/back-end@182584277:environment:ecr-main",
+            "repo:OperationCode@10479364/back-end@182584277:environment:ecr-approval"
+          ]
         }
       }
     }
   ]
 }
-EOF
-
-# Create the role
-aws iam create-role \
-  --role-name GitHubActions-ECR-Push \
-  --assume-role-policy-document file://github-actions-trust-policy.json \
-  --description "Allows GitHub Actions to push Docker images to ECR"
 ```
 
-### 3. Attach ECR Permissions Policy
+### 3. Add the ECR Permissions Policy
 
-Create and attach a policy that allows pushing to ECR:
+An inline policy allows push to the `back-end` ECR repository only. `ecr:GetAuthorizationToken` cannot be limited to a repository, so it is on `*`. Terraform also manages this policy. Reference:
 
-```bash
-# Create policy file
-cat > ecr-push-policy.json <<EOF
+```json
 {
   "Version": "2012-10-17",
   "Statement": [
     {
       "Effect": "Allow",
       "Action": [
-        "ecr:GetAuthorizationToken",
         "ecr:BatchCheckLayerAvailability",
         "ecr:GetDownloadUrlForLayer",
         "ecr:BatchGetImage",
-        "ecr:PutImage",
         "ecr:InitiateLayerUpload",
         "ecr:UploadLayerPart",
-        "ecr:CompleteLayerUpload"
+        "ecr:CompleteLayerUpload",
+        "ecr:PutImage"
       ],
       "Resource": "arn:aws:ecr:us-east-2:633607774026:repository/back-end"
     },
@@ -173,50 +167,33 @@ cat > ecr-push-policy.json <<EOF
     }
   ]
 }
-EOF
-
-# Create the policy
-aws iam create-policy \
-  --policy-name GitHubActions-ECR-Push-Policy \
-  --policy-document file://ecr-push-policy.json
-
-# Attach policy to role
-aws iam attach-role-policy \
-  --role-name GitHubActions-ECR-Push \
-  --policy-arn arn:aws:iam::633607774026:policy/GitHubActions-ECR-Push-Policy
 ```
 
 ### 4. Configure GitHub Secret
 
-Add the IAM role ARN as a GitHub repository secret using the GitHub CLI:
+Add the IAM role ARN as a repository secret:
 
 ```bash
-# Ensure you're authenticated with GitHub CLI
-# If not already authenticated, run: gh auth login
-
-# Set the secret (replace with your actual role ARN if different)
-gh secret set AWS_ROLE_ARN --body "arn:aws:iam::633607774026:role/GitHubActions-ECR-Push"
+gh secret set AWS_ROLE_ARN --repo OperationCode/back-end --body "arn:aws:iam::633607774026:role/GitHubActions-ECR-Push-back-end"
 ```
-
-**Note**: Make sure you're in the repository directory or specify the repo with `--repo operationcode/back-end`.
 
 ### 5. Verify Setup
 
 After setup, the GitHub Actions workflow will automatically:
 - Authenticate to AWS using OIDC
 - Build Docker images for ARM64 platform
-- Push images to ECR with appropriate tags (`:staging` or `:prod`)
+- Push images to ECR with appropriate tags (`:prod` from `main`, `:staging` from an approved dispatch)
 
 You can verify by:
-1. Pushing a commit to a non-main branch (should push `:staging`)
+1. Running the workflow with a dispatch on a non-main branch and approving `ecr-approval` (should push `:staging`)
 2. Merging to main (should push `:prod` after tests pass)
 3. Checking ECR repository for new images
 
 ## Security Best Practices
 
 ✅ **OIDC Authentication**: No long-lived AWS credentials stored in GitHub  
-✅ **Least Privilege**: IAM role only has permissions needed for ECR push operations  
-✅ **Repository Scoping**: Trust policy restricts access to `operationcode/back-end` repository  
+✅ **Least Privilege**: IAM role only has permissions needed for ECR push operations, on the `back-end` repository only  
+✅ **Repository Scoping**: Trust policy of the back-end role accepts only the `ecr-main` and `ecr-approval` environments of `OperationCode/back-end` (the old shared role stays open until it is deleted)  
 ✅ **Conditional Access**: Production builds only run after CI checks pass  
 ✅ **Build Caching**: Uses GitHub Actions cache to speed up builds
 
