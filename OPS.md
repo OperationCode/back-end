@@ -111,10 +111,11 @@ aws iam create-open-id-connect-provider \
 
 Back-end has its own role, `GitHubActions-ECR-Push-back-end`. Do not share it with another repository. The old role `GitHubActions-ECR-Push` is shared with `operationcode-pybot` and is deleted after both repositories move to their own roles. For the change procedure and the open gap until then, see [`.github/SETUP.md`](.github/SETUP.md#the-old-shared-role).
 
+The role is defined in [operationcode_infra](https://github.com/OperationCode/operationcode_infra), file `terraform/github_actions_ecr.tf`. Apply it with Terraform. Do not create the role by hand, and do not edit it by hand. The Terraform file is the source of truth. The JSON below is a reference only.
+
 The trust policy accepts only the `ecr-main` and `ecr-approval` environments of `OperationCode/back-end`, with `StringEquals`:
 
-```bash
-cat > be-trust.json <<'EOF'
+```json
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -136,21 +137,13 @@ cat > be-trust.json <<'EOF'
     }
   ]
 }
-EOF
-
-aws iam create-role \
-  --role-name GitHubActions-ECR-Push-back-end \
-  --assume-role-policy-document file://be-trust.json \
-  --max-session-duration 3600 \
-  --description "GitHub Actions OperationCode/back-end: push to ECR repository back-end"
 ```
 
 ### 3. Add the ECR Permissions Policy
 
-An inline policy allows push to the `back-end` ECR repository only. `ecr:GetAuthorizationToken` cannot be limited to a repository, so it is on `*`:
+An inline policy allows push to the `back-end` ECR repository only. `ecr:GetAuthorizationToken` cannot be limited to a repository, so it is on `*`. Terraform also manages this policy. Reference:
 
-```bash
-cat > be-ecr-push.json <<'EOF'
+```json
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -174,12 +167,6 @@ cat > be-ecr-push.json <<'EOF'
     }
   ]
 }
-EOF
-
-aws iam put-role-policy \
-  --role-name GitHubActions-ECR-Push-back-end \
-  --policy-name ecr-push-back-end \
-  --policy-document file://be-ecr-push.json
 ```
 
 ### 4. Configure GitHub Secret

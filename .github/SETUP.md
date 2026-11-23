@@ -116,19 +116,13 @@ Save this as `be-ecr-push.json`. The first statement has the ECR actions of the 
 
 ### Create the role
 
+The role is defined in [operationcode_infra](https://github.com/OperationCode/operationcode_infra), file `terraform/github_actions_ecr.tf`. Apply it with Terraform. Do not create the role by hand, and do not edit it by hand.
+
+The trust policy and permissions policy above are a reference only. The Terraform file is the source of truth.
+
+To examine the result after the apply:
+
 ```bash
-aws iam create-role \
-  --role-name GitHubActions-ECR-Push-back-end \
-  --assume-role-policy-document file://be-trust.json \
-  --max-session-duration 3600 \
-  --description "GitHub Actions OperationCode/back-end: push to ECR repository back-end"
-
-aws iam put-role-policy \
-  --role-name GitHubActions-ECR-Push-back-end \
-  --policy-name ecr-push-back-end \
-  --policy-document file://be-ecr-push.json
-
-# Examine the result.
 aws iam get-role --role-name GitHubActions-ECR-Push-back-end \
   --query 'Role.[Arn,MaxSessionDuration,AssumeRolePolicyDocument]'
 aws iam list-role-policies --role-name GitHubActions-ECR-Push-back-end           # only ecr-push-back-end
