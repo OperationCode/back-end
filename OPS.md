@@ -109,11 +109,12 @@ aws iam create-open-id-connect-provider \
 
 ### 2. Create IAM Role for GitHub Actions
 
-Create an IAM role that GitHub Actions can assume:
+Back-end has its own role, `GitHubActions-ECR-Push-back-end`. Do not share it with another repository. The old role `GitHubActions-ECR-Push` is shared with `operationcode-pybot` and is deleted after both repositories move to their own roles. For the change procedure and the open gap until then, see [`.github/SETUP.md`](.github/SETUP.md#the-old-shared-role).
+
+The trust policy accepts only the `ecr-main` and `ecr-approval` environments of `OperationCode/back-end`, with `StringEquals`:
 
 ```bash
-# Create trust policy file
-cat > github-actions-trust-policy.json <<EOF
+cat > be-trust.json <<'EOF'
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -137,34 +138,32 @@ cat > github-actions-trust-policy.json <<EOF
 }
 EOF
 
-# Create the role
 aws iam create-role \
-  --role-name GitHubActions-ECR-Push \
-  --assume-role-policy-document file://github-actions-trust-policy.json \
-  --description "Allows GitHub Actions to push Docker images to ECR"
+  --role-name GitHubActions-ECR-Push-back-end \
+  --assume-role-policy-document file://be-trust.json \
+  --max-session-duration 3600 \
+  --description "GitHub Actions OperationCode/back-end: push to ECR repository back-end"
 ```
 
-### 3. Attach ECR Permissions Policy
+### 3. Add the ECR Permissions Policy
 
-Create and attach a policy that allows pushing to ECR:
+An inline policy allows push to the `back-end` ECR repository only. `ecr:GetAuthorizationToken` cannot be limited to a repository, so it is on `*`:
 
 ```bash
-# Create policy file
-cat > ecr-push-policy.json <<EOF
+cat > be-ecr-push.json <<'EOF'
 {
   "Version": "2012-10-17",
   "Statement": [
     {
       "Effect": "Allow",
       "Action": [
-        "ecr:GetAuthorizationToken",
         "ecr:BatchCheckLayerAvailability",
         "ecr:GetDownloadUrlForLayer",
         "ecr:BatchGetImage",
-        "ecr:PutImage",
         "ecr:InitiateLayerUpload",
         "ecr:UploadLayerPart",
-        "ecr:CompleteLayerUpload"
+        "ecr:CompleteLayerUpload",
+        "ecr:PutImage"
       ],
       "Resource": "arn:aws:ecr:us-east-2:633607774026:repository/back-end"
     },
@@ -177,30 +176,19 @@ cat > ecr-push-policy.json <<EOF
 }
 EOF
 
-# Create the policy
-aws iam create-policy \
-  --policy-name GitHubActions-ECR-Push-Policy \
-  --policy-document file://ecr-push-policy.json
-
-# Attach policy to role
-aws iam attach-role-policy \
-  --role-name GitHubActions-ECR-Push \
-  --policy-arn arn:aws:iam::633607774026:policy/GitHubActions-ECR-Push-Policy
+aws iam put-role-policy \
+  --role-name GitHubActions-ECR-Push-back-end \
+  --policy-name ecr-push-back-end \
+  --policy-document file://be-ecr-push.json
 ```
 
 ### 4. Configure GitHub Secret
 
-Add the IAM role ARN as a GitHub repository secret using the GitHub CLI:
+Add the IAM role ARN as a repository secret:
 
 ```bash
-# Ensure you're authenticated with GitHub CLI
-# If not already authenticated, run: gh auth login
-
-# Set the secret (replace with your actual role ARN if different)
-gh secret set AWS_ROLE_ARN --body "arn:aws:iam::633607774026:role/GitHubActions-ECR-Push"
+gh secret set AWS_ROLE_ARN --repo OperationCode/back-end --body "arn:aws:iam::633607774026:role/GitHubActions-ECR-Push-back-end"
 ```
-
-**Note**: Make sure you're in the repository directory or specify the repo with `--repo operationcode/back-end`.
 
 ### 5. Verify Setup
 
@@ -217,8 +205,8 @@ You can verify by:
 ## Security Best Practices
 
 ✅ **OIDC Authentication**: No long-lived AWS credentials stored in GitHub  
-✅ **Least Privilege**: IAM role only has permissions needed for ECR push operations  
-✅ **Repository Scoping**: Trust policy accepts only the `ecr-main` and `ecr-approval` environments of `OperationCode/back-end`  
+✅ **Least Privilege**: IAM role only has permissions needed for ECR push operations, on the `back-end` repository only  
+✅ **Repository Scoping**: Trust policy of the back-end role accepts only the `ecr-main` and `ecr-approval` environments of `OperationCode/back-end` (the old shared role stays open until it is deleted)  
 ✅ **Conditional Access**: Production builds only run after CI checks pass  
 ✅ **Build Caching**: Uses GitHub Actions cache to speed up builds
 

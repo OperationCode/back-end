@@ -1,6 +1,6 @@
 # GitHub Actions Docker Push Setup
 
-This guide gives the setup that CI must have to push Docker images to ECR. It also gives the security rules for that setup. For the AWS OIDC provider and the ECR policy, see [`OPS.md`](../OPS.md#github-actions-aws-oidc-setup).
+This guide gives the setup that CI must have to push Docker images to ECR. It also gives the security rules for that setup. For the AWS OIDC provider, see [`OPS.md`](../OPS.md#github-actions-aws-oidc-setup).
 
 ## How pushes are gated
 
@@ -13,18 +13,19 @@ workflow_dispatch (any ref)  --> docker-build-push   environment ecr-approval  m
 re-run of any push run       --> docker-build-push   environment ecr-approval  maintainer approves
                                         |
                                         v
-           AWS role trust accepts ONLY the ecr-main and ecr-approval subjects
+     role GitHubActions-ECR-Push-back-end trusts ONLY the ecr-main and ecr-approval subjects
 ```
 
 - `ecr-main` can skip the wait because the org ruleset on `main` requires a pull request with code-owner review.
 - Image tags: `:prod` when the ref is `main`, and `:staging` for all other refs. Both tags are in the same ECR repository.
+- The gate is not complete until the old shared role is deleted. See [The Old Shared Role](#the-old-shared-role).
 
 ## Required Secret
 
-- **`AWS_ROLE_ARN`**: the ARN of the IAM role that the push job assumes, for example `arn:aws:iam::633607774026:role/GitHubActions-ECR-Push`.
+- **`AWS_ROLE_ARN`** (repository secret): the ARN of the IAM role that the push job assumes.
 
 ```bash
-gh secret set AWS_ROLE_ARN --repo OperationCode/back-end --body "arn:aws:iam::633607774026:role/GitHubActions-ECR-Push"
+gh secret set AWS_ROLE_ARN --repo OperationCode/back-end --body "arn:aws:iam::633607774026:role/GitHubActions-ECR-Push-back-end"
 ```
 
 ## Required Environments
@@ -36,7 +37,11 @@ Create the two environments in Settings > Environments. Create them **before** a
 | `ecr-main` | None | "Selected branches and tags", with one **branch** rule: `main`. Do not add a tag rule. Do not use "Protected branches only". |
 | `ecr-approval` | The maintainers, at minimum the code owners `irvingpop` and `kylemh` | No restriction |
 
-## AWS Trust Policy Subjects
+## AWS Role
+
+The back-end repository has its own role, `GitHubActions-ECR-Push-back-end`. No other repository uses it.
+
+### Trust policy
 
 The repository uses immutable OIDC subjects. To get the prefix, run this command:
 
@@ -45,35 +50,110 @@ gh api repos/OperationCode/back-end/actions/oidc/customization/sub --jq .sub_cla
 # repo:OperationCode@10479364/back-end@182584277
 ```
 
-The role trust must use `StringEquals` and these two subjects only:
+Save this as `be-trust.json`:
 
 ```json
-"Condition": {
-  "StringEquals": {
-    "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
-    "token.actions.githubusercontent.com:sub": [
-      "repo:OperationCode@10479364/back-end@182584277:environment:ecr-main",
-      "repo:OperationCode@10479364/back-end@182584277:environment:ecr-approval"
-    ]
-  }
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::633607774026:oidc-provider/token.actions.githubusercontent.com"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+          "token.actions.githubusercontent.com:sub": [
+            "repo:OperationCode@10479364/back-end@182584277:environment:ecr-main",
+            "repo:OperationCode@10479364/back-end@182584277:environment:ecr-approval"
+          ]
+        }
+      }
+    }
+  ]
 }
 ```
 
 Rules:
-- Do not use `StringLike` or `*`.
+- Use `StringEquals` and these two subjects only. Do not use `StringLike` or `*`.
 - Do not add `:pull_request` or `:ref:refs/heads/...` subjects. A writer can get those subjects without approval.
-- The role must have only this one `Allow` statement for the GitHub OIDC provider. Examine all statements with this command:
-  `aws iam get-role --role-name GitHubActions-ECR-Push --query Role.AssumeRolePolicyDocument`
+- Do not add subjects of another repository. Each repository gets its own role.
+- The role must have only this one `Allow` statement. Examine all statements with this command:
+  `aws iam get-role --role-name GitHubActions-ECR-Push-back-end --query Role.AssumeRolePolicyDocument`
 - If an assume-role step fails, read the `oidc.sub` line from the "Debug OIDC claims" step. Then correct the environment subject. Never add an old subject back.
 
-## Safe Change of the Trust Policy
+### Permissions policy (inline)
 
-Use this procedure when you change from an older trust policy. It makes sure that no unapproved credential path stays open during the change.
+Save this as `be-ecr-push.json`. The first statement has the ECR actions of the push job: `docker/build-push-action` checks, uploads, and tags the image. It applies to the `back-end` repository only. `ecr:GetAuthorizationToken` (used by `amazon-ecr-login`) cannot be limited to a repository, so it has its own statement on `*`.
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "ecr:InitiateLayerUpload",
+        "ecr:UploadLayerPart",
+        "ecr:CompleteLayerUpload",
+        "ecr:PutImage"
+      ],
+      "Resource": "arn:aws:ecr:us-east-2:633607774026:repository/back-end"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "ecr:GetAuthorizationToken",
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+### Create the role
+
+```bash
+aws iam create-role \
+  --role-name GitHubActions-ECR-Push-back-end \
+  --assume-role-policy-document file://be-trust.json \
+  --max-session-duration 3600 \
+  --description "GitHub Actions OperationCode/back-end: push to ECR repository back-end"
+
+aws iam put-role-policy \
+  --role-name GitHubActions-ECR-Push-back-end \
+  --policy-name ecr-push-back-end \
+  --policy-document file://be-ecr-push.json
+
+# Examine the result.
+aws iam get-role --role-name GitHubActions-ECR-Push-back-end \
+  --query 'Role.[Arn,MaxSessionDuration,AssumeRolePolicyDocument]'
+aws iam list-role-policies --role-name GitHubActions-ECR-Push-back-end           # only ecr-push-back-end
+aws iam list-attached-role-policies --role-name GitHubActions-ECR-Push-back-end  # empty
+```
+
+## The Old Shared Role
+
+Before this change, back-end used `arn:aws:iam::633607774026:role/GitHubActions-ECR-Push`. That role is shared with `OperationCode/operationcode-pybot`:
+- Its trust uses `StringLike` with `repo:...:*` subjects for back-end and pybot. Any branch or pull request of either repository can assume it.
+- Its policy allows push to `repository/back-end` and to `repository/pybot`. Thus a session of either repository can overwrite the images of the other.
+
+The old role stays as it is until pybot moves to its own role, so that pybot CI does not break. The move of pybot is a separate change. This change depends on it.
+
+**Open gap until the old role is deleted:** the back-end subjects stay on the old role. Thus a writer can edit a workflow on a branch, put the old role ARN in it, and get credentials without an approval. These credentials can push `back-end:prod`, and also pybot images. The environments do not stop this. The gap closes only when the old role is deleted, after pybot uses its own role. Until then, a push through this gap is detected (see step 7 below), not prevented.
+
+## Safe Change to the New Role
+
+Use this procedure to move back-end from the old shared role to its own role. Do not change the old role during this procedure: pybot uses it. Do not use "Revoke active sessions" on the old role: it stops pybot runs, and the back-end subjects can get a new session immediately.
 
 1. Create the two environments, as given in [Required Environments](#required-environments).
-2. Get the pull request that adds the environments to `ci.yml` approved and green. Do not merge it yet.
-3. Replace the trust policy with the environment-only policy above, in one `aws iam update-assume-role-policy` call. Examine all statements again. Write down the time of this change (T). After T, the old trust cannot issue a new session.
-4. Cancel every CI run that is in progress or queued. These runs can hold credentials from before T.
+2. Create the new role, as given in [Create the role](#create-the-role). Get the pull request that adds the environments to `ci.yml` approved and green. Do not merge it yet.
+3. Set the secret to the new role ARN, as given in [Required Secret](#required-secret). Write down the time of this change (T). After T, each new back-end job uses the new role.
+   - Between step 3 and step 5, every push run of the old workflow fails at "Configure AWS credentials", because the new role does not trust its subject. Nobody must push to `main` during this time.
+4. Cancel every back-end CI run that is in progress or queued. These runs can hold the old ARN or credentials of the old role.
    ```bash
    # List the runs, then cancel each one.
    for s in in_progress queued; do
@@ -81,28 +161,36 @@ Use this procedure when you change from an older trust policy. It makes sure tha
    done | xargs -n 1 gh run cancel --repo OperationCode/back-end
    ```
    To cancel one run: `gh run cancel <id> --repo OperationCode/back-end`. Run the list again until it is empty.
-5. Revoke the sessions that the old trust issued: IAM > Roles > the role > "Revoke active sessions". Write down the time of this revoke (R). Do this before the merge, so that the revocation does not stop the first `ecr-main` build. An STS session stays valid until this revoke, for up to the role's maximum session duration (`aws iam get-role --role-name GitHubActions-ECR-Push --query Role.MaxSessionDuration`; the default is 3600 seconds).
-6. Immediately merge the pull request. The push to `main` that the merge causes uses `ecr-main` and pushes `:prod`.
-   - Between step 3 and step 6, every push run of the old workflow fails at "Configure AWS credentials". Nobody must push to `main` during this time.
-   - If the first push fails, correct the trust subject (see the rules above). Then re-run the job. The re-run uses `ecr-approval`, so a maintainer must approve it.
+5. Immediately merge the pull request. The push to `main` that the merge causes uses `ecr-main` and the new role, and pushes `:prod`.
+   - If the first push fails, correct the new role (see the rules above). Then re-run the job. The re-run uses `ecr-approval`, so a maintainer must approve it.
    - When the push run is complete, write down the image digest of `:prod`. You compare with it in step 7:
      `aws ecr describe-images --region us-east-2 --repository-name back-end --image-ids imageTag=prod --query 'imageDetails[0].imageDigest' --output text`
-7. Check for ECR login tokens from before R. A session issued before T can call ECR `GetAuthorizationToken` until the revoke at R. An ECR login token stays valid for 12 hours, and AWS does not document that "Revoke active sessions" stops it. Thus such a token can push until R + 12 h. An unapproved push during this window is detected, not prevented. When you follow these steps, you accept this risk.
-   - At R + 12 h plus approximately 30 minutes (CloudTrail can deliver events late), list the ECR write events from T - 12 h to R + 12 h:
+6. After pybot uses its own role, delete the old role. First make sure that nothing uses it: `aws iam get-role --role-name GitHubActions-ECR-Push --query Role.RoleLastUsed`. Then:
+   ```bash
+   aws iam detach-role-policy --role-name GitHubActions-ECR-Push \
+     --policy-arn arn:aws:iam::633607774026:policy/GitHubActions-ECR-Push-Policy
+   aws iam delete-role --role-name GitHubActions-ECR-Push
+   aws iam delete-policy --policy-arn arn:aws:iam::633607774026:policy/GitHubActions-ECR-Push-Policy
+   ```
+   Write down the time of the `detach-role-policy` (D). After D, no session of the old role can get a new ECR login token. If `delete-policy` fails with `DeleteConflict`, delete the non-default versions first (`aws iam list-policy-versions`, `aws iam delete-policy-version`).
+7. Check the ECR write events of both roles. An ECR login token stays valid for 12 hours, and a session of the old role can get one until D. Thus a token of the old role can push until D + 12 h. An unapproved push through the gap is detected, not prevented. When you follow these steps, you accept this risk.
+   - At D + 12 h plus approximately 30 minutes (CloudTrail can deliver events late), list the ECR write events from T - 12 h to D + 12 h:
      ```bash
      for e in InitiateLayerUpload PutImage BatchDeleteImage; do
        aws cloudtrail lookup-events --region us-east-2 \
          --lookup-attributes AttributeKey=EventName,AttributeValue=$e \
-         --start-time <T-12h> --end-time <R+12h> --output json |
+         --start-time <T-12h> --end-time <D+12h> --output json |
          jq -r '.Events[] | (.CloudTrailEvent | fromjson) as $c
            | [.EventTime, .EventName, .Username,
               ($c.userIdentity.sessionContext.sessionIssuer.arn // "-"),
+              ($c.requestParameters.repositoryName // "-"),
               ($c.sourceIPAddress // "-")] | @tsv'
      done
      ```
-     The columns are: time, event, `Username`, session issuer ARN, source IP address. Use the session issuer ARN to find the events of the CI role (`role/GitHubActions-ECR-Push`). Do not use `Username` for this: for a role session it is the session name, and the caller chooses it. Each event of the CI role must match a CI run that you know about (time and run).
+     The columns are: time, event, `Username`, session issuer ARN, ECR repository, source IP address. Use the session issuer ARN to find the role (`role/GitHubActions-ECR-Push` or `role/GitHubActions-ECR-Push-back-end`). Do not use `Username` for this: for a role session it is the session name, and the caller chooses it. Each event must match a CI run that you know about (time and run). After step 4, no back-end run uses the old role: an event of the old role on `back-end` after that time is unexpected.
+   - `lookup-events` returns only the last 90 days. If D is more than 80 days after T, also run this check every 80 days, so that no part of the window is lost.
    - The `PutImage` events are the real control. The tag check below shows only the current state of each tag.
-   - At the same time, make sure that the `:prod` and `:staging` digests are the digests that known CI runs pushed. For `:prod`, this is the digest from step 6, unless a later known run pushed `:prod`:
+   - At the same time, make sure that the `:prod` and `:staging` digests are the digests that known CI runs pushed. For `:prod`, this is the digest from step 5, unless a later known run pushed `:prod`:
      ```bash
      for t in prod staging; do
        aws ecr describe-images --region us-east-2 --repository-name back-end \
@@ -131,7 +219,7 @@ A dispatch on `main` pushes `:prod`, and it also needs approval.
 - Make sure the job ran in `ecr-main` or `ecr-approval`
 
 ### Build fails with "AccessDenied" to ECR
-- Verify the IAM role has the ECR push policy attached
+- Verify the IAM role has the inline policy `ecr-push-back-end`
 - Check that the policy allows access to the correct ECR repository
 - Ensure the repository path matches: `633607774026.dkr.ecr.us-east-2.amazonaws.com/back-end`
 
