@@ -8,7 +8,8 @@ The backend is deployed to AWS ECS (Elastic Container Service) with separate sta
 
 Docker images are automatically built and pushed to AWS ECR via GitHub Actions:
 
-- **PR branches** (any branch except `main`): Automatically builds and pushes to `:staging` tag
+- **Pull requests**: build only, no push
+- **Manual dispatch** on any branch: pushes to `:staging` (`:prod` on `main`) after a maintainer approves the `ecr-approval` environment. See [`.github/SETUP.md`](.github/SETUP.md)
 - **main branch**: Automatically builds and pushes to `:prod` tag after CI checks pass
 
 The automated builds use AWS OIDC for secure authentication (no long-lived credentials).
@@ -206,10 +207,10 @@ gh secret set AWS_ROLE_ARN --body "arn:aws:iam::633607774026:role/GitHubActions-
 After setup, the GitHub Actions workflow will automatically:
 - Authenticate to AWS using OIDC
 - Build Docker images for ARM64 platform
-- Push images to ECR with appropriate tags (`:staging` or `:prod`)
+- Push images to ECR with appropriate tags (`:prod` from `main`, `:staging` from an approved dispatch)
 
 You can verify by:
-1. Pushing a commit to a non-main branch (should push `:staging`)
+1. Running the workflow with a dispatch on a non-main branch and approving `ecr-approval` (should push `:staging`)
 2. Merging to main (should push `:prod` after tests pass)
 3. Checking ECR repository for new images
 
@@ -217,7 +218,7 @@ You can verify by:
 
 ✅ **OIDC Authentication**: No long-lived AWS credentials stored in GitHub  
 ✅ **Least Privilege**: IAM role only has permissions needed for ECR push operations  
-✅ **Repository Scoping**: Trust policy restricts access to `operationcode/back-end` repository  
+✅ **Repository Scoping**: Trust policy accepts only the `ecr-main` and `ecr-approval` environments of `OperationCode/back-end`  
 ✅ **Conditional Access**: Production builds only run after CI checks pass  
 ✅ **Build Caching**: Uses GitHub Actions cache to speed up builds
 

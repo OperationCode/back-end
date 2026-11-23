@@ -72,16 +72,26 @@ Use this procedure when you change from an older trust policy. It makes sure tha
 
 1. Create the two environments, as given in [Required Environments](#required-environments).
 2. Get the pull request that adds the environments to `ci.yml` approved and green. Do not merge it yet.
-3. Make sure that no CI run is in progress or queued:
-   `gh run list --repo OperationCode/back-end --status in_progress` and `--status queued`. Cancel any run that you find.
-4. Replace the trust policy with the environment-only policy above, in one `aws iam update-assume-role-policy` call. Examine all statements again.
-5. Revoke the sessions that the old trust issued: IAM > Roles > the role > "Revoke active sessions". Do this before the merge, so that the revocation does not stop the first `ecr-main` build. A trust change does not cancel credentials that were already issued:
-   - An STS session stays valid for up to the role's maximum session duration. Get it with `aws iam get-role --role-name GitHubActions-ECR-Push --query Role.MaxSessionDuration`. The default is 3600 seconds, and `configure-aws-credentials` asks for 1 hour by default.
-   - An ECR login token (`GetAuthorizationToken`) stays valid for 12 hours.
-   - Look in CloudTrail for ECR pushes in the 12 hours before step 4 that did not come from CI runs you know about.
+3. Replace the trust policy with the environment-only policy above, in one `aws iam update-assume-role-policy` call. Examine all statements again. Write down the time of this change (T). After T, the old trust cannot issue a new session.
+4. Cancel every CI run that is in progress or queued:
+   `gh run list --repo OperationCode/back-end --status in_progress` and `--status queued`. These runs can hold credentials from before T.
+5. Revoke the sessions that the old trust issued: IAM > Roles > the role > "Revoke active sessions". Do this before the merge, so that the revocation does not stop the first `ecr-main` build. An STS session stays valid until this revoke, for up to the role's maximum session duration (`aws iam get-role --role-name GitHubActions-ECR-Push --query Role.MaxSessionDuration`; the default is 3600 seconds).
 6. Immediately merge the pull request. The push to `main` that the merge causes uses `ecr-main` and pushes `:prod`.
-   - Between step 4 and step 6, every push run of the old workflow fails at "Configure AWS credentials". Nobody must push to `main` during this time.
+   - Between step 3 and step 6, every push run of the old workflow fails at "Configure AWS credentials". Nobody must push to `main` during this time.
    - If the first push fails, correct the trust subject (see the rules above). Then re-run the job. The re-run uses `ecr-approval`, so a maintainer must approve it.
+7. Check for ECR login tokens from before T. An ECR login token stays valid for 12 hours, and AWS does not document that "Revoke active sessions" stops it. Thus a token issued before T can push until T + 12 h:
+   - At T + 12 h, list the ECR write events of the role from T - 12 h to T + 12 h. Each event must match a CI run that you know about (time and run):
+     ```bash
+     for e in InitiateLayerUpload PutImage BatchDeleteImage; do
+       aws cloudtrail lookup-events --region us-east-2 \
+         --lookup-attributes AttributeKey=EventName,AttributeValue=$e \
+         --start-time <T-12h> --end-time <T+12h> \
+         --query 'Events[].[EventTime,Username,EventName]' --output text
+     done
+     ```
+   - At T + 12 h, make sure that the `:prod` and `:staging` digests are the digests that known CI runs pushed (the first `ecr-main` run for `:prod`):
+     `aws ecr describe-images --region us-east-2 --repository-name back-end --image-ids imageTag=prod imageTag=staging --query 'imageDetails[].[imageTags,imageDigest,imagePushedAt]'`
+   - If an event or a digest does not match, push a known-good image again (re-run the main build with an `ecr-approval` approval) and investigate.
 
 ## Push a Staging Image (maintainers)
 
