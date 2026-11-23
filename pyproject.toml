@@ -39,7 +39,7 @@ django-health-check = "^3.20"               # Was ^3.18
 [tool.poetry.group.dev.dependencies]
 bandit = "^1.9"
 coverage = "^7.0"
-django-debug-toolbar = "^5.0"               # Was ^4.4 (6.x has API changes)
+django-debug-toolbar = ">=5,<9"               # Was ^4.4 (6.x has API changes)
 factory_boy = "^3.3"
 pyhumps = "^3.8"
 pytest = ">=9.0"
