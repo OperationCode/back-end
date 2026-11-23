@@ -34,7 +34,7 @@ requests = "^2.32"
 urllib3 = "^2.6.3"
 sentry-sdk = "^2.49"
 django-allow-cidr = "^0.8"
-django-health-check = "^3.20"               # Was ^3.18
+django-health-check = ">=3.20,<5.0"               # Was ^3.18
 
 [tool.poetry.group.dev.dependencies]
 bandit = "^1.9"
