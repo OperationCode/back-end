@@ -40,9 +40,10 @@ urlpatterns = [
 #    Static and media files in debug mode    #
 ##############################################
 if settings.DEBUG or settings.TESTING:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+# Toolbar 6+ ships models, so it can only be imported when installed (dev only)
+if "debug_toolbar" in settings.INSTALLED_APPS:
     import debug_toolbar
 
-    urlpatterns += [
-        *static(settings.STATIC_URL, document_root=settings.STATIC_ROOT),
-        path("__debug__/", include(debug_toolbar.urls)),
-    ]
+    urlpatterns += [path("__debug__/", include(debug_toolbar.urls))]
