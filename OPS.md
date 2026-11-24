@@ -9,8 +9,8 @@ The backend is deployed to AWS ECS (Elastic Container Service) with separate sta
 Docker images are automatically built and pushed to AWS ECR via GitHub Actions:
 
 - **Pull requests**: build only, no push
-- **Manual dispatch** on any branch: pushes to `:staging` (`:prod` on `main`) after a maintainer approves the `ecr-approval` environment. See [`.github/SETUP.md`](.github/SETUP.md)
 - **main branch**: Automatically builds and pushes to `:prod` tag after CI checks pass
+- **Manual dispatch**: a manual rebuild after a maintainer approves the `ecr-approval` environment. It is not the staging path.
 
 The automated builds use AWS OIDC for secure authentication (no long-lived credentials).
 
@@ -30,13 +30,13 @@ This creates ARM64 images tagged as `back-end:staging` or `back-end:prod`.
 
 ## Deploying to ECS
 
-After images are pushed to ECR, deploy by updating the ECS service:
+CI never deploys to ECS. The task definitions pin `back-end:prod` and `back-end:staging`, so a deploy is a manual force-new-deployment.
 
-1. **Update task definition** with new image tag
-2. **Deploy to staging first** - Update ECS service to use new task definition
-3. **Monitor logs** in CloudWatch or Sentry
-4. **Validate staging** (see below)
-5. **Deploy to production** - Repeat for production ECS service
+1. **Staging first** - retag the `:prod` image from the main build as `:staging`, then force a new deployment of `python_backend_staging`
+2. **Validate staging** (see below) and monitor logs in CloudWatch or Sentry
+3. **Then prod** - force a new deployment of `python_backend_prod`
+
+Save the running image digest before you deploy, so you can roll back. Commands and the caveat about outages: [`.github/SETUP.md`](.github/SETUP.md#deploy-to-staging-and-prod-maintainers)
 
 ## Important: JWT Secret Key Migration
 
@@ -182,12 +182,11 @@ gh secret set AWS_ROLE_ARN --repo OperationCode/back-end --body "arn:aws:iam::63
 After setup, the GitHub Actions workflow will automatically:
 - Authenticate to AWS using OIDC
 - Build Docker images for ARM64 platform
-- Push images to ECR with appropriate tags (`:prod` from `main`, `:staging` from an approved dispatch)
+- Push images to ECR with appropriate tags (`:prod` from `main`; `:staging` is a retag of `:prod`, see [`.github/SETUP.md`](.github/SETUP.md#deploy-to-staging-and-prod-maintainers))
 
 You can verify by:
-1. Running the workflow with a dispatch on a non-main branch and approving `ecr-approval` (should push `:staging`)
-2. Merging to main (should push `:prod` after tests pass)
-3. Checking ECR repository for new images
+1. Merging to main (should push `:prod` after tests pass)
+2. Checking ECR repository for new images
 
 ## Security Best Practices
 

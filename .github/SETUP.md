@@ -9,7 +9,7 @@ Only maintainers can cause CI to push an image. The workflow file does not enfor
 ```
 pull_request (any author)    --> docker-build        build only, no AWS credentials
 push to main, first attempt  --> docker-build-push   environment ecr-main      no wait
-workflow_dispatch (any ref)  --> docker-build-push   environment ecr-approval  maintainer approves
+workflow_dispatch (any ref)  --> docker-build-push   environment ecr-approval  maintainer approves (manual rebuild)
 re-run of any push run       --> docker-build-push   environment ecr-approval  maintainer approves
                                         |
                                         v
@@ -266,16 +266,34 @@ An IAM change can take time to propagate, so the old role can still issue a sess
   An `ImageNotFoundException` for a tag means that the tag does not exist. This is not a failure of the check.
 - If an event or a digest does not match, push a known-good image again (re-run the default-branch build of that repository with an `ecr-approval` approval) and investigate.
 
-## Push a Staging Image (maintainers)
+## Deploy to Staging and Prod (maintainers)
 
-Pull requests do not push images. To push `:staging` from a branch:
+Pull requests do not push images. CI never deploys to ECS. The task definitions pin `back-end:prod` and `back-end:staging`, so a deploy is a manual force-new-deployment.
 
-1. Go to Actions > CI > "Run workflow". Select the branch. You can also run `gh workflow run ci.yml --repo OperationCode/back-end --ref <branch>`.
-2. The `Build and Push Docker Image` job waits for the `ecr-approval` review.
-3. Before you approve, read the commit **and** `.github/workflows/ci.yml` on that branch. The approved job runs with the branch's workflow file. Its credentials can also write `:prod`.
-4. Approve the deployment. The job pushes `back-end:staging`.
+Merging to `main` builds the `runtime` target and pushes `back-end:prod`. Staging gets the same image, so it tests exactly what prod will run.
 
-A dispatch on `main` pushes `:prod`, and it also needs approval.
+1. Save the running digest for a rollback, for each service:
+   ```bash
+   export AWS_PROFILE=operationcode AWS_REGION=us-east-2
+   C=operationcode-ecs-us-east-2
+   T=$(aws ecs list-tasks --cluster $C --service-name python_backend_prod --query 'taskArns[0]' --output text)
+   aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].containers[0].imageDigest' --output text
+   ```
+2. Staging first. Give `:staging` to the image that the main build pushed:
+   ```bash
+   M=$(aws ecr batch-get-image --repository-name back-end --image-ids imageTag=prod --query 'images[0].imageManifest' --output text)
+   aws ecr put-image --repository-name back-end --image-tag staging --image-manifest "$M"
+   aws ecs update-service --cluster $C --service python_backend_staging --force-new-deployment
+   aws ecs wait services-stable --cluster $C --services python_backend_staging
+   curl -fsS https://api.staging.operationcode.org/healthz
+   ```
+3. Then prod. Run the same `update-service` and `wait` for `python_backend_prod`, then `curl -fsS https://api.operationcode.org/healthz`.
+
+To roll back: `batch-get-image` with `imageDigest=<saved digest>`, `put-image` that manifest to the tag, then force a new deployment.
+
+Caveat: `deployment_minimum_healthy_percent` is 0 and there is no circuit breaker. Each deploy has a short outage, and there is no automatic rollback.
+
+The `ecr-approval` dispatch (Actions > CI > "Run workflow") still exists for a manual rebuild. It is not the staging path. Read the branch's `.github/workflows/ci.yml` before you approve, because the approved job runs with that file and its credentials can also write `:prod`.
 
 ## Troubleshooting
 
