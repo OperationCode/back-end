@@ -1,7 +1,5 @@
 version: 2
-# Majors are ignored for version updates: they get a manual, planned upgrade.
-# Security fixes that need a major still arrive via Dependabot alerts and
-# security updates, which ignore rules here do not block.
+# Majors are ignored; a security fix that needs a major opens no PR but still shows as a Dependabot alert (alerts are on), so we take it by hand.
 updates:
   # Poetry projects use the "pip" ecosystem; Dependabot reads pyproject.toml and poetry.lock
   - package-ecosystem: "pip"
