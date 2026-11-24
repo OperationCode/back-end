@@ -42,7 +42,7 @@ coverage = "^7.0"
 django-debug-toolbar = "^5.0"               # Was ^4.4 (6.x has API changes)
 factory_boy = "^3.3"
 pyhumps = "^3.8"
-pytest = ">=9.0"
+pytest = ">=9.0,<10"
 pytest-django = "^4.8"
 pytest-env = "^1.1"
 pytest-mock = "^3.14"
