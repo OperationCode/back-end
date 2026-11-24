@@ -1,4 +1,7 @@
 version: 2
+# Majors are ignored for version updates: they get a manual, planned upgrade.
+# Security fixes that need a major still arrive via Dependabot alerts and
+# security updates, which ignore rules here do not block.
 updates:
   # Poetry projects use the "pip" ecosystem; Dependabot reads pyproject.toml and poetry.lock
   - package-ecosystem: "pip"
@@ -8,8 +11,11 @@ updates:
       day: "monday"
     cooldown:
       default-days: 7
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
-      # One PR for routine bumps; majors stay separate so they get a real review
+      # One PR for routine minor and patch bumps (majors are ignored above)
       python-minor-patch:
         update-types:
           - "minor"
@@ -22,6 +28,9 @@ updates:
       day: "monday"
     cooldown:
       default-days: 7
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       actions:
         patterns:
@@ -36,3 +45,5 @@ updates:
       # Stay on Python 3.14 until we decide to move; patch bumps only
       - dependency-name: "python"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
