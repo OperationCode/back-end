@@ -53,13 +53,14 @@ Nothing runs database migrations when a task starts. A release that has a new mi
    ```bash
    gh run list -R OperationCode/back-end --workflow ci.yml --branch main --limit 3
    ```
-2. Save the running digest of each service in a file, and print it. You need it for a rollback. A new terminal loses shell variables, the file does not. Run this step one time per deploy, before step 3. It refuses to overwrite a saved digest, so a failed deploy cannot replace the good digest with a bad one. Delete the file only after a deploy that you checked and finished:
+2. Save the running digest of each service in a file, and print it. You need it for a rollback. A new terminal loses shell variables, the file does not. Run this step one time per deploy, before step 3. It refuses to overwrite a saved digest, so a failed deploy cannot replace the good digest with a bad one. Step 10 (deploy) and the end of section 4 (rollback) delete the file:
    ```bash
-   C=operationcode-ecs-us-east-2
    (
      set -euo pipefail
+     export AWS_PROFILE=operationcode AWS_REGION=us-east-2
+     C=operationcode-ecs-us-east-2
      D=$HOME/back-end-deploy.env
-     if [ -s $D ]; then echo "STOP: $D exists. Roll back with it, or delete it after a finished deploy"; exit 1; fi
+     if [ -s $D ]; then echo "STOP: $D exists: a previous deploy or rollback was not finished. If it was finished, run: rm $D"; exit 1; fi
      : > $D
      for S in python_backend_staging python_backend_prod; do
        T=$(aws ecs list-tasks --cluster $C --service-name $S --query 'taskArns[0]' --output text)
@@ -130,11 +131,12 @@ Nothing runs database migrations when a task starts. A release that has a new mi
    ```
 4. Check staging. All three must pass:
    ```bash
-   C=operationcode-ecs-us-east-2
-   S=python_backend_staging U=https://api.staging.operationcode.org/healthz   # prod (step 8): S=python_backend_prod U=https://api.operationcode.org/healthz
-   T=$(aws ecs list-tasks --cluster $C --service-name $S --query 'taskArns[0]' --output text)
    (
      set -euo pipefail
+     export AWS_PROFILE=operationcode AWS_REGION=us-east-2
+     C=operationcode-ecs-us-east-2
+     S=python_backend_staging U=https://api.staging.operationcode.org/healthz   # prod (step 8): S=python_backend_prod U=https://api.operationcode.org/healthz
+     T=$(aws ecs list-tasks --cluster $C --service-name $S --query 'taskArns[0]' --output text)
      # a) HEALTHY, and the digest is the digest of :prod
      H=$(aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].healthStatus' --output text)
      G=$(aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].containers[0].imageDigest' --output text)
@@ -151,14 +153,23 @@ Nothing runs database migrations when a task starts. A release that has a new mi
      echo "step 4 OK"
    )
    ```
-5. Migrations on staging (the new image has the migration files, so run this after the rollout). First list the pending ones (ECS Exec, see section 5 for `$T`):
+5. Migrations on staging (the new image has the migration files, so run this after the rollout). First list the pending ones with ECS Exec:
    ```bash
-   aws ecs execute-command --cluster $C --task "$T" --container $S --interactive --command "python manage.py migrate --plan"
+   (
+     set -euo pipefail
+     export AWS_PROFILE=operationcode AWS_REGION=us-east-2
+     C=operationcode-ecs-us-east-2 S=python_backend_staging
+     T=$(aws ecs list-tasks --cluster $C --service-name $S --query 'taskArns[0]' --output text)
+     aws ecs execute-command --cluster $C --task "$T" --container $S --interactive --command "python manage.py migrate --plan"
+   )
    ```
    `No planned migration operations.` means you are done. Otherwise read the plan. Stop if it contains a destructive operation (`RemoveField`, `DeleteModel`, `RunSQL`) that you did not expect. Then apply and check:
    ```bash
    (
      set -euo pipefail
+     export AWS_PROFILE=operationcode AWS_REGION=us-east-2
+     C=operationcode-ecs-us-east-2 S=python_backend_staging
+     T=$(aws ecs list-tasks --cluster $C --service-name $S --query 'taskArns[0]' --output text)
      aws ecs execute-command --cluster $C --task "$T" --container $S --interactive --command "python manage.py migrate"
      aws ecs execute-command --cluster $C --task "$T" --container $S --interactive --command "python manage.py migrate --plan"   # must say: No planned migration operations.
    )
@@ -175,39 +186,88 @@ Nothing runs database migrations when a task starts. A release that has a new mi
    )
    ```
 8. Check prod: run the step 4 block with the prod values of `S` and `U` (in its comment).
-9. Migrations on prod: repeat step 5 with the prod `$S` and `$T`. Between step 7 and step 9 the new code runs on the old schema. Keep this time short, and do not skip the step when staging needed it.
+9. Migrations on prod. Between step 7 and this step the new code runs on the old schema. Keep this time short, and do not skip the step when staging needed it. List the pending migrations:
+   ```bash
+   (
+     set -euo pipefail
+     export AWS_PROFILE=operationcode AWS_REGION=us-east-2
+     C=operationcode-ecs-us-east-2 S=python_backend_prod
+     T=$(aws ecs list-tasks --cluster $C --service-name $S --query 'taskArns[0]' --output text)
+     aws ecs execute-command --cluster $C --task "$T" --container $S --interactive --command "python manage.py migrate --plan"
+   )
+   ```
+   If the plan is not empty, read it (same destructive-operation rule as step 5), then apply and check:
+   ```bash
+   (
+     set -euo pipefail
+     export AWS_PROFILE=operationcode AWS_REGION=us-east-2
+     C=operationcode-ecs-us-east-2 S=python_backend_prod
+     T=$(aws ecs list-tasks --cluster $C --service-name $S --query 'taskArns[0]' --output text)
+     aws ecs execute-command --cluster $C --task "$T" --container $S --interactive --command "python manage.py migrate"
+     aws ecs execute-command --cluster $C --task "$T" --container $S --interactive --command "python manage.py migrate --plan"   # must say: No planned migration operations.
+   )
+   ```
+10. Finish. When step 8 and step 9 passed, delete the saved digests. A later step 2 refuses to run while the file exists:
+   ```bash
+   rm $HOME/back-end-deploy.env
+   ```
 
 ## 4. Roll back
 
-Use the digest saved in deploy step 2 (`cat $HOME/back-end-deploy.env`). Set `S` and `TAG` for the environment that failed, then run the block:
+Use the digest saved in deploy step 2 (`cat $HOME/back-end-deploy.env`). Set `ENV` to the environment that failed (`prod` or `staging`), then run the block. If `:TAG` already points at the saved digest, the block skips `put-image` and only redeploys:
 
 ```bash
-C=operationcode-ecs-us-east-2
-. $HOME/back-end-deploy.env
-S=python_backend_prod TAG=prod DIGEST=$PROD_DIGEST            # prod
-# S=python_backend_staging TAG=staging DIGEST=$STAGING_DIGEST   # staging
+ENV=prod   # or: ENV=staging
 (
   set -euo pipefail
+  export AWS_PROFILE=operationcode AWS_REGION=us-east-2
+  C=operationcode-ecs-us-east-2
+  . $HOME/back-end-deploy.env
+  S=python_backend_$ENV TAG=$ENV
+  case $ENV in prod) DIGEST=$PROD_DIGEST;; staging) DIGEST=$STAGING_DIGEST;; *) echo "STOP: ENV must be prod or staging"; exit 1;; esac
   if [ -z "$DIGEST" ] || [ "$DIGEST" = None ]; then echo "STOP: no saved digest"; exit 1; fi
-  M=$(aws ecr batch-get-image --repository-name back-end --image-ids imageDigest=$DIGEST --query 'images[0].imageManifest' --output text)
-  if [ -z "$M" ] || [ "$M" = None ]; then echo "STOP: no manifest for $DIGEST"; exit 1; fi
-  aws ecr put-image --repository-name back-end --image-tag $TAG --image-manifest "$M"
+  CUR=$(aws ecr describe-images --repository-name back-end --image-ids imageTag=$TAG --query 'imageDetails[0].imageDigest' --output text 2>/dev/null || echo none)
+  if [ "$CUR" = "$DIGEST" ]; then
+    echo "put-image skipped: :$TAG already points at $DIGEST"
+  else
+    M=$(aws ecr batch-get-image --repository-name back-end --image-ids imageDigest=$DIGEST --query 'images[0].imageManifest' --output text)
+    if [ -z "$M" ] || [ "$M" = None ]; then echo "STOP: no manifest for $DIGEST"; exit 1; fi
+    aws ecr put-image --repository-name back-end --image-tag $TAG --image-manifest "$M"
+  fi
   aws ecs update-service --cluster $C --service $S --force-new-deployment
   aws ecs wait services-stable --cluster $C --services $S
 )
 ```
 
-Verify. The task digest must equal `$DIGEST` (the saved digest, not `:prod`), the task must be HEALTHY, and the health URL must return 200:
+Verify. Use the same `ENV`. The task digest must equal the saved digest (not `:prod`), the task must be HEALTHY, and the health URL must return 200:
 
 ```bash
+ENV=prod   # or: ENV=staging
 (
   set -euo pipefail
+  export AWS_PROFILE=operationcode AWS_REGION=us-east-2
+  C=operationcode-ecs-us-east-2
+  . $HOME/back-end-deploy.env
+  S=python_backend_$ENV
+  case $ENV in
+    prod) DIGEST=$PROD_DIGEST U=https://api.operationcode.org/healthz;;
+    staging) DIGEST=$STAGING_DIGEST U=https://api.staging.operationcode.org/healthz;;
+    *) echo "STOP: ENV must be prod or staging"; exit 1;;
+  esac
   T=$(aws ecs list-tasks --cluster $C --service-name $S --query 'taskArns[0]' --output text)
   H=$(aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].healthStatus' --output text)
   G=$(aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].containers[0].imageDigest' --output text)
   echo "health $H, task $G, saved $DIGEST"
   if [ "$H" != HEALTHY ] || [ "$G" != "$DIGEST" ]; then echo "STOP: rollback check failed"; exit 1; fi
+  if ! curl -fsS -o /dev/null -w '%{http_code}\n' "$U"; then echo "STOP: health URL failed"; exit 1; fi
+  echo "rollback OK"
 )
+```
+
+Finish. When the block prints `rollback OK`, delete the saved digests. A later step 2 refuses to run while the file exists:
+
+```bash
+rm $HOME/back-end-deploy.env
 ```
 
 - ECR does not keep tag history. If you did not save the digest, you cannot find the old one by tag.
@@ -220,6 +280,7 @@ Verify. The task digest must equal `$DIGEST` (the saved digest, not `:prod`), th
 ECS Exec is enabled on both services. You need the `session-manager-plugin` (`brew install --cask session-manager-plugin`).
 
 ```bash
+C=operationcode-ecs-us-east-2
 S=python_backend_prod   # or python_backend_staging
 T=$(aws ecs list-tasks --cluster $C --service-name $S --query 'taskArns[0]' --output text)
 aws ecs execute-command --cluster $C --task "$T" --container $S --interactive --command "python manage.py shell"
@@ -265,6 +326,7 @@ aws logs describe-log-groups --log-group-name-prefix ecs-
 Service state and deployments. `rolloutState` must be `COMPLETED`, and `runningCount` must equal `desiredCount`:
 
 ```bash
+C=operationcode-ecs-us-east-2
 aws ecs describe-services --cluster $C --services python_backend_prod \
   --query 'services[0].[runningCount,desiredCount,deployments[].[status,rolloutState,taskDefinition],events[:5].message]'
 aws ecs list-tasks --cluster $C --service-name python_backend_prod --desired-status STOPPED
@@ -275,9 +337,16 @@ If a new task keeps stopping, read the stop reason: `aws ecs describe-tasks --cl
 Target group health (one target per group, health path `/healthz`):
 
 ```bash
-aws elbv2 describe-target-groups --query 'TargetGroups[?contains(TargetGroupName,`python-backend`)].[TargetGroupName,TargetGroupArn]' --output text
-aws elbv2 describe-target-health --target-group-arn <TargetGroupArn>
+ENV=prod   # or: ENV=staging
+(
+  set -euo pipefail
+  export AWS_PROFILE=operationcode AWS_REGION=us-east-2
+  TG=$(aws elbv2 describe-target-groups --names ecs-python-backend-$ENV --query 'TargetGroups[0].TargetGroupArn' --output text)
+  aws elbv2 describe-target-health --target-group-arn "$TG"
+)
 ```
+
+The target groups are `ecs-python-backend-prod` and `ecs-python-backend-staging`.
 
 Errors and traces are in Sentry. Configure it with `SENTRY_DSN`, `SENTRY_TRACES_SAMPLE_RATE`, and `SENTRY_PROFILES_SAMPLE_RATE` (see `example.env`).
 
@@ -294,13 +363,15 @@ aws ecs describe-task-definition --task-definition python_backend_prod --query '
 To rotate, do staging first (`SECRET=staging/python_backend`), then prod (`SECRET=prod/python_backend`). Never print the value. This changes one key and keeps the others:
 
 ```bash
-C=operationcode-ecs-us-east-2
 SECRET=staging/python_backend SVC=python_backend_staging   # prod: prod/python_backend, python_backend_prod
 (
   set -euo pipefail
-  umask 077; F=$(mktemp); trap 'rm -f "$F"' EXIT
+  export AWS_PROFILE=operationcode AWS_REGION=us-east-2
+  C=operationcode-ecs-us-east-2
+  umask 077; F=$(mktemp); K=$(mktemp); trap 'rm -f "$F" "$K"' EXIT
+  openssl rand -base64 64 | tr -d '\n' > $K   # the new key goes through a file, not argv, so ps cannot show it
   aws secretsmanager get-secret-value --secret-id $SECRET --query SecretString --output text \
-    | jq --arg k "$(openssl rand -base64 64 | tr -d '\n')" '.jwt_secret_key=$k' > $F
+    | jq --rawfile k $K '.jwt_secret_key=$k' > $F
   if ! test -s $F || ! jq -e 'has("jwt_secret_key")' $F >/dev/null; then echo "STOP: bad secret JSON"; exit 1; fi
   jq 'keys' $F                      # check that all the keys are still there
   aws secretsmanager put-secret-value --secret-id $SECRET --secret-string file://$F
