@@ -53,12 +53,14 @@ Nothing runs database migrations when a task starts. A release that has a new mi
    ```bash
    gh run list -R OperationCode/back-end --workflow ci.yml --branch main --limit 3
    ```
-2. Save the running digest of each service in a file, and print it. You need it for a rollback. A new terminal loses shell variables, the file does not:
+2. Save the running digest of each service in a file, and print it. You need it for a rollback. A new terminal loses shell variables, the file does not. Run this step one time per deploy, before step 3. It refuses to overwrite a saved digest, so a failed deploy cannot replace the good digest with a bad one. Delete the file only after a deploy that you checked and finished:
    ```bash
    C=operationcode-ecs-us-east-2
    (
      set -euo pipefail
-     D=$HOME/back-end-deploy.env; : > $D
+     D=$HOME/back-end-deploy.env
+     if [ -s $D ]; then echo "STOP: $D exists. Roll back with it, or delete it after a finished deploy"; exit 1; fi
+     : > $D
      for S in python_backend_staging python_backend_prod; do
        T=$(aws ecs list-tasks --cluster $C --service-name $S --query 'taskArns[0]' --output text)
        G=$(aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].containers[0].imageDigest' --output text)
