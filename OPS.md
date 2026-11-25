@@ -45,7 +45,7 @@ Deploys cause a short outage: `deployment_minimum_healthy_percent` is 0 and ther
 
 **Stop rule:** if any step or check below fails, STOP. Do not go on to prod. Go to section 4 and roll back the environment that failed. A `wait services-stable` that times out (about 10 minutes, exit code 255) is a failure.
 
-Nothing runs database migrations when a task starts. A release that has a new migration needs step 5 (staging) and step 9 (prod). Step 2b checks whether the new code needs the migration *before* it can start.
+Nothing runs database migrations when a task starts. A release that has a new migration needs step 5 (staging) and step 9 (prod). Step 2b checks whether the new code needs the migration *before* it can start. If it does, step 3b runs it before the rollout.
 
 1. Wait for the CI run on `main` to finish and succeed:
    ```bash
@@ -65,13 +65,45 @@ Nothing runs database migrations when a task starts. A release that has a new mi
    ```bash
    git fetch origin && git diff --name-only <last deployed commit> origin/main -- 'src/**/migrations/*.py'
    ```
-   No output: go on to step 3. If there are files, read them. If the new code can start on the old schema, go on: step 5 and step 9 apply them after the rollout. If the new code needs the schema change to start (the new task would fail its health check), the order is migrate first. A running old task cannot do this: its image does not contain the new migration files. Run `python manage.py migrate` from the new image instead (a one-off task of the service task definition, with the command overridden), and only if the migration is backward-compatible with the old code (it only adds: new tables, or new columns that are null or have a default). Otherwise STOP and ask a maintainer. The one-off task is not tested here. Staging goes first, so a mistake costs only staging: if the staging task fails its health check with `ProgrammingError` or `no such column` in the logs, this is the cause.
-3. Staging: give `:staging` the manifest of `:prod`, check it, then deploy:
+   Read the files, then choose one path:
+   - No files, or the new code can start on the old schema: the **normal path**. Steps 5 and 9 apply the migrations after the rollout.
+   - The new code needs the schema change to start (the new task would fail its health check), and the migration is backward-compatible with the old code that still runs (it only adds: new tables, or new columns that are null or have a default): the **migrate-first path**. Do step 3b on staging, and again on prod in step 7.
+   - Any other case: STOP and ask a maintainer.
+
+   The task definition pins a tag, not an image. So a one-off task started before the retag of step 3 runs the old image, and the old image does not have the new migration files. A running old task cannot run them for the same reason. That is why step 3b comes after the retag and before the rollout. If the staging task fails its health check with `ProgrammingError` or `no such column` in the logs, a migration that had to run first did not run.
+3. Staging: give `:staging` the manifest of `:prod`, and check it:
    ```bash
    M=$(aws ecr batch-get-image --repository-name back-end --image-ids imageTag=prod --query 'images[0].imageManifest' --output text)
    test -n "$M" -a "$M" != None || { echo "no :prod manifest: STOP"; false; }
    aws ecr put-image --repository-name back-end --image-tag staging --image-manifest "$M"
    for t in prod staging; do aws ecr describe-images --repository-name back-end --image-ids imageTag=$t --query 'imageDetails[0].imageDigest' --output text; done   # the two digests must be equal
+   ```
+3b. Migrate-first path only (step 2b). Run `migrate` in a one-off task of the service. The task uses the current task definition of the service, so it pulls the image that the tag has now: the new image. The command override replaces the gunicorn `CMD` of the image (the working directory is `/app/src`):
+   ```bash
+   C=operationcode-ecs-us-east-2 S=python_backend_staging   # prod (step 7): S=python_backend_prod
+   (
+     set -euo pipefail
+     TD=$(aws ecs describe-services --cluster $C --services $S --query 'services[0].taskDefinition' --output text)
+     R=$(aws ecs run-task --cluster $C --task-definition "$TD" --started-by ops-migrate \
+       --capacity-provider-strategy capacityProvider=spot_instances,weight=1 \
+       --overrides "{\"containerOverrides\":[{\"name\":\"$S\",\"command\":[\"python\",\"manage.py\",\"migrate\",\"--noinput\"]}]}")
+     T=$(echo "$R" | jq -r '.tasks[0].taskArn // empty')
+     test -n "$T" || { echo "$R" | jq '.failures'; echo "no task started: STOP"; false; }
+     echo "task: $T"
+     aws ecs wait tasks-stopped --cluster $C --tasks "$T"   # about 10 minutes, then exit code 255
+     aws ecs describe-tasks --cluster $C --tasks "$T" \
+       --query 'tasks[0].[containers[0].exitCode,containers[0].imageDigest,stoppedReason]' --output text
+     aws logs get-log-events --log-group-name ecs-20221213004720404200000001 --start-from-head \
+       --log-stream-name "$S/$S/${T##*/}" --query 'events[].message' --output text || true
+     X=$(aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].containers[0].exitCode' --output text)
+     test "$X" = 0 || { echo "migrate exit code $X: STOP"; false; }
+     echo "migrate OK"
+   )
+   ```
+   It must print `migrate OK`, and the digest must be the digest of `:prod` from step 3. Otherwise STOP: do not deploy. Read the log lines that the block prints. If the wait timed out, the task can still be running: check it with `aws ecs describe-tasks` and do not start a second one.
+3c. Deploy staging:
+   ```bash
+   C=operationcode-ecs-us-east-2
    aws ecs update-service --cluster $C --service python_backend_staging --force-new-deployment
    aws ecs wait services-stable --cluster $C --services python_backend_staging
    ```
@@ -100,7 +132,7 @@ Nothing runs database migrations when a task starts. A release that has a new mi
    ```
    If `migrate` fails, STOP. Do not go to prod. A code rollback does not undo applied migrations.
 6. Check staging again (steps 4b and 4c) after the migration.
-7. Prod: `:prod` is already the image, so do not retag. Deploy:
+7. Prod: `:prod` is already the image, so do not retag. On the migrate-first path, first run the step 3b block with `S=python_backend_prod`. Then deploy:
    ```bash
    aws ecs update-service --cluster $C --service python_backend_prod --force-new-deployment
    aws ecs wait services-stable --cluster $C --services python_backend_prod
@@ -118,6 +150,7 @@ S=python_backend_prod TAG=prod DIGEST=$PROD_DIGEST            # prod
 # S=python_backend_staging TAG=staging DIGEST=$STAGING_DIGEST   # staging
 test -n "$DIGEST" -a "$DIGEST" != None || { echo "no saved digest: STOP"; false; }
 M=$(aws ecr batch-get-image --repository-name back-end --image-ids imageDigest=$DIGEST --query 'images[0].imageManifest' --output text)
+test -n "$M" -a "$M" != None || { echo "no manifest for $DIGEST: STOP"; false; }
 aws ecr put-image --repository-name back-end --image-tag $TAG --image-manifest "$M"
 aws ecs update-service --cluster $C --service $S --force-new-deployment
 aws ecs wait services-stable --cluster $C --services $S
@@ -215,6 +248,7 @@ aws ecs describe-task-definition --task-definition python_backend_prod --query '
 To rotate, do staging first (`SECRET=staging/python_backend`), then prod (`SECRET=prod/python_backend`). Never print the value. This changes one key and keeps the others:
 
 ```bash
+C=operationcode-ecs-us-east-2
 SECRET=staging/python_backend SVC=python_backend_staging   # prod: prod/python_backend, python_backend_prod
 (
   set -euo pipefail
