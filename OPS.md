@@ -45,6 +45,8 @@ Deploys cause a short outage: `deployment_minimum_healthy_percent` is 0 and ther
 
 **Stop rule:** if any step or check below fails, STOP. Do not go on to prod. Go to section 4 and roll back the environment that failed. A `wait services-stable` that times out (about 10 minutes, exit code 255) is a failure.
 
+Each block with checks runs in a subshell `( set -euo pipefail ... )`. It halts at the first failed command or check and prints `STOP: <reason>`. If a block ends with an error, STOP.
+
 Nothing runs database migrations when a task starts. A release that has a new migration needs step 5 (staging) and step 9 (prod). Step 2b checks whether the new code needs the migration *before* it can start. If it does, step 3b runs it before the rollout.
 
 1. Wait for the CI run on `main` to finish and succeed:
@@ -53,13 +55,18 @@ Nothing runs database migrations when a task starts. A release that has a new mi
    ```
 2. Save the running digest of each service in a file, and print it. You need it for a rollback. A new terminal loses shell variables, the file does not:
    ```bash
-   D=$HOME/back-end-deploy.env; : > $D
-   for S in python_backend_staging python_backend_prod; do
-     T=$(aws ecs list-tasks --cluster $C --service-name $S --query 'taskArns[0]' --output text)
-     G=$(aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].containers[0].imageDigest' --output text)
-     echo "$(echo ${S#python_backend_} | tr a-z A-Z)_DIGEST=$G" >> $D
-   done
-   cat $D   # copy these two lines to your notes. Stop if a value is empty or None.
+   C=operationcode-ecs-us-east-2
+   (
+     set -euo pipefail
+     D=$HOME/back-end-deploy.env; : > $D
+     for S in python_backend_staging python_backend_prod; do
+       T=$(aws ecs list-tasks --cluster $C --service-name $S --query 'taskArns[0]' --output text)
+       G=$(aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].containers[0].imageDigest' --output text)
+       if [ -z "$G" ] || [ "$G" = None ]; then echo "STOP: no digest for $S"; exit 1; fi
+       echo "$(echo ${S#python_backend_} | tr a-z A-Z)_DIGEST=$G" >> $D
+     done
+     cat $D   # copy these two lines to your notes
+   )
    ```
 2b. Check for a migration that must run before the rollout. List the migration files that are new since the last deploy (`<last deployed commit>` is the `main` commit of the previous deploy):
    ```bash
@@ -73,10 +80,16 @@ Nothing runs database migrations when a task starts. A release that has a new mi
    The task definition pins a tag, not an image. So a one-off task started before the retag of step 3 runs the old image, and the old image does not have the new migration files. A running old task cannot run them for the same reason. That is why step 3b comes after the retag and before the rollout. If the staging task fails its health check with `ProgrammingError` or `no such column` in the logs, a migration that had to run first did not run.
 3. Staging: give `:staging` the manifest of `:prod`, and check it:
    ```bash
-   M=$(aws ecr batch-get-image --repository-name back-end --image-ids imageTag=prod --query 'images[0].imageManifest' --output text)
-   test -n "$M" -a "$M" != None || { echo "no :prod manifest: STOP"; false; }
-   aws ecr put-image --repository-name back-end --image-tag staging --image-manifest "$M"
-   for t in prod staging; do aws ecr describe-images --repository-name back-end --image-ids imageTag=$t --query 'imageDetails[0].imageDigest' --output text; done   # the two digests must be equal
+   (
+     set -euo pipefail
+     M=$(aws ecr batch-get-image --repository-name back-end --image-ids imageTag=prod --query 'images[0].imageManifest' --output text)
+     if [ -z "$M" ] || [ "$M" = None ]; then echo "STOP: no :prod manifest"; exit 1; fi
+     aws ecr put-image --repository-name back-end --image-tag staging --image-manifest "$M"
+     P=$(aws ecr describe-images --repository-name back-end --image-ids imageTag=prod --query 'imageDetails[0].imageDigest' --output text)
+     Q=$(aws ecr describe-images --repository-name back-end --image-ids imageTag=staging --query 'imageDetails[0].imageDigest' --output text)
+     echo ":prod $P, :staging $Q"
+     if [ "$P" != "$Q" ]; then echo "STOP: :staging is not :prod"; exit 1; fi
+   )
    ```
 3b. Migrate-first path only (step 2b). Run `migrate` in a one-off task of the service. The task uses the current task definition of the service, so it pulls the image that the tag has now: the new image. The command override replaces the gunicorn `CMD` of the image (the working directory is `/app/src`):
    ```bash
@@ -88,38 +101,53 @@ Nothing runs database migrations when a task starts. A release that has a new mi
        --capacity-provider-strategy capacityProvider=spot_instances,weight=1 \
        --overrides "{\"containerOverrides\":[{\"name\":\"$S\",\"command\":[\"python\",\"manage.py\",\"migrate\",\"--noinput\"]}]}")
      T=$(echo "$R" | jq -r '.tasks[0].taskArn // empty')
-     test -n "$T" || { echo "$R" | jq '.failures'; echo "no task started: STOP"; false; }
+     if [ -z "$T" ]; then echo "$R" | jq '.failures'; echo "STOP: no task started"; exit 1; fi
      echo "task: $T"
      aws ecs wait tasks-stopped --cluster $C --tasks "$T"   # about 10 minutes, then exit code 255
-     aws ecs describe-tasks --cluster $C --tasks "$T" \
-       --query 'tasks[0].[containers[0].exitCode,containers[0].imageDigest,stoppedReason]' --output text
      aws logs get-log-events --log-group-name ecs-20221213004720404200000001 --start-from-head \
-       --log-stream-name "$S/$S/${T##*/}" --query 'events[].message' --output text || true
-     X=$(aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].containers[0].exitCode' --output text)
-     test "$X" = 0 || { echo "migrate exit code $X: STOP"; false; }
+       --log-stream-name "$S/$S/${T##*/}" --query 'events[].message' --output text || echo "(no log stream)"
+     K=$(aws ecs describe-tasks --cluster $C --tasks "$T" --output json)
+     X=$(echo "$K" | jq -r '.tasks[0].containers[0].exitCode')
+     G=$(echo "$K" | jq -r '.tasks[0].containers[0].imageDigest')
+     W=$(aws ecr describe-images --repository-name back-end --image-ids imageTag=${S#python_backend_} --query 'imageDetails[0].imageDigest' --output text)
+     echo "exit code $X, task digest $G, tag digest $W, reason: $(echo "$K" | jq -r '.tasks[0].stoppedReason')"
+     if [ "$X" != 0 ]; then echo "STOP: migrate failed"; exit 1; fi
+     if [ "$G" != "$W" ]; then echo "STOP: the task did not run the new image"; exit 1; fi
      echo "migrate OK"
    )
    ```
-   It must print `migrate OK`, and the digest must be the digest of `:prod` from step 3. Otherwise STOP: do not deploy. Read the log lines that the block prints. If the wait timed out, the task can still be running: check it with `aws ecs describe-tasks` and do not start a second one.
+   It must print `migrate OK`. Otherwise STOP: do not deploy. Read the log lines that the block prints. If the wait timed out, the task can still be running: check it with `aws ecs describe-tasks` and do not start a second one.
 3c. Deploy staging:
    ```bash
    C=operationcode-ecs-us-east-2
-   aws ecs update-service --cluster $C --service python_backend_staging --force-new-deployment
-   aws ecs wait services-stable --cluster $C --services python_backend_staging
+   (
+     set -euo pipefail
+     aws ecs update-service --cluster $C --service python_backend_staging --force-new-deployment
+     aws ecs wait services-stable --cluster $C --services python_backend_staging
+   )
    ```
 4. Check staging. All three must pass:
    ```bash
-   S=python_backend_staging
+   C=operationcode-ecs-us-east-2
+   S=python_backend_staging U=https://api.staging.operationcode.org/healthz   # prod (step 8): S=python_backend_prod U=https://api.operationcode.org/healthz
    T=$(aws ecs list-tasks --cluster $C --service-name $S --query 'taskArns[0]' --output text)
-   # a) HEALTHY, and the digest is the digest of :prod
-   aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].[healthStatus,containers[0].imageDigest]' --output text
-   aws ecr describe-images --repository-name back-end --image-ids imageTag=prod --query 'imageDetails[0].imageDigest' --output text
-   # b) HTTP 200
-   curl -fsS -o /dev/null -w '%{http_code}\n' https://api.staging.operationcode.org/healthz
-   # c) no errors in the last 15 minutes (no output is good)
-   aws logs filter-log-events --log-group-name ecs-20221213004720404200000001 \
-     --log-stream-name-prefix python_backend_staging --start-time $(( ($(date +%s) - 900) * 1000 )) \
-     --filter-pattern '?Traceback ?ERROR' --query 'events[].message' --output text
+   (
+     set -euo pipefail
+     # a) HEALTHY, and the digest is the digest of :prod
+     H=$(aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].healthStatus' --output text)
+     G=$(aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].containers[0].imageDigest' --output text)
+     P=$(aws ecr describe-images --repository-name back-end --image-ids imageTag=prod --query 'imageDetails[0].imageDigest' --output text)
+     echo "health $H, task $G, :prod $P"
+     if [ "$H" != HEALTHY ] || [ "$G" != "$P" ]; then echo "STOP: 4a failed"; exit 1; fi
+     # b) HTTP 200
+     if ! curl -fsS -o /dev/null -w '%{http_code}\n' "$U"; then echo "STOP: 4b failed"; exit 1; fi
+     # c) no errors in the last 15 minutes
+     E=$(aws logs filter-log-events --log-group-name ecs-20221213004720404200000001 \
+       --log-stream-name-prefix $S --start-time $(( ($(date +%s) - 900) * 1000 )) \
+       --filter-pattern '?Traceback ?ERROR' --query 'events[].message' --output text)
+     if [ -n "$E" ]; then echo "$E"; echo "STOP: 4c found errors"; exit 1; fi
+     echo "step 4 OK"
+   )
    ```
 5. Migrations on staging (the new image has the migration files, so run this after the rollout). First list the pending ones (ECS Exec, see section 5 for `$T`):
    ```bash
@@ -127,17 +155,24 @@ Nothing runs database migrations when a task starts. A release that has a new mi
    ```
    `No planned migration operations.` means you are done. Otherwise read the plan. Stop if it contains a destructive operation (`RemoveField`, `DeleteModel`, `RunSQL`) that you did not expect. Then apply and check:
    ```bash
-   aws ecs execute-command --cluster $C --task "$T" --container $S --interactive --command "python manage.py migrate"
-   aws ecs execute-command --cluster $C --task "$T" --container $S --interactive --command "python manage.py migrate --plan"   # must say: No planned migration operations.
+   (
+     set -euo pipefail
+     aws ecs execute-command --cluster $C --task "$T" --container $S --interactive --command "python manage.py migrate"
+     aws ecs execute-command --cluster $C --task "$T" --container $S --interactive --command "python manage.py migrate --plan"   # must say: No planned migration operations.
+   )
    ```
-   If `migrate` fails, STOP. Do not go to prod. A code rollback does not undo applied migrations.
-6. Check staging again (steps 4b and 4c) after the migration.
+   ECS Exec can return 0 even when the command in the container fails, so read the output. If `migrate` fails, STOP. Do not go to prod. A code rollback does not undo applied migrations.
+6. Check staging again after the migration: run the step 4 block again.
 7. Prod: `:prod` is already the image, so do not retag. On the migrate-first path, first run the step 3b block with `S=python_backend_prod`. Then deploy:
    ```bash
-   aws ecs update-service --cluster $C --service python_backend_prod --force-new-deployment
-   aws ecs wait services-stable --cluster $C --services python_backend_prod
+   C=operationcode-ecs-us-east-2
+   (
+     set -euo pipefail
+     aws ecs update-service --cluster $C --service python_backend_prod --force-new-deployment
+     aws ecs wait services-stable --cluster $C --services python_backend_prod
+   )
    ```
-8. Check prod: repeat step 4 with `S=python_backend_prod`, the prefix `python_backend_prod`, and https://api.operationcode.org/healthz.
+8. Check prod: run the step 4 block with the prod values of `S` and `U` (in its comment).
 9. Migrations on prod: repeat step 5 with the prod `$S` and `$T`. Between step 7 and step 9 the new code runs on the old schema. Keep this time short, and do not skip the step when staging needed it.
 
 ## 4. Roll back
@@ -145,23 +180,32 @@ Nothing runs database migrations when a task starts. A release that has a new mi
 Use the digest saved in deploy step 2 (`cat $HOME/back-end-deploy.env`). Set `S` and `TAG` for the environment that failed, then run the block:
 
 ```bash
+C=operationcode-ecs-us-east-2
 . $HOME/back-end-deploy.env
 S=python_backend_prod TAG=prod DIGEST=$PROD_DIGEST            # prod
 # S=python_backend_staging TAG=staging DIGEST=$STAGING_DIGEST   # staging
-test -n "$DIGEST" -a "$DIGEST" != None || { echo "no saved digest: STOP"; false; }
-M=$(aws ecr batch-get-image --repository-name back-end --image-ids imageDigest=$DIGEST --query 'images[0].imageManifest' --output text)
-test -n "$M" -a "$M" != None || { echo "no manifest for $DIGEST: STOP"; false; }
-aws ecr put-image --repository-name back-end --image-tag $TAG --image-manifest "$M"
-aws ecs update-service --cluster $C --service $S --force-new-deployment
-aws ecs wait services-stable --cluster $C --services $S
+(
+  set -euo pipefail
+  if [ -z "$DIGEST" ] || [ "$DIGEST" = None ]; then echo "STOP: no saved digest"; exit 1; fi
+  M=$(aws ecr batch-get-image --repository-name back-end --image-ids imageDigest=$DIGEST --query 'images[0].imageManifest' --output text)
+  if [ -z "$M" ] || [ "$M" = None ]; then echo "STOP: no manifest for $DIGEST"; exit 1; fi
+  aws ecr put-image --repository-name back-end --image-tag $TAG --image-manifest "$M"
+  aws ecs update-service --cluster $C --service $S --force-new-deployment
+  aws ecs wait services-stable --cluster $C --services $S
+)
 ```
 
 Verify. The task digest must equal `$DIGEST` (the saved digest, not `:prod`), the task must be HEALTHY, and the health URL must return 200:
 
 ```bash
-T=$(aws ecs list-tasks --cluster $C --service-name $S --query 'taskArns[0]' --output text)
-aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].[healthStatus,containers[0].imageDigest]' --output text
-echo "$DIGEST"
+(
+  set -euo pipefail
+  T=$(aws ecs list-tasks --cluster $C --service-name $S --query 'taskArns[0]' --output text)
+  H=$(aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].healthStatus' --output text)
+  G=$(aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].containers[0].imageDigest' --output text)
+  echo "health $H, task $G, saved $DIGEST"
+  if [ "$H" != HEALTHY ] || [ "$G" != "$DIGEST" ]; then echo "STOP: rollback check failed"; exit 1; fi
+)
 ```
 
 - ECR does not keep tag history. If you did not save the digest, you cannot find the old one by tag.
@@ -255,7 +299,7 @@ SECRET=staging/python_backend SVC=python_backend_staging   # prod: prod/python_b
   umask 077; F=$(mktemp); trap 'rm -f "$F"' EXIT
   aws secretsmanager get-secret-value --secret-id $SECRET --query SecretString --output text \
     | jq --arg k "$(openssl rand -base64 64 | tr -d '\n')" '.jwt_secret_key=$k' > $F
-  test -s $F && jq -e 'has("jwt_secret_key")' $F >/dev/null   # not empty, key present
+  if ! test -s $F || ! jq -e 'has("jwt_secret_key")' $F >/dev/null; then echo "STOP: bad secret JSON"; exit 1; fi
   jq 'keys' $F                      # check that all the keys are still there
   aws secretsmanager put-secret-value --secret-id $SECRET --secret-string file://$F
   aws ecs update-service --cluster $C --service $SVC --force-new-deployment
