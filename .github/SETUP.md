@@ -137,32 +137,7 @@ The role was deleted on 2026-11-23, after both repositories moved to their own r
 
 ## Deploy to Staging and Prod (maintainers)
 
-Pull requests do not push images. CI never deploys to ECS. The task definitions pin `back-end:prod` and `back-end:staging`, so a deploy is a manual force-new-deployment.
-
-Merging to `main` builds the `runtime` target and pushes `back-end:prod`. Staging gets the same image, so it tests exactly what prod will run.
-
-1. Save the running digest for a rollback, for each service:
-   ```bash
-   export AWS_PROFILE=operationcode AWS_REGION=us-east-2
-   C=operationcode-ecs-us-east-2
-   T=$(aws ecs list-tasks --cluster $C --service-name python_backend_prod --query 'taskArns[0]' --output text)
-   aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].containers[0].imageDigest' --output text
-   ```
-2. Staging first. Give `:staging` to the image that the main build pushed:
-   ```bash
-   M=$(aws ecr batch-get-image --repository-name back-end --image-ids imageTag=prod --query 'images[0].imageManifest' --output text)
-   aws ecr put-image --repository-name back-end --image-tag staging --image-manifest "$M"
-   aws ecs update-service --cluster $C --service python_backend_staging --force-new-deployment
-   aws ecs wait services-stable --cluster $C --services python_backend_staging
-   curl -fsS https://api.staging.operationcode.org/healthz
-   ```
-3. Then prod. Run the same `update-service` and `wait` for `python_backend_prod`, then `curl -fsS https://api.operationcode.org/healthz`.
-
-To roll back: `batch-get-image` with `imageDigest=<saved digest>`, `put-image` that manifest to the tag, then force a new deployment.
-
-Caveat: `deployment_minimum_healthy_percent` is 0 and there is no circuit breaker. Each deploy has a short outage, and there is no automatic rollback.
-
-The `ecr-approval` dispatch (Actions > CI > "Run workflow") still exists for a manual rebuild. It is not the staging path. Read the branch's `.github/workflows/ci.yml` before you approve, because the approved job runs with that file and its credentials can also write `:prod`.
+The deploy, check, and rollback steps are in [`OPS.md`](../OPS.md#3-deploy-staging-first-then-prod). Read the branch's `.github/workflows/ci.yml` before you approve an `ecr-approval` run, because the approved job runs with that file and its credentials can also write `:prod`.
 
 ## Troubleshooting
 

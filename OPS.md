@@ -34,7 +34,8 @@ C=operationcode-ecs-us-east-2
 
 - A pull request builds the image. It pushes nothing.
 - A merge to `main` pushes `back-end:prod`. The job runs in the `ecr-main` environment and does not wait.
-- A manual run (Actions > CI > "Run workflow") or a re-run of a push needs `ecr-approval`: a maintainer must approve it. A run on a branch other than `main` pushes `:staging`.
+- A manual run (Actions > CI > "Run workflow") or a re-run of a push needs `ecr-approval`: a maintainer must approve it. A run on a branch other than `main` pushes `:staging`. Do not use it to deploy staging: use section 3. The approved job runs the `ci.yml` of that branch, and its credentials can also write `:prod`, so read that file before you approve.
+- Do not use `docker-build.sh` to deploy. It pushes from a laptop and skips the gates.
 - Nothing deploys to ECS automatically. CI never calls ECS.
 - Security setup (environments, IAM role, trust policy): [`.github/SETUP.md`](.github/SETUP.md).
 
@@ -42,21 +43,30 @@ C=operationcode-ecs-us-east-2
 
 Deploys cause a short outage: `deployment_minimum_healthy_percent` is 0 and there is no circuit breaker. ECS stops the old task before it starts the new one. If the new task fails, nothing rolls back: you must do section 4.
 
+**Stop rule:** if any step or check below fails, STOP. Do not go on to prod. Go to section 4 and roll back the environment that failed. A `wait services-stable` that times out (about 10 minutes, exit code 255) is a failure.
+
+Nothing runs database migrations when a task starts. A release that has a new migration needs step 5 (staging) and step 9 (prod).
+
 1. Wait for the CI run on `main` to finish and succeed:
    ```bash
    gh run list -R OperationCode/back-end --workflow ci.yml --branch main --limit 3
    ```
-2. Save the running digest of each service. You need it for a rollback:
+2. Save the running digest of each service in a file, and print it. You need it for a rollback. A new terminal loses shell variables, the file does not:
    ```bash
+   D=$HOME/back-end-deploy.env; : > $D
    for S in python_backend_staging python_backend_prod; do
      T=$(aws ecs list-tasks --cluster $C --service-name $S --query 'taskArns[0]' --output text)
-     echo "$S $(aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].containers[0].imageDigest' --output text)"
+     G=$(aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].containers[0].imageDigest' --output text)
+     echo "$(echo ${S#python_backend_} | tr a-z A-Z)_DIGEST=$G" >> $D
    done
+   cat $D   # copy these two lines to your notes. Stop if a value is empty or None.
    ```
-3. Staging: give `:staging` the manifest of `:prod`, then deploy:
+3. Staging: give `:staging` the manifest of `:prod`, check it, then deploy:
    ```bash
    M=$(aws ecr batch-get-image --repository-name back-end --image-ids imageTag=prod --query 'images[0].imageManifest' --output text)
+   test -n "$M" -a "$M" != None || { echo "no :prod manifest: STOP"; false; }
    aws ecr put-image --repository-name back-end --image-tag staging --image-manifest "$M"
+   for t in prod staging; do aws ecr describe-images --repository-name back-end --image-ids imageTag=$t --query 'imageDetails[0].imageDigest' --output text; done   # the two digests must be equal
    aws ecs update-service --cluster $C --service python_backend_staging --force-new-deployment
    aws ecs wait services-stable --cluster $C --services python_backend_staging
    ```
@@ -74,32 +84,52 @@ Deploys cause a short outage: `deployment_minimum_healthy_percent` is 0 and ther
      --log-stream-name-prefix python_backend_staging --start-time $(( ($(date +%s) - 900) * 1000 )) \
      --filter-pattern '?Traceback ?ERROR' --query 'events[].message' --output text
    ```
-5. Prod: `:prod` is already the image, so do not retag. Deploy:
+5. Migrations on staging (the new image has the migration files, so run this after the rollout). First list the pending ones (ECS Exec, see section 5 for `$T`):
+   ```bash
+   aws ecs execute-command --cluster $C --task "$T" --container $S --interactive --command "python manage.py migrate --plan"
+   ```
+   `No planned migration operations.` means you are done. Otherwise read the plan. Stop if it contains a destructive operation (`RemoveField`, `DeleteModel`, `RunSQL`) that you did not expect. Then apply and check:
+   ```bash
+   aws ecs execute-command --cluster $C --task "$T" --container $S --interactive --command "python manage.py migrate"
+   aws ecs execute-command --cluster $C --task "$T" --container $S --interactive --command "python manage.py migrate --plan"   # must say: No planned migration operations.
+   ```
+   If `migrate` fails, STOP. Do not go to prod. A code rollback does not undo applied migrations.
+6. Check staging again (steps 4b and 4c) after the migration.
+7. Prod: `:prod` is already the image, so do not retag. Deploy:
    ```bash
    aws ecs update-service --cluster $C --service python_backend_prod --force-new-deployment
    aws ecs wait services-stable --cluster $C --services python_backend_prod
    ```
-6. Check prod: repeat step 4 with `S=python_backend_prod`, the prefix `python_backend_prod`, and https://api.operationcode.org/healthz.
-
-If a check fails, go to section 4.
+8. Check prod: repeat step 4 with `S=python_backend_prod`, the prefix `python_backend_prod`, and https://api.operationcode.org/healthz.
+9. Migrations on prod: repeat step 5 with the prod `$S` and `$T`. Between step 7 and step 9 the new code runs on the old schema. Keep this time short, and do not skip the step when staging needed it.
 
 ## 4. Roll back
 
-Use the digest you saved in deploy step 2. For prod:
+Use the digest saved in deploy step 2 (`cat $HOME/back-end-deploy.env`). Set `S` and `TAG` for the environment that failed, then run the block:
 
 ```bash
-DIGEST=sha256:<saved digest>
+. $HOME/back-end-deploy.env
+S=python_backend_prod TAG=prod DIGEST=$PROD_DIGEST            # prod
+# S=python_backend_staging TAG=staging DIGEST=$STAGING_DIGEST   # staging
+test -n "$DIGEST" || { echo "no saved digest: STOP"; false; }
 M=$(aws ecr batch-get-image --repository-name back-end --image-ids imageDigest=$DIGEST --query 'images[0].imageManifest' --output text)
-aws ecr put-image --repository-name back-end --image-tag prod --image-manifest "$M"
-aws ecs update-service --cluster $C --service python_backend_prod --force-new-deployment
-aws ecs wait services-stable --cluster $C --services python_backend_prod
+aws ecr put-image --repository-name back-end --image-tag $TAG --image-manifest "$M"
+aws ecs update-service --cluster $C --service $S --force-new-deployment
+aws ecs wait services-stable --cluster $C --services $S
 ```
 
-Then do the checks of deploy step 4 for prod. For staging, use `--image-tag staging` and `python_backend_staging`.
+Verify. The task digest must equal `$DIGEST` (the saved digest, not `:prod`), the task must be HEALTHY, and the health URL must return 200:
+
+```bash
+T=$(aws ecs list-tasks --cluster $C --service-name $S --query 'taskArns[0]' --output text)
+aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].[healthStatus,containers[0].imageDigest]' --output text
+echo "$DIGEST"
+```
 
 - ECR does not keep tag history. If you did not save the digest, you cannot find the old one by tag.
 - The ECR lifecycle policy archives untagged images 7 days after the last pull. An archived image can need a restore before it can be pulled.
-- `:prod` is the tag the next restart pulls. After a rollback, a new merge to `main` moves `:prod` again.
+- A rollback does not undo migrations. If a migration broke the old code, ask a maintainer before you do anything else.
+- `:prod` is the tag the next restart pulls. After a prod rollback, a new merge to `main` moves `:prod` again.
 
 ## 5. Run a management command (ECS Exec)
 
@@ -111,17 +141,17 @@ T=$(aws ecs list-tasks --cluster $C --service-name $S --query 'taskArns[0]' --ou
 aws ecs execute-command --cluster $C --task "$T" --container $S --interactive --command "python manage.py shell"
 ```
 
-The working directory is `/app/src`. For other commands, replace `python manage.py shell`, for example `python manage.py showmigrations`.
+The working directory is `/app/src`. For other commands, replace `python manage.py shell`, for example `python manage.py showmigrations`. Type `exit` to leave. The container runs as a non-root user.
 
-**Warning:** this is a shell inside the live container with database access. Use staging first. Prefer read-only commands. Do not change data unless you have a reviewed plan.
+**Warning:** this is a shell inside the live container with database access. Use staging first. Prefer read-only commands. Do not change data unless you have a reviewed plan. The session is recorded only in CloudTrail.
 
 ## 6. Dependency updates
 
 Policy:
 
-- Dependabot opens one grouped minor/patch pull request per ecosystem (Python, GitHub Actions) each week, on Monday. Docker base-image updates are patch only.
+- Dependabot runs each Monday. Python and GitHub Actions: one grouped minor/patch pull request each. Docker: no group and no cooldown, and the `python` base image takes patch updates only.
 - Dependabot ignores major versions. A security fix that needs a major shows only as a Dependabot alert. Apply it by hand.
-- The Dependabot cooldown is 3 days. It matches the 72-hour supply-chain rule of the org PR reviewer: do not take a release that is less than 72 hours old.
+- The cooldown for Python and GitHub Actions is 3 days. It matches the 72-hour supply-chain rule of the org PR reviewer: do not take a release that is less than 72 hours old.
 - Never apply a major version, unless a security fix requires it.
 
 To update by hand:
@@ -166,3 +196,28 @@ aws elbv2 describe-target-health --target-group-arn <TargetGroupArn>
 ```
 
 Errors and traces are in Sentry. Configure it with `SENTRY_DSN`, `SENTRY_TRACES_SAMPLE_RATE`, and `SENTRY_PROFILES_SAMPLE_RATE` (see `example.env`).
+
+## 8. Rotate JWT_SECRET_KEY
+
+`JWT_SECRET_KEY` signs the login tokens (HS256). It is a secret in Secrets Manager, in the JSON secret `prod/python_backend` (key `jwt_secret_key`) for prod and `staging/python_backend` for staging. The task definition reads it at task start. Terraform owns the task definition, so do not edit it by hand.
+
+If the variable is missing from the task definition, the app uses an insecure default from the code. After any task definition change, check that it is still listed (this prints names, not values):
+
+```bash
+aws ecs describe-task-definition --task-definition python_backend_prod --query 'taskDefinition.containerDefinitions[0].secrets[?name==`JWT_SECRET_KEY`].name' --output text
+```
+
+To rotate, do staging first (`SECRET=staging/python_backend`), then prod (`SECRET=prod/python_backend`). Never print the value. This changes one key and keeps the others:
+
+```bash
+umask 077; F=$(mktemp)
+aws secretsmanager get-secret-value --secret-id $SECRET --query SecretString --output text \
+  | jq --arg k "$(openssl rand -base64 64 | tr -d '\n')" '.jwt_secret_key=$k' > $F
+jq 'keys' $F                      # check that all the keys are still there
+aws secretsmanager put-secret-value --secret-id $SECRET --secret-string file://$F
+rm -f $F
+aws ecs update-service --cluster $C --service python_backend_staging --force-new-deployment   # prod: python_backend_prod
+aws ecs wait services-stable --cluster $C --services python_backend_staging
+```
+
+Then do the checks of deploy step 4 for that service. The rotation logs out all users (access token 1 hour, refresh token 1 day). To undo it, put the old value back: Secrets Manager keeps the previous version under the label `AWSPREVIOUS`.
