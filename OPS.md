@@ -1,198 +1,168 @@
-# Deploying a new backend version
+# Back-end Operations Runbook
 
-The backend is deployed to AWS ECS (Elastic Container Service) with separate staging and production environments.
+How the back-end is built, deployed, rolled back, and debugged. Each step has a command you can copy. Run all commands from any directory.
 
-## Building and Pushing Docker Images
-
-### Automated Builds (Recommended)
-
-Docker images are automatically built and pushed to AWS ECR via GitHub Actions:
-
-- **Pull requests**: build only, no push
-- **main branch**: Automatically builds and pushes to `:prod` tag after CI checks pass
-- **Manual dispatch**: a manual rebuild after a maintainer approves the `ecr-approval` environment. It is not the staging path.
-
-The automated builds use AWS OIDC for secure authentication (no long-lived credentials).
-
-### Manual Builds (Legacy)
-
-For manual builds, use the `docker-build.sh` script:
+Set this once per shell. Every later command uses it:
 
 ```bash
-# Build and push staging images
-./docker-build.sh staging
-
-# Build and push production images
-./docker-build.sh prod
+export AWS_PROFILE=operationcode AWS_REGION=us-east-2
+C=operationcode-ecs-us-east-2
 ```
 
-This creates ARM64 images tagged as `back-end:staging` or `back-end:prod`.
+## 1. Overview
 
-## Deploying to ECS
+```
+ PR  ---> CI: build only (no push)
+ merge to main ---> CI: build + push ECR back-end:prod   (environment ecr-main)
+                              |
+                              |  nothing deploys by itself
+                              v
+ you: retag :prod -> :staging, force new deployment  --> python_backend_staging
+ you: check staging, then force new deployment       --> python_backend_prod
+```
 
-CI never deploys to ECS. The task definitions pin `back-end:prod` and `back-end:staging`, so a deploy is a manual force-new-deployment.
+| Service | Image tag | Hostname | Health URL |
+|---|---|---|---|
+| `python_backend_staging` | `back-end:staging` | `api.staging.operationcode.org` | https://api.staging.operationcode.org/healthz |
+| `python_backend_prod` | `back-end:prod` | `api.operationcode.org` | https://api.operationcode.org/healthz |
 
-1. **Staging first** - retag the `:prod` image from the main build as `:staging`, then force a new deployment of `python_backend_staging`
-2. **Validate staging** (see below) and monitor logs in CloudWatch or Sentry
-3. **Then prod** - force a new deployment of `python_backend_prod`
+- Cluster: `operationcode-ecs-us-east-2`. Region: `us-east-2`. Each service runs one task.
+- The task definition pins a tag, not a digest. ECS resolves the tag to a digest when a task starts.
+- The services are defined in [operationcode_infra](https://github.com/OperationCode/operationcode_infra) (`terraform/apps.tf`). Change settings there, not by hand.
 
-Save the running image digest before you deploy, so you can roll back. Commands and the caveat about outages: [`.github/SETUP.md`](.github/SETUP.md#deploy-to-staging-and-prod-maintainers)
+## 2. How images are built
 
-## Important: JWT Secret Key Migration
+- A pull request builds the image. It pushes nothing.
+- A merge to `main` pushes `back-end:prod`. The job runs in the `ecr-main` environment and does not wait.
+- A manual run (Actions > CI > "Run workflow") or a re-run of a push needs `ecr-approval`: a maintainer must approve it. A run on a branch other than `main` pushes `:staging`.
+- Nothing deploys to ECS automatically. CI never calls ECS.
+- Security setup (environments, IAM role, trust policy): [`.github/SETUP.md`](.github/SETUP.md).
 
-**Before deploying these performance changes**, you must update the production `JWT_SECRET_KEY` environment variable:
+## 3. Deploy (staging first, then prod)
 
-1. Generate a new secret: `openssl rand -base64 64 | tr -d '\n'`
-2. Set `JWT_SECRET_KEY` env var in ECS task definition to the generated string
-3. Remove `JWT_PUBLIC_KEY` env var (no longer needed with HS256)
+Deploys cause a short outage: `deployment_minimum_healthy_percent` is 0 and there is no circuit breaker. ECS stops the old task before it starts the new one. If the new task fails, nothing rolls back: you must do section 4.
 
-⚠️ **This will log out all users** (one-time migration from RS256 to HS256)
+1. Wait for the CI run on `main` to finish and succeed:
+   ```bash
+   gh run list -R OperationCode/back-end --workflow ci.yml --branch main --limit 3
+   ```
+2. Save the running digest of each service. You need it for a rollback:
+   ```bash
+   for S in python_backend_staging python_backend_prod; do
+     T=$(aws ecs list-tasks --cluster $C --service-name $S --query 'taskArns[0]' --output text)
+     echo "$S $(aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].containers[0].imageDigest' --output text)"
+   done
+   ```
+3. Staging: give `:staging` the manifest of `:prod`, then deploy:
+   ```bash
+   M=$(aws ecr batch-get-image --repository-name back-end --image-ids imageTag=prod --query 'images[0].imageManifest' --output text)
+   aws ecr put-image --repository-name back-end --image-tag staging --image-manifest "$M"
+   aws ecs update-service --cluster $C --service python_backend_staging --force-new-deployment
+   aws ecs wait services-stable --cluster $C --services python_backend_staging
+   ```
+4. Check staging. All three must pass:
+   ```bash
+   S=python_backend_staging
+   T=$(aws ecs list-tasks --cluster $C --service-name $S --query 'taskArns[0]' --output text)
+   # a) HEALTHY, and the digest is the digest of :prod
+   aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].[healthStatus,containers[0].imageDigest]' --output text
+   aws ecr describe-images --repository-name back-end --image-ids imageTag=prod --query 'imageDetails[0].imageDigest' --output text
+   # b) HTTP 200
+   curl -fsS -o /dev/null -w '%{http_code}\n' https://api.staging.operationcode.org/healthz
+   # c) no errors in the last 15 minutes (no output is good)
+   aws logs filter-log-events --log-group-name ecs-20221213004720404200000001 \
+     --log-stream-name-prefix python_backend_staging --start-time $(( ($(date +%s) - 900) * 1000 )) \
+     --filter-pattern '?Traceback ?ERROR' --query 'events[].message' --output text
+   ```
+5. Prod: `:prod` is already the image, so do not retag. Deploy:
+   ```bash
+   aws ecs update-service --cluster $C --service python_backend_prod --force-new-deployment
+   aws ecs wait services-stable --cluster $C --services python_backend_prod
+   ```
+6. Check prod: repeat step 4 with `S=python_backend_prod`, the prefix `python_backend_prod`, and https://api.operationcode.org/healthz.
 
-# Validating the staging environment
+If a check fails, go to section 4.
 
-This requires a working node or docker environment.  I found docker to be easier and more reliable but that was me :shrug:
+## 4. Roll back
 
-When you run the front-end repo in localdev mode, it automatically connects to the staging environment.
-1. install dependencies:  `docker run -it -v ${PWD}:/src -w /src node:lts yarn`
-2. run the dev server:  `docker run -it -v ${PWD}:/src -w /src -p 127.0.0.1:3000:3000/tcp node:lts yarn dev --hostname 0.0.0.0`
-3. Connect to the dev server: `open http://localhost:3000`
-
-# Monitoring
-
-## Sentry Performance Monitoring
-
-The application is instrumented with Sentry for error tracking and performance monitoring:
-- Error tracking with breadcrumbs and context
-- Transaction tracing for HTTP requests
-- Database query performance tracking
-- Python profiling for CPU-intensive operations
-
-Configure via environment variables (see `example.env`):
-- `SENTRY_DSN` - Sentry project DSN
-- `SENTRY_TRACES_SAMPLE_RATE` - Percentage of requests to trace (0.0-1.0)
-- `SENTRY_PROFILES_SAMPLE_RATE` - Percentage of transactions to profile (0.0-1.0)
-
-## CloudWatch Logs
-
-Application logs are sent to CloudWatch Logs. Access via AWS Console or CLI:
+Use the digest you saved in deploy step 2. For prod:
 
 ```bash
-# View recent logs for staging
-aws logs tail /ecs/back-end-staging --follow
-
-# View recent logs for production
-aws logs tail /ecs/back-end-production --follow
+DIGEST=sha256:<saved digest>
+M=$(aws ecr batch-get-image --repository-name back-end --image-ids imageDigest=$DIGEST --query 'images[0].imageManifest' --output text)
+aws ecr put-image --repository-name back-end --image-tag prod --image-manifest "$M"
+aws ecs update-service --cluster $C --service python_backend_prod --force-new-deployment
+aws ecs wait services-stable --cluster $C --services python_backend_prod
 ```
 
-# GitHub Actions AWS OIDC Setup
+Then do the checks of deploy step 4 for prod. For staging, use `--image-tag staging` and `python_backend_staging`.
 
-The CI/CD pipeline uses AWS OIDC (OpenID Connect) for secure authentication to AWS without storing long-lived credentials. This follows AWS security best practices.
+- ECR does not keep tag history. If you did not save the digest, you cannot find the old one by tag.
+- The ECR lifecycle policy archives untagged images 7 days after the last pull. An archived image can need a restore before it can be pulled.
+- `:prod` is the tag the next restart pulls. After a rollback, a new merge to `main` moves `:prod` again.
 
-## Prerequisites
+## 5. Run a management command (ECS Exec)
 
-- AWS account with ECR repository: `633607774026.dkr.ecr.us-east-2.amazonaws.com/back-end`
-- GitHub repository: `operationcode/back-end`
-- AWS IAM permissions to create IAM roles and policies
-
-## Setup Instructions
-
-### 1. Create IAM OIDC Identity Provider
-
-If not already configured, create an OIDC identity provider for GitHub:
+ECS Exec is enabled on both services. You need the `session-manager-plugin` (`brew install --cask session-manager-plugin`).
 
 ```bash
-aws iam create-open-id-connect-provider \
-  --url https://token.actions.githubusercontent.com \
-  --client-id-list sts.amazonaws.com \
-  --thumbprint-list 6938fd4d98bab03faadb97b34396831e3780aea1
+S=python_backend_prod   # or python_backend_staging
+T=$(aws ecs list-tasks --cluster $C --service-name $S --query 'taskArns[0]' --output text)
+aws ecs execute-command --cluster $C --task "$T" --container $S --interactive --command "python manage.py shell"
 ```
 
-### 2. Create IAM Role for GitHub Actions
+The working directory is `/app/src`. For other commands, replace `python manage.py shell`, for example `python manage.py showmigrations`.
 
-Back-end has its own role, `GitHubActions-ECR-Push-back-end`. Do not share it with another repository. The old role `GitHubActions-ECR-Push` is shared with `operationcode-pybot` and is deleted after both repositories move to their own roles. For the change procedure and the open gap until then, see [`.github/SETUP.md`](.github/SETUP.md#the-old-shared-role).
+**Warning:** this is a shell inside the live container with database access. Use staging first. Prefer read-only commands. Do not change data unless you have a reviewed plan.
 
-The role is defined in [operationcode_infra](https://github.com/OperationCode/operationcode_infra), file `terraform/github_actions_ecr.tf`. Apply it with Terraform. Do not create the role by hand, and do not edit it by hand. The Terraform file is the source of truth. The JSON below is a reference only.
+## 6. Dependency updates
 
-The trust policy accepts only the `ecr-main` and `ecr-approval` environments of `OperationCode/back-end`, with `StringEquals`:
+Policy:
 
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Federated": "arn:aws:iam::633607774026:oidc-provider/token.actions.githubusercontent.com"
-      },
-      "Action": "sts:AssumeRoleWithWebIdentity",
-      "Condition": {
-        "StringEquals": {
-          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
-          "token.actions.githubusercontent.com:sub": [
-            "repo:OperationCode@10479364/back-end@182584277:environment:ecr-main",
-            "repo:OperationCode@10479364/back-end@182584277:environment:ecr-approval"
-          ]
-        }
-      }
-    }
-  ]
-}
-```
+- Dependabot opens one grouped minor/patch pull request per ecosystem (Python, GitHub Actions) each week, on Monday. Docker base-image updates are patch only.
+- Dependabot ignores major versions. A security fix that needs a major shows only as a Dependabot alert. Apply it by hand.
+- The Dependabot cooldown is 3 days. It matches the 72-hour supply-chain rule of the org PR reviewer: do not take a release that is less than 72 hours old.
+- Never apply a major version, unless a security fix requires it.
 
-### 3. Add the ECR Permissions Policy
+To update by hand:
 
-An inline policy allows push to the `back-end` ECR repository only. `ecr:GetAuthorizationToken` cannot be limited to a repository, so it is on `*`. Terraform also manages this policy. Reference:
+1. Update within the constraints of `pyproject.toml`:
+   ```bash
+   poetry update
+   ```
+2. Check the release date of each changed package. Put back any version that is less than 72 hours old (`poetry add "<package>@<previous version>"`, or edit `poetry.lock` back with `git checkout -p poetry.lock`).
+3. Run the same checks as CI (the Makefile has them):
+   ```bash
+   make ci      # ruff check, ruff format --check, pytest with coverage, bandit
+   ```
+4. Open one pull request with the `pyproject.toml` and `poetry.lock` changes. After the merge, deploy as in section 3.
 
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "ecr:BatchCheckLayerAvailability",
-        "ecr:GetDownloadUrlForLayer",
-        "ecr:BatchGetImage",
-        "ecr:InitiateLayerUpload",
-        "ecr:UploadLayerPart",
-        "ecr:CompleteLayerUpload",
-        "ecr:PutImage"
-      ],
-      "Resource": "arn:aws:ecr:us-east-2:633607774026:repository/back-end"
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ecr:GetAuthorizationToken",
-      "Resource": "*"
-    }
-  ]
-}
-```
+## 7. Logs and troubleshooting
 
-### 4. Configure GitHub Secret
-
-Add the IAM role ARN as a repository secret:
+All containers write to one CloudWatch log group, `ecs-20221213004720404200000001`. The stream prefix is `python_backend_prod` or `python_backend_staging`.
 
 ```bash
-gh secret set AWS_ROLE_ARN --repo OperationCode/back-end --body "arn:aws:iam::633607774026:role/GitHubActions-ECR-Push-back-end"
+# Follow the logs
+aws logs tail ecs-20221213004720404200000001 --log-stream-name-prefix python_backend_prod --follow
+# Check that the group name is still correct
+aws logs describe-log-groups --log-group-name-prefix ecs-
 ```
 
-### 5. Verify Setup
+Service state and deployments. `rolloutState` must be `COMPLETED`, and `runningCount` must equal `desiredCount`:
 
-After setup, the GitHub Actions workflow will automatically:
-- Authenticate to AWS using OIDC
-- Build Docker images for ARM64 platform
-- Push images to ECR with appropriate tags (`:prod` from `main`; `:staging` is a retag of `:prod`, see [`.github/SETUP.md`](.github/SETUP.md#deploy-to-staging-and-prod-maintainers))
+```bash
+aws ecs describe-services --cluster $C --services python_backend_prod \
+  --query 'services[0].[runningCount,desiredCount,deployments[].[status,rolloutState,taskDefinition],events[:5].message]'
+aws ecs list-tasks --cluster $C --service-name python_backend_prod --desired-status STOPPED
+```
 
-You can verify by:
-1. Merging to main (should push `:prod` after tests pass)
-2. Checking ECR repository for new images
+If a new task keeps stopping, read the stop reason: `aws ecs describe-tasks --cluster $C --tasks <task ARN> --query 'tasks[0].[stoppedReason,containers[0].reason]'`.
 
-## Security Best Practices
+Target group health (one target per group, health path `/healthz`):
 
-✅ **OIDC Authentication**: No long-lived AWS credentials stored in GitHub  
-✅ **Least Privilege**: IAM role only has permissions needed for ECR push operations, on the `back-end` repository only  
-✅ **Repository Scoping**: Trust policy of the back-end role accepts only the `ecr-main` and `ecr-approval` environments of `OperationCode/back-end` (the old shared role stays open until it is deleted)  
-✅ **Conditional Access**: Production builds only run after CI checks pass  
-✅ **Build Caching**: Uses GitHub Actions cache to speed up builds
+```bash
+aws elbv2 describe-target-groups --query 'TargetGroups[?contains(TargetGroupName,`python-backend`)].[TargetGroupName,TargetGroupArn]' --output text
+aws elbv2 describe-target-health --target-group-arn <TargetGroupArn>
+```
 
+Errors and traces are in Sentry. Configure it with `SENTRY_DSN`, `SENTRY_TRACES_SAMPLE_RATE`, and `SENTRY_PROFILES_SAMPLE_RATE` (see `example.env`).

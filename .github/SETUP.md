@@ -1,6 +1,6 @@
 # GitHub Actions Docker Push Setup
 
-This guide gives the setup that CI must have to push Docker images to ECR. It also gives the security rules for that setup. For the AWS OIDC provider, see [`OPS.md`](../OPS.md#github-actions-aws-oidc-setup).
+This guide gives the setup that CI must have to push Docker images to ECR. It also gives the security rules for that setup.
 
 ## How pushes are gated
 
@@ -18,7 +18,7 @@ re-run of any push run       --> docker-build-push   environment ecr-approval  m
 
 - `ecr-main` can skip the wait because the org ruleset on `main` requires a pull request with code-owner review.
 - Image tags: `:prod` when the ref is `main`, and `:staging` for all other refs. Both tags are in the same ECR repository.
-- The gate is not complete until the old shared role is deleted. See [The Old Shared Role](#the-old-shared-role).
+- The old shared role was deleted. See [The Old Shared Role](#the-old-shared-role-deleted).
 
 ## Required Secret
 
@@ -129,142 +129,11 @@ aws iam list-role-policies --role-name GitHubActions-ECR-Push-back-end          
 aws iam list-attached-role-policies --role-name GitHubActions-ECR-Push-back-end  # empty
 ```
 
-## The Old Shared Role
+## The Old Shared Role (deleted)
 
-Before this change, back-end used `arn:aws:iam::633607774026:role/GitHubActions-ECR-Push`. Back-end and `OperationCode/operationcode-pybot` both use it today:
-- Its trust uses `StringLike` with `repo:...:*` subjects for back-end and pybot. Any branch or pull request of either repository can assume it.
-- Its policy allows push to `repository/back-end` and to `repository/pybot`. Thus a session of either repository can overwrite the images of the other.
+Before back-end had its own role, back-end and `OperationCode/operationcode-pybot` shared `GitHubActions-ECR-Push`. Its trust allowed any branch of either repository.
 
-Each repository moves to its own role on its own: back-end with [Safe Change to the New Role](#safe-change-to-the-new-role) below, pybot with its own `.github/SETUP.md`.
-
-**During either move, nobody changes the old role.** No trust edits, no permission edits, and no "Revoke active sessions".
-
-**The old role is not gated.** It stays open to branch workflows of both repositories until it is deleted. A writer of either repository can edit a workflow on a branch, put the old role ARN in it, and get credentials without an approval. These credentials can push `back-end` and `pybot` images, `:prod` included. The environments do not stop this. The gap closes only when the old role is deleted. The old role is deleted once, after both repositories have completed step 6 of their move (see [Delete the Old Role](#delete-the-old-role)). Until then, a push through this gap is detected, not prevented.
-
-## Safe Change to the New Role
-
-Use this procedure to move back-end from the old shared role to its own role. Do not change the old role (see [The Old Shared Role](#the-old-shared-role)).
-
-If back-end is the first of the two repositories to start its move, write down the time of step 1 (S). The CloudTrail check in [Delete the Old Role](#delete-the-old-role) starts at S - 12 h. If pybot started first, use the time of its step 1.
-
-1. Create the two environments, as given in [Required Environments](#required-environments).
-2. Create the new role, as given in [Create the role](#create-the-role). Get the pull request that adds the environments to `ci.yml` approved and green. Do not merge it yet.
-3. Set the secret to the new role ARN, as given in [Required Secret](#required-secret). Write down the time of this change (T). After T, each new back-end job uses the new role.
-   - Between step 3 and step 5, every push run of the old workflow fails at "Configure AWS credentials", because the new role does not trust its subject. Nobody must push to `main` during this time.
-4. Cancel every back-end CI run that is in progress or queued. These runs can hold the old ARN or credentials of the old role.
-   ```bash
-   # List the runs, then cancel each one.
-   for s in in_progress queued; do
-     gh run list --repo OperationCode/back-end --status $s --limit 100 --json databaseId --jq '.[].databaseId'
-   done | xargs -n 1 gh run cancel --repo OperationCode/back-end
-   ```
-   To cancel one run: `gh run cancel <id> --repo OperationCode/back-end`. Run the list again until it is empty.
-5. Immediately merge the pull request. The push to `main` that the merge causes uses `ecr-main` and the new role, and pushes `:prod`.
-   - If the first push fails, correct the new role (see the rules above). Then re-run the job. The re-run uses `ecr-approval`, so a maintainer must approve it.
-   - When the push run is complete, write down the image digest of `:prod`. You compare with it in the CloudTrail check:
-     `aws ecr describe-images --region us-east-2 --repository-name back-end --image-ids imageTag=prod --query 'imageDetails[0].imageDigest' --output text`
-6. Confirm one successful push to `main` through the new role. Use the CloudTrail `AssumeRoleWithWebIdentity` event for the new role ARN:
-   ```bash
-   aws cloudtrail lookup-events --region us-east-2 \
-     --lookup-attributes AttributeKey=EventName,AttributeValue=AssumeRoleWithWebIdentity \
-     --start-time <T> --output json |
-     jq -r '.Events[] | (.CloudTrailEvent | fromjson) as $c
-       | select($c.requestParameters.roleArn == "arn:aws:iam::633607774026:role/GitHubActions-ECR-Push-back-end")
-       | [.EventTime, $c.requestParameters.roleArn, ($c.userIdentity.userName // "-"),
-          ($c.sourceIPAddress // "-"), ($c.errorCode // "ok")] | @tsv'
-   ```
-   Expect a line with `ok` at the time of the push run, with the subject `repo:OperationCode@10479364/back-end@182584277:environment:ecr-main`. Or use the run log: the `main` push run is green, its job ran in `ecr-main`, and "Build and push Docker image" pushed `back-end:prod`. The back-end move is complete after this step.
-
-## Delete the Old Role
-
-Delete the old role once, after both repositories have completed step 6 of their move: back-end above, and pybot in its own `.github/SETUP.md`. This section is the only deletion procedure. The pybot guide points to it.
-
-1. Delete every inline policy:
-   ```bash
-   OLD=GitHubActions-ECR-Push
-   aws iam list-role-policies --role-name $OLD
-   for p in $(aws iam list-role-policies --role-name $OLD --query 'PolicyNames[]' --output text); do
-     aws iam delete-role-policy --role-name $OLD --policy-name "$p"
-   done
-   ```
-2. Detach every managed policy:
-   ```bash
-   OLD=GitHubActions-ECR-Push
-   aws iam list-attached-role-policies --role-name $OLD
-   for a in $(aws iam list-attached-role-policies --role-name $OLD --query 'AttachedPolicies[].PolicyArn' --output text); do
-     aws iam detach-role-policy --role-name $OLD --policy-arn "$a"
-   done
-   ```
-3. Remove the role from each instance profile, if there are any:
-   ```bash
-   OLD=GitHubActions-ECR-Push
-   aws iam list-instance-profiles-for-role --role-name $OLD
-   for ip in $(aws iam list-instance-profiles-for-role --role-name $OLD --query 'InstanceProfiles[].InstanceProfileName' --output text); do
-     aws iam remove-role-from-instance-profile --instance-profile-name "$ip" --role-name $OLD
-   done
-   ```
-4. Delete the role:
-   ```bash
-   OLD=GitHubActions-ECR-Push
-   aws iam delete-role --role-name $OLD
-   ```
-5. Confirm. This command must fail with `NoSuchEntity`. Write down the time of this confirmation (D).
-   ```bash
-   OLD=GitHubActions-ECR-Push
-   aws iam get-role --role-name $OLD
-   date -u +%Y-%m-%dT%H:%M:%SZ   # D
-   ```
-6. Delete the old managed policy only if nothing else uses it. The policy has non-default versions (for example `v1`), and `delete-policy` fails with `DeleteConflict` until they are deleted. The block stops if the attachment count is not `0`:
-   ```bash
-   POLICY=arn:aws:iam::633607774026:policy/GitHubActions-ECR-Push-Policy
-   COUNT=$(aws iam get-policy --policy-arn $POLICY --query Policy.AttachmentCount --output text)
-   if [ "$COUNT" = "0" ]; then
-     aws iam list-policy-versions --policy-arn $POLICY
-     for v in $(aws iam list-policy-versions --policy-arn $POLICY \
-         --query 'Versions[?IsDefaultVersion==`false`].VersionId' --output text); do
-       aws iam delete-policy-version --policy-arn $POLICY --version-id "$v"
-     done
-     aws iam delete-policy --policy-arn $POLICY
-   else
-     echo "AttachmentCount is $COUNT: something else uses the policy. Do not delete it."
-   fi
-   ```
-
-### CloudTrail check of the old role
-
-An IAM change can take time to propagate, so the old role can still issue a session for up to approximately 1 h after D. An ECR login token from such a session stays valid for 12 hours. Thus a token of the old role can push until D + 13 h. An unapproved push in this window is detected, not prevented. When you follow these steps, you accept this risk.
-
-- At D + 13 h plus approximately 30 minutes (CloudTrail can deliver events late), list every ECR write event of the old role, on both ECR repositories, from S - 12 h to D + 13 h:
-  ```bash
-  for e in InitiateLayerUpload PutImage BatchDeleteImage; do
-    aws cloudtrail lookup-events --region us-east-2 \
-      --lookup-attributes AttributeKey=EventName,AttributeValue=$e \
-      --start-time <S-12h> --end-time <D+13h> --output json |
-      jq -r '.Events[] | (.CloudTrailEvent | fromjson) as $c
-        | ($c.userIdentity.sessionContext.sessionIssuer.arn // "-") as $role
-        | select($role == "arn:aws:iam::633607774026:role/GitHubActions-ECR-Push")
-        | [.EventTime, .EventName, .Username, $role,
-           ($c.requestParameters.repositoryName // "-"),
-           ($c.sourceIPAddress // "-")] | @tsv'
-  done
-  ```
-  The columns are: time, event, `Username`, session issuer ARN, ECR repository, source IP address. The command selects the old role by the session issuer ARN. Do not use `Username` for this: for a role session it is the session name, and the caller chooses it.
-- Each event must match a CI run that you know about (time and run) of the repository in the event: `back-end` or `pybot`. After step 4 of a repository's move, no run of that repository uses the old role. Thus an event of the old role on that repository after that time is unexpected.
-- `lookup-events` returns only the last 90 days. If D + 13 h is more than 80 days after S, also run this check every 80 days, so that no part of the window is lost.
-- The `PutImage` events are the real control. The tag check below shows only the current state of each tag.
-- At the same time, make sure that each tag digest is a digest that a known CI run pushed. For back-end `:prod`, this is the digest from step 5, unless a later known run pushed `:prod`. Query each tag on its own:
-  ```bash
-  for t in prod staging; do
-    aws ecr describe-images --region us-east-2 --repository-name back-end \
-      --image-ids imageTag=$t --query 'imageDetails[].[imageTags,imageDigest,imagePushedAt]'
-  done
-  for t in prod latest staging; do
-    aws ecr describe-images --region us-east-2 --repository-name pybot \
-      --image-ids imageTag=$t --query 'imageDetails[].[imageTags,imageDigest,imagePushedAt]'
-  done
-  ```
-  An `ImageNotFoundException` for a tag means that the tag does not exist. This is not a failure of the check.
-- If an event or a digest does not match, push a known-good image again (re-run the default-branch build of that repository with an `ecr-approval` approval) and investigate.
+The role was deleted on 2026-11-23, after both repositories moved to their own roles. The CloudTrail check of its window came back clean. `aws iam get-role --role-name GitHubActions-ECR-Push` now returns `NoSuchEntity`. The gap is closed.
 
 ## Deploy to Staging and Prod (maintainers)
 
@@ -313,7 +182,7 @@ The `ecr-approval` dispatch (Actions > CI > "Run workflow") still exists for a m
 
 ## Additional Resources
 
-- [Full AWS OIDC setup](../OPS.md#github-actions-aws-oidc-setup)
+- [Deploy and rollback runbook](../OPS.md)
 - [GitHub Actions secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets)
 - [GitHub deployment environments](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments)
 - [GitHub OIDC reference](https://docs.github.com/en/actions/reference/security/oidc)
