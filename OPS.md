@@ -45,7 +45,7 @@ Deploys cause a short outage: `deployment_minimum_healthy_percent` is 0 and ther
 
 **Stop rule:** if any step or check below fails, STOP. Do not go on to prod. Go to section 4 and roll back the environment that failed. A `wait services-stable` that times out (about 10 minutes, exit code 255) is a failure.
 
-Nothing runs database migrations when a task starts. A release that has a new migration needs step 5 (staging) and step 9 (prod).
+Nothing runs database migrations when a task starts. A release that has a new migration needs step 5 (staging) and step 9 (prod). Step 2b checks whether the new code needs the migration *before* it can start.
 
 1. Wait for the CI run on `main` to finish and succeed:
    ```bash
@@ -61,6 +61,11 @@ Nothing runs database migrations when a task starts. A release that has a new mi
    done
    cat $D   # copy these two lines to your notes. Stop if a value is empty or None.
    ```
+2b. Check for a migration that must run before the rollout. List the migration files that are new since the last deploy (`<last deployed commit>` is the `main` commit of the previous deploy):
+   ```bash
+   git fetch origin && git diff --name-only <last deployed commit> origin/main -- 'src/**/migrations/*.py'
+   ```
+   No output: go on to step 3. If there are files, read them. If the new code can start on the old schema, go on: step 5 and step 9 apply them after the rollout. If the new code needs the schema change to start (the new task would fail its health check), the order is migrate first. A running old task cannot do this: its image does not contain the new migration files. Run `python manage.py migrate` from the new image instead (a one-off task of the service task definition, with the command overridden), and only if the migration is backward-compatible with the old code (it only adds: new tables, or new columns that are null or have a default). Otherwise STOP and ask a maintainer. The one-off task is not tested here. Staging goes first, so a mistake costs only staging: if the staging task fails its health check with `ProgrammingError` or `no such column` in the logs, this is the cause.
 3. Staging: give `:staging` the manifest of `:prod`, check it, then deploy:
    ```bash
    M=$(aws ecr batch-get-image --repository-name back-end --image-ids imageTag=prod --query 'images[0].imageManifest' --output text)
@@ -111,7 +116,7 @@ Use the digest saved in deploy step 2 (`cat $HOME/back-end-deploy.env`). Set `S`
 . $HOME/back-end-deploy.env
 S=python_backend_prod TAG=prod DIGEST=$PROD_DIGEST            # prod
 # S=python_backend_staging TAG=staging DIGEST=$STAGING_DIGEST   # staging
-test -n "$DIGEST" || { echo "no saved digest: STOP"; false; }
+test -n "$DIGEST" -a "$DIGEST" != None || { echo "no saved digest: STOP"; false; }
 M=$(aws ecr batch-get-image --repository-name back-end --image-ids imageDigest=$DIGEST --query 'images[0].imageManifest' --output text)
 aws ecr put-image --repository-name back-end --image-tag $TAG --image-manifest "$M"
 aws ecs update-service --cluster $C --service $S --force-new-deployment
@@ -210,14 +215,18 @@ aws ecs describe-task-definition --task-definition python_backend_prod --query '
 To rotate, do staging first (`SECRET=staging/python_backend`), then prod (`SECRET=prod/python_backend`). Never print the value. This changes one key and keeps the others:
 
 ```bash
-umask 077; F=$(mktemp)
-aws secretsmanager get-secret-value --secret-id $SECRET --query SecretString --output text \
-  | jq --arg k "$(openssl rand -base64 64 | tr -d '\n')" '.jwt_secret_key=$k' > $F
-jq 'keys' $F                      # check that all the keys are still there
-aws secretsmanager put-secret-value --secret-id $SECRET --secret-string file://$F
-rm -f $F
-aws ecs update-service --cluster $C --service python_backend_staging --force-new-deployment   # prod: python_backend_prod
-aws ecs wait services-stable --cluster $C --services python_backend_staging
+SECRET=staging/python_backend SVC=python_backend_staging   # prod: prod/python_backend, python_backend_prod
+(
+  set -euo pipefail
+  umask 077; F=$(mktemp); trap 'rm -f "$F"' EXIT
+  aws secretsmanager get-secret-value --secret-id $SECRET --query SecretString --output text \
+    | jq --arg k "$(openssl rand -base64 64 | tr -d '\n')" '.jwt_secret_key=$k' > $F
+  test -s $F && jq -e 'has("jwt_secret_key")' $F >/dev/null   # not empty, key present
+  jq 'keys' $F                      # check that all the keys are still there
+  aws secretsmanager put-secret-value --secret-id $SECRET --secret-string file://$F
+  aws ecs update-service --cluster $C --service $SVC --force-new-deployment
+  aws ecs wait services-stable --cluster $C --services $SVC
+)
 ```
 
 Then do the checks of deploy step 4 for that service. The rotation logs out all users (access token 1 hour, refresh token 1 day). To undo it, put the old value back: Secrets Manager keeps the previous version under the label `AWSPREVIOUS`.
