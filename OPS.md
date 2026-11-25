@@ -84,6 +84,7 @@ Nothing runs database migrations when a task starts. A release that has a new mi
 3. Staging: give `:staging` the manifest of `:prod`, and check it:
    ```bash
    (
+     export AWS_PROFILE=operationcode AWS_REGION=us-east-2
      set -euo pipefail
      M=$(aws ecr batch-get-image --repository-name back-end --image-ids imageTag=prod --query 'images[0].imageManifest' --output text)
      if [ -z "$M" ] || [ "$M" = None ]; then echo "STOP: no :prod manifest"; exit 1; fi
@@ -96,6 +97,7 @@ Nothing runs database migrations when a task starts. A release that has a new mi
    ```
 3b. Migrate-first path only (step 2b). Run `migrate` in a one-off task of the service. The task uses the current task definition of the service, so it pulls the image that the tag has now: the new image. The command override replaces the gunicorn `CMD` of the image (the working directory is `/app/src`):
    ```bash
+   export AWS_PROFILE=operationcode AWS_REGION=us-east-2
    C=operationcode-ecs-us-east-2 S=python_backend_staging   # prod (step 7): S=python_backend_prod
    (
      set -euo pipefail
@@ -122,6 +124,7 @@ Nothing runs database migrations when a task starts. A release that has a new mi
    It must print `migrate OK`. Otherwise STOP: do not deploy. Read the log lines that the block prints. If the wait timed out, the task can still be running: check it with `aws ecs describe-tasks` and do not start a second one.
 3c. Deploy staging:
    ```bash
+   export AWS_PROFILE=operationcode AWS_REGION=us-east-2
    C=operationcode-ecs-us-east-2
    (
      set -euo pipefail
@@ -178,6 +181,7 @@ Nothing runs database migrations when a task starts. A release that has a new mi
 6. Check staging again after the migration: run the step 4 block again.
 7. Prod: `:prod` is already the image, so do not retag. On the migrate-first path, first run the step 3b block with `S=python_backend_prod`. Then deploy:
    ```bash
+   export AWS_PROFILE=operationcode AWS_REGION=us-east-2
    C=operationcode-ecs-us-east-2
    (
      set -euo pipefail
@@ -280,6 +284,7 @@ rm $HOME/back-end-deploy.env
 ECS Exec is enabled on both services. You need the `session-manager-plugin` (`brew install --cask session-manager-plugin`).
 
 ```bash
+export AWS_PROFILE=operationcode AWS_REGION=us-east-2
 C=operationcode-ecs-us-east-2
 S=python_backend_prod   # or python_backend_staging
 T=$(aws ecs list-tasks --cluster $C --service-name $S --query 'taskArns[0]' --output text)
@@ -317,6 +322,7 @@ To update by hand:
 All containers write to one CloudWatch log group, `ecs-20221213004720404200000001`. The stream prefix is `python_backend_prod` or `python_backend_staging`.
 
 ```bash
+export AWS_PROFILE=operationcode AWS_REGION=us-east-2
 # Follow the logs
 aws logs tail ecs-20221213004720404200000001 --log-stream-name-prefix python_backend_prod --follow
 # Check that the group name is still correct
@@ -326,6 +332,7 @@ aws logs describe-log-groups --log-group-name-prefix ecs-
 Service state and deployments. `rolloutState` must be `COMPLETED`, and `runningCount` must equal `desiredCount`:
 
 ```bash
+export AWS_PROFILE=operationcode AWS_REGION=us-east-2
 C=operationcode-ecs-us-east-2
 aws ecs describe-services --cluster $C --services python_backend_prod \
   --query 'services[0].[runningCount,desiredCount,deployments[].[status,rolloutState,taskDefinition],events[:5].message]'
@@ -357,6 +364,7 @@ Errors and traces are in Sentry. Configure it with `SENTRY_DSN`, `SENTRY_TRACES_
 If the variable is missing from the task definition, the app uses an insecure default from the code. After any task definition change, check that it is still listed (this prints names, not values):
 
 ```bash
+export AWS_PROFILE=operationcode AWS_REGION=us-east-2
 aws ecs describe-task-definition --task-definition python_backend_prod --query 'taskDefinition.containerDefinitions[0].secrets[?name==`JWT_SECRET_KEY`].name' --output text
 ```
 
