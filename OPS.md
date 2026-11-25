@@ -61,13 +61,15 @@ Nothing runs database migrations when a task starts. A release that has a new mi
      C=operationcode-ecs-us-east-2
      D=$HOME/back-end-deploy.env
      if [ -s $D ]; then echo "STOP: $D exists: a previous deploy or rollback was not finished. If it was finished, run: rm $D"; exit 1; fi
-     : > $D
+     W=$(mktemp $D.XXXXXX)   # temp file in the same directory: mv is atomic
+     trap 'rm -f $W' EXIT    # a STOP leaves no partial file; after the mv, W is gone
      for S in python_backend_staging python_backend_prod; do
        T=$(aws ecs list-tasks --cluster $C --service-name $S --query 'taskArns[0]' --output text)
        G=$(aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].containers[0].imageDigest' --output text)
        if [ -z "$G" ] || [ "$G" = None ]; then echo "STOP: no digest for $S"; exit 1; fi
-       echo "$(echo ${S#python_backend_} | tr a-z A-Z)_DIGEST=$G" >> $D
+       echo "$(echo ${S#python_backend_} | tr a-z A-Z)_DIGEST=$G" >> $W
      done
+     mv $W $D
      cat $D   # copy these two lines to your notes
    )
    ```
@@ -148,9 +150,11 @@ Nothing runs database migrations when a task starts. A release that has a new mi
      if [ "$H" != HEALTHY ] || [ "$G" != "$P" ]; then echo "STOP: 4a failed"; exit 1; fi
      # b) HTTP 200
      if ! curl -fsS -o /dev/null -w '%{http_code}\n' "$U"; then echo "STOP: 4b failed"; exit 1; fi
-     # c) no errors in the last 15 minutes
+     # c) no errors since the new task started (errors of the old task do not count)
+     A=$(aws ecs describe-tasks --cluster $C --tasks "$T" --query 'tasks[0].startedAt' --output text)
+     B=$(python3 -c 'import sys,datetime as d; print(int(d.datetime.fromisoformat(sys.argv[1]).timestamp()*1000))' "$A")   # ISO time to epoch ms, same on macOS and Linux
      E=$(aws logs filter-log-events --log-group-name ecs-20221213004720404200000001 \
-       --log-stream-name-prefix $S --start-time $(( ($(date +%s) - 900) * 1000 )) \
+       --log-stream-name-prefix $S --start-time $B \
        --filter-pattern '?Traceback ?ERROR' --query 'events[].message' --output text)
      if [ -n "$E" ]; then echo "$E"; echo "STOP: 4c found errors"; exit 1; fi
      echo "step 4 OK"
